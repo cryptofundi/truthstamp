@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My stamps — TruthStamp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/components.css">
+  <script src="js/analytics.js"></script>
+  <style>
+    .dash-shell {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: var(--space-8) var(--space-6);
+    }
+    .dash-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: var(--space-6);
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+    .dash-title {
+      font-size: var(--text-2xl);
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin: 0 0 4px;
+    }
+    .dash-subtitle {
+      font-size: var(--text-base);
+      color: var(--color-text-secondary);
+      margin: 0;
+    }
+
+    .stat-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: var(--space-3);
+      margin-bottom: var(--space-6);
+    }
+    .stat-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+    }
+    .stat-card-label {
+      font-size: var(--text-xs);
+      color: var(--color-text-secondary);
+      margin: 0 0 6px;
+    }
+    .stat-card-value {
+      font-size: var(--text-xl);
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+    .stat-card-meta {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      margin: 4px 0 0;
+    }
+    .stat-card.upgrade {
+      background: var(--brand-accent-light);
+      border-color: rgba(83, 74, 183, 0.2);
+    }
+    .stat-card.upgrade .stat-card-value {
+      font-size: var(--text-base);
+      font-weight: 500;
+      padding-top: 4px;
+    }
+
+    .filter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-4);
+      flex-wrap: wrap;
+      gap: var(--space-3);
+    }
+    .filter-tabs {
+      display: flex;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+    .filter-tab {
+      padding: 6px 14px;
+      font-size: var(--text-sm);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--color-text-secondary);
+    }
+    .filter-tab.active {
+      background: var(--color-text);
+      color: var(--color-bg);
+      border-color: var(--color-text);
+    }
+    .search-input {
+      max-width: 240px;
+      padding: 6px 12px;
+      font-size: var(--text-sm);
+    }
+
+    .stamp-list {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .stamp-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-4) var(--space-5);
+      border-bottom: 1px solid var(--color-border);
+      transition: background var(--transition-fast);
+      cursor: pointer;
+    }
+    .stamp-row:last-child { border-bottom: none; }
+    .stamp-row:hover { background: var(--color-bg); }
+
+    .stamp-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: var(--text-xs);
+      font-weight: 600;
+    }
+    .stamp-icon.text { background: var(--brand-primary-light); color: var(--brand-primary-dark); }
+    .stamp-icon.pdf { background: var(--color-danger-bg); color: var(--color-danger); }
+    .stamp-icon.image { background: var(--color-info-bg); color: var(--color-info); }
+    .stamp-icon.audio { background: var(--brand-accent-light); color: var(--brand-accent); }
+    .stamp-icon.url { background: var(--color-warning-bg); color: var(--color-warning); }
+
+    .stamp-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .stamp-preview {
+      font-size: var(--text-sm);
+      font-weight: 500;
+      margin: 0 0 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--color-text);
+    }
+    .stamp-meta {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      margin: 0;
+    }
+
+    .stamp-status {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: var(--space-12) var(--space-6);
+      background: var(--color-surface);
+      border: 1px dashed var(--color-border-strong);
+      border-radius: var(--radius-lg);
+    }
+    .empty-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius-md);
+      background: var(--brand-primary-light);
+      color: var(--brand-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-4);
+    }
+    .empty-title {
+      font-size: var(--text-lg);
+      font-weight: 600;
+      margin: 0 0 var(--space-2);
+    }
+    .empty-desc {
+      font-size: var(--text-base);
+      color: var(--color-text-secondary);
+      margin: 0 0 var(--space-5);
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <span class="nav-logo">T</span><span>TruthStamp</span>
+      </a>
+      <div class="nav-links">
+        <a href="dashboard.html" style="color: var(--color-text); font-weight: 500;">My stamps</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="trust.html">Trust</a>
+        <a href="stamp.html" class="btn btn-primary btn-sm">+ New stamp</a>
+        <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--brand-accent-light); color: var(--brand-accent); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">PR</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="dash-shell">
+
+    <!-- Header -->
+    <div class="dash-header">
+      <div>
+        <h1 class="dash-title">My stamps</h1>
+        <p class="dash-subtitle">Every receipt you've ever dropped.</p>
+      </div>
+      <a href="stamp.html" class="btn btn-primary">+ New stamp</a>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="stat-cards">
+      <div class="stat-card">
+        <p class="stat-card-label">Total stamps</p>
+        <p class="stat-card-value">47</p>
+        <p class="stat-card-meta">12 this month</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-card-label">Public verifications</p>
+        <p class="stat-card-value">3,124</p>
+        <p class="stat-card-meta">+842 this week</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-card-label">Sealed reveals upcoming</p>
+        <p class="stat-card-value">3</p>
+        <p class="stat-card-meta">Next: May 15</p>
+      </div>
+      <div class="stat-card upgrade">
+        <p class="stat-card-label" style="color: var(--brand-accent);">Free plan</p>
+        <p class="stat-card-value">18 of 30 stamps left</p>
+        <p class="stat-card-meta" style="color: var(--brand-accent); margin-top: 8px;"><a href="pricing.html" style="text-decoration: underline; font-weight: 500;">Upgrade →</a></p>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <div class="filter-tabs">
+        <button class="filter-tab active">All</button>
+        <button class="filter-tab">Public</button>
+        <button class="filter-tab">Sealed</button>
+        <button class="filter-tab">Hash only</button>
+      </div>
+      <input type="text" class="input search-input" placeholder="Search your stamps...">
+    </div>
+
+    <!-- Stamps list -->
+    <div class="stamp-list">
+
+      <a href="proof.html" class="stamp-row" style="text-decoration: none; color: inherit; display: flex;">
+        <div class="stamp-icon text">TXT</div>
+        <div class="stamp-content">
+          <p class="stamp-preview">MEGA hits $1 before end of June 2026. Volume + ecosystem catalysts...</p>
+          <p class="stamp-meta">Today · 14:32 · Public · 1,247 verifications</p>
+        </div>
+        <div class="stamp-status">
+          <span class="badge badge-success"><span class="badge-dot"></span> Verified</span>
+        </div>
+      </a>
+
+      <div class="stamp-row">
+        <div class="stamp-icon text">TXT</div>
+        <div class="stamp-content">
+          <p class="stamp-preview">Sealed prediction — auto-reveals June 1, 2026</p>
+          <p class="stamp-meta">May 1 · Sealed · Reveals in 31 days</p>
+        </div>
+        <div class="stamp-status">
+          <span class="badge badge-accent">Sealed</span>
+        </div>
+      </div>
+
+      <div class="stamp-row">
+        <div class="stamp-icon text">TXT</div>
+        <div class="stamp-content">
+          <p class="stamp-preview">Calling it now — the next narrative is X. 3 reasons why.</p>
+          <p class="stamp-meta">Apr 28 · Public · 412 verifications</p>
+        </div>
+        <div class="stamp-status">
+          <span class="badge badge-success"><span class="badge-dot"></span> Verified</span>
+        </div>
+      </div>
+
+      <div class="stamp-row">
+        <div class="stamp-icon pdf">PDF</div>
+        <div class="stamp-content">
+          <p class="stamp-preview">my-research-2026.pdf</p>
+          <p class="stamp-meta">Apr 25 · Hash only · 2.4 MB</p>
+        </div>
+        <div class="stamp-status">
+          <span class="badge badge-success"><span class="badge-dot"></span> Verified</span>
+        </div>
+      </div>
+
+      <div class="stamp-row">
+        <div class="stamp-icon text">TXT</div>
+        <div class="stamp-content">
+          <p class="stamp-preview">Hot take that nobody's ready for yet — bookmark this.</p>
+          <p class="stamp-meta">Apr 22 · Public · 89 verifications</p>
+        </div>
+        <div class="stamp-status">
+          <span class="badge badge-success"><span class="badge-dot"></span> Verified</span>
+        </div>
+      </div>
+
+      <div class="stamp-row">
+        <div class="stamp-icon image">IMG</div>
+        <div class="stamp-content">
+          <p class="stamp-preview">brand-mockup-final-v3.jpg</p>
+          <p class="stamp-meta">Apr 18 · Public · 156 verifications</p>
+        </div>
+        <div class="stamp-status">
+          <span class="badge badge-success"><span class="badge-dot"></span> Verified</span>
+        </div>
+      </div>
+
+      <div class="stamp-row">
+        <div class="stamp-icon audio">MP3</div>
+        <div class="stamp-content">
+          <p class="stamp-preview">podcast-ep-12-original.mp3</p>
+          <p class="stamp-meta">Apr 12 · Public · 234 verifications</p>
+        </div>
+        <div class="stamp-status">
+          <span class="badge badge-success"><span class="badge-dot"></span> Verified</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-center text-muted mt-6" style="font-size: var(--text-sm);">Showing 7 of 47 stamps · <a href="#" style="color: var(--brand-primary);">Load more</a></p>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="flex gap-2" style="align-items: center;">
+        <span class="nav-logo">T</span>
+        <span style="font-weight: 500; color: var(--color-text);">TruthStamp</span>
+      </div>
+      <div class="footer-links">
+        <a href="trust.html">Trust</a>
+        <a href="verify.html">Verify a stamp</a>
+        <a href="pricing.html">Pricing</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+</body>
+</html>
