@@ -5,9 +5,9 @@
 
 :root {
   /* Brand colors — TruthStamp identity */
-  --brand-primary: #1D9E75;        /* Teal — trust, verification */
-  --brand-primary-dark: #0F6E56;
-  --brand-primary-light: #E1F5EE;
+  --brand-primary: #2854E8;        /* Royal blue — trust, verification */
+  --brand-primary-dark: #1D3FB8;
+  --brand-primary-light: #E8EEFD;
   --brand-accent: #534AB7;         /* Purple — premium, sealed */
   --brand-accent-light: #EEEDFE;
 
