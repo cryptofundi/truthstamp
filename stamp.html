@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stamp it — TruthStamp</title>
+  <meta name="description" content="Lock your thought, prediction, or work in time. Sealed forever on MegaETH.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/components.css">
+  <script src="js/analytics.js"></script>
+
+  <style>
+    /* Page-specific styles */
+    .composer-shell {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: var(--space-8) var(--space-6) var(--space-12);
+    }
+    .composer-header {
+      margin-bottom: var(--space-6);
+    }
+    .composer-title {
+      font-size: var(--text-2xl);
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin: 0 0 var(--space-2);
+    }
+    .composer-subtitle {
+      font-size: var(--text-base);
+      color: var(--color-text-secondary);
+      margin: 0;
+    }
+    .composer-tabs {
+      margin-bottom: var(--space-6);
+    }
+    .tab-locked {
+      position: relative;
+      padding-right: 30px;
+    }
+    .tab-locked::after {
+      content: "";
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 12px;
+      height: 12px;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888780' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='11' width='18' height='11' rx='2'/%3E%3Cpath d='M7 11V7a5 5 0 0110 0v4'/%3E%3C/svg%3E") center/contain no-repeat;
+    }
+    .text-area-wrap {
+      position: relative;
+    }
+    .text-area-wrap textarea {
+      min-height: 160px;
+      font-size: var(--text-md);
+      line-height: 1.6;
+      padding-bottom: 36px;
+    }
+    .char-count {
+      position: absolute;
+      bottom: 12px;
+      right: 14px;
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      pointer-events: none;
+    }
+    .char-count.warning { color: var(--color-warning); }
+    .char-count.danger { color: var(--color-danger); }
+
+    .tag-row {
+      display: flex;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+      margin-top: var(--space-3);
+    }
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: var(--text-xs);
+      padding: 4px 10px;
+      border-radius: var(--radius-md);
+      background: var(--brand-primary-light);
+      color: var(--brand-primary-dark);
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+    }
+    .tag-pill.add {
+      background: var(--color-surface-alt);
+      color: var(--color-text-secondary);
+      border: 1px dashed var(--color-border-strong);
+    }
+
+    .visibility-section {
+      margin-top: var(--space-6);
+    }
+    .visibility-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+    }
+    .visibility-card {
+      padding: var(--space-4);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      background: var(--color-surface);
+      text-align: left;
+      font-family: inherit;
+      width: 100%;
+    }
+    .visibility-card:hover {
+      border-color: var(--color-border-strong);
+    }
+    .visibility-card.selected {
+      border-color: var(--brand-primary);
+      background: var(--brand-primary-light);
+      border-width: 2px;
+      padding: calc(var(--space-4) - 1px);
+    }
+    .visibility-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .visibility-card-title {
+      font-size: var(--text-base);
+      font-weight: 500;
+      margin: 0;
+    }
+    .visibility-card.selected .visibility-card-title {
+      color: var(--brand-primary-dark);
+    }
+    .visibility-card-desc {
+      font-size: var(--text-xs);
+      color: var(--color-text-secondary);
+      margin: 0;
+      line-height: 1.5;
+    }
+    .visibility-icon {
+      width: 16px;
+      height: 16px;
+      color: var(--color-text-muted);
+    }
+    .visibility-card.selected .visibility-icon {
+      color: var(--brand-primary);
+    }
+
+    .seal-options {
+      margin-top: var(--space-4);
+      padding: var(--space-4);
+      background: var(--brand-accent-light);
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(83, 74, 183, 0.15);
+      display: none;
+    }
+    .seal-options.show { display: block; }
+    .seal-label {
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--brand-accent);
+      margin: 0 0 var(--space-2);
+    }
+    .seal-input-row {
+      display: flex;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+    .seal-quick {
+      padding: 6px 12px;
+      font-size: var(--text-xs);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--color-text-secondary);
+    }
+    .seal-quick:hover {
+      border-color: var(--brand-accent);
+      color: var(--brand-accent);
+    }
+
+    .stamp-cta-section {
+      margin-top: var(--space-6);
+      padding-top: var(--space-6);
+      border-top: 1px solid var(--color-border);
+    }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background: var(--color-surface-alt);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-4);
+      font-size: var(--text-sm);
+    }
+    .meta-row .text-secondary { color: var(--color-text-secondary); }
+
+    /* Premium upgrade card — shown when File/URL tabs are clicked */
+    .premium-prompt {
+      padding: var(--space-6);
+      background: linear-gradient(135deg, var(--brand-accent-light) 0%, var(--brand-primary-light) 100%);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(83, 74, 183, 0.2);
+      text-align: center;
+      display: none;
+    }
+    .premium-prompt.show { display: block; }
+    .premium-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-4);
+      color: var(--brand-accent);
+    }
+    .premium-title {
+      font-size: var(--text-lg);
+      font-weight: 600;
+      margin: 0 0 var(--space-2);
+    }
+    .premium-desc {
+      font-size: var(--text-base);
+      color: var(--color-text-secondary);
+      margin: 0 0 var(--space-5);
+      line-height: 1.5;
+    }
+    .text-content-wrapper {
+      display: block;
+    }
+    .text-content-wrapper.hide { display: none; }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <span class="nav-logo">T</span>
+        <span>TruthStamp</span>
+      </a>
+      <div class="nav-links">
+        <a href="dashboard.html">My stamps</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="trust.html">Trust</a>
+        <span style="display: inline-flex; align-items: center; gap: 8px;">
+          <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--brand-accent-light); color: var(--brand-accent); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">PR</span>
+        </span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Composer -->
+  <main class="composer-shell">
+    <div class="composer-header">
+      <h1 class="composer-title">Stamp it.</h1>
+      <p class="composer-subtitle">Lock your thought in time. About one second on MegaETH.</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="composer-tabs">
+      <div class="tabs">
+        <button class="tab active" data-tab="text" onclick="switchTab('text')">Text</button>
+        <button class="tab tab-locked" data-tab="file" onclick="switchTab('file')">File</button>
+        <button class="tab tab-locked" data-tab="url" onclick="switchTab('url')">URL</button>
+      </div>
+    </div>
+
+    <!-- Text composer (default) -->
+    <div class="text-content-wrapper" id="text-content">
+      <div class="card">
+        <label class="label" for="stamp-text">What do you want to lock in time?</label>
+        <div class="text-area-wrap">
+          <textarea
+            id="stamp-text"
+            class="textarea"
+            placeholder="A prediction, a hot take, a draft of your work — anything up to 500 characters."
+            maxlength="500"
+            oninput="updateCharCount()"></textarea>
+          <span class="char-count" id="char-count">0 / 500</span>
+        </div>
+
+        <!-- Tags -->
+        <div class="tag-row">
+          <button class="tag-pill" type="button">+ #prediction</button>
+          <button class="tag-pill" type="button">+ #crypto</button>
+          <button class="tag-pill" type="button">+ #alpha</button>
+          <button class="tag-pill add" type="button">+ Add tag</button>
+        </div>
+
+        <!-- Visibility -->
+        <div class="visibility-section">
+          <p class="label">Visibility</p>
+          <div class="visibility-grid">
+            <button type="button" class="visibility-card selected" id="vis-public" onclick="selectVisibility('public')">
+              <div class="visibility-card-head">
+                <p class="visibility-card-title">Public</p>
+                <svg class="visibility-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"/></svg>
+              </div>
+              <p class="visibility-card-desc">Shareable proof URL. Anyone can verify it.</p>
+            </button>
+            <button type="button" class="visibility-card" id="vis-sealed" onclick="selectVisibility('sealed')">
+              <div class="visibility-card-head">
+                <p class="visibility-card-title">Sealed</p>
+                <svg class="visibility-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              </div>
+              <p class="visibility-card-desc">Hidden until a date you choose. Auto-reveals.</p>
+            </button>
+          </div>
+
+          <!-- None option as a smaller secondary -->
+          <button type="button" class="visibility-card" id="vis-none" onclick="selectVisibility('none')" style="margin-top: var(--space-3);">
+            <div class="visibility-card-head">
+              <p class="visibility-card-title">Hash only · Maximum privacy</p>
+              <svg class="visibility-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10 10 0 0112 20c-7 0-10-8-10-8a18.5 18.5 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 10 8 10 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M2 2l20 20"/></svg>
+            </div>
+            <p class="visibility-card-desc">Only your fingerprint goes on-chain. Content stays with you.</p>
+          </button>
+
+          <!-- Seal options (shown only when Sealed is selected) -->
+          <div class="seal-options" id="seal-options">
+            <p class="seal-label">Auto-reveal on</p>
+            <div class="seal-input-row">
+              <input type="date" class="input" id="seal-date" style="flex: 1; min-width: 180px;">
+              <button class="seal-quick" type="button" onclick="setSealDate(7)">+7 days</button>
+              <button class="seal-quick" type="button" onclick="setSealDate(30)">+30 days</button>
+              <button class="seal-quick" type="button" onclick="setSealDate(90)">+90 days</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stamp CTA -->
+        <div class="stamp-cta-section">
+          <div class="meta-row">
+            <span class="text-secondary">Estimated cost</span>
+            <span style="font-weight: 500;">Free · 28 stamps left this month</span>
+          </div>
+          <button class="btn btn-primary btn-block btn-lg" onclick="handleStamp()">Stamp this thought · ~1 second</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Premium prompt (hidden by default, shown when File or URL clicked) -->
+    <div class="premium-prompt" id="premium-prompt">
+      <div class="premium-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      </div>
+      <h3 class="premium-title" id="premium-title">File &amp; URL stamping is a Pro feature</h3>
+      <p class="premium-desc" id="premium-desc">
+        Stamp PDFs, images, audio, video, and live web pages.<br>
+        Files stored on Arweave — permanent, decentralized, outlives us.
+      </p>
+      <div class="flex gap-3" style="justify-content: center; flex-wrap: wrap;">
+        <a href="pricing.html" class="btn btn-primary">See Pro plans</a>
+        <button class="btn btn-ghost" type="button" onclick="switchTab('text')">Back to text</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script>
+    // Tab switching
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+
+      const textContent = document.getElementById('text-content');
+      const premium = document.getElementById('premium-prompt');
+      const premiumTitle = document.getElementById('premium-title');
+      const premiumDesc = document.getElementById('premium-desc');
+
+      if (tab === 'text') {
+        textContent.classList.remove('hide');
+        premium.classList.remove('show');
+      } else {
+        textContent.classList.add('hide');
+        premium.classList.add('show');
+        if (tab === 'file') {
+          premiumTitle.textContent = 'File stamping is a Pro feature';
+          premiumDesc.innerHTML = 'Stamp PDFs, images, audio, video — up to 100 MB.<br>Files stored on Arweave. Permanent. Decentralized. Outlives us.';
+        } else if (tab === 'url') {
+          premiumTitle.textContent = 'URL stamping is a Pro feature';
+          premiumDesc.innerHTML = 'Capture and seal a webpage exactly as it exists today.<br>Perfect for journalists, researchers, and anyone tracking online claims.';
+        }
+        if (window.trackEvent) window.trackEvent('premium_prompt_view', { source: tab });
+      }
+    }
+
+    // Visibility selection
+    function selectVisibility(option) {
+      ['public', 'sealed', 'none'].forEach(v => {
+        document.getElementById(`vis-${v}`).classList.remove('selected');
+      });
+      document.getElementById(`vis-${option}`).classList.add('selected');
+
+      const sealOpts = document.getElementById('seal-options');
+      if (option === 'sealed') {
+        sealOpts.classList.add('show');
+        // Default to 30 days
+        if (!document.getElementById('seal-date').value) {
+          setSealDate(30);
+        }
+      } else {
+        sealOpts.classList.remove('show');
+      }
+    }
+
+    function setSealDate(days) {
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      document.getElementById('seal-date').value = d.toISOString().slice(0, 10);
+    }
+
+    // Character count
+    function updateCharCount() {
+      const ta = document.getElementById('stamp-text');
+      const cc = document.getElementById('char-count');
+      const len = ta.value.length;
+      cc.textContent = `${len} / 500`;
+      cc.classList.toggle('warning', len > 400 && len <= 480);
+      cc.classList.toggle('danger', len > 480);
+    }
+
+    // Stamp action (placeholder — wires to backend later)
+    function handleStamp() {
+      const text = document.getElementById('stamp-text').value.trim();
+      if (!text) {
+        alert('Please write something to stamp.');
+        return;
+      }
+      if (window.trackEvent) {
+        const visibility = document.querySelector('.visibility-card.selected')?.id.replace('vis-', '') || 'public';
+        window.trackEvent('stamp_created', { type: 'text', visibility, length: text.length });
+      }
+      // Simulate stamp success → redirect to proof page
+      window.location.href = 'proof.html';
+    }
+  </script>
+</body>
+</html>
