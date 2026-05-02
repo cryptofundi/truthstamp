@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in — TruthStamp</title>
+  <meta name="description" content="Start stamping in 60 seconds. Email or Google — no wallet required.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/components.css">
+  <script src="js/analytics.js"></script>
+
+  <style>
+    .auth-shell {
+      min-height: calc(100vh - 70px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-8) var(--space-6);
+    }
+    .auth-card {
+      max-width: 420px;
+      width: 100%;
+    }
+    .auth-header {
+      text-align: center;
+      margin-bottom: var(--space-8);
+    }
+    .auth-title {
+      font-size: var(--text-2xl);
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin: 0 0 var(--space-2);
+    }
+    .auth-subtitle {
+      font-size: var(--text-base);
+      color: var(--color-text-secondary);
+      margin: 0;
+    }
+
+    .auth-tabs {
+      display: flex;
+      margin-bottom: var(--space-6);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .auth-tab {
+      flex: 1;
+      padding: var(--space-3) 0;
+      font-size: var(--text-base);
+      font-weight: 500;
+      color: var(--color-text-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      font-family: inherit;
+      transition: all var(--transition-fast);
+    }
+    .auth-tab:hover { color: var(--color-text); }
+    .auth-tab.active {
+      color: var(--brand-primary);
+      border-bottom-color: var(--brand-primary);
+    }
+
+    .auth-panel { display: none; }
+    .auth-panel.active { display: block; }
+
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 16px;
+      width: 100%;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border-strong);
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: var(--text-base);
+      font-weight: 500;
+      color: var(--color-text);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .btn-google:hover { background: var(--color-surface-alt); }
+    .google-icon { width: 18px; height: 18px; flex-shrink: 0; }
+
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin: var(--space-5) 0;
+      color: var(--color-text-muted);
+      font-size: var(--text-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .auth-divider::before,
+    .auth-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--color-border);
+    }
+
+    .form-group { margin-bottom: var(--space-4); }
+
+    .auth-toggle {
+      text-align: center;
+      margin-top: var(--space-6);
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+    }
+    .auth-toggle a {
+      color: var(--brand-primary);
+      font-weight: 500;
+    }
+
+    .wallet-section {
+      margin-top: var(--space-8);
+      padding-top: var(--space-6);
+      border-top: 1px solid var(--color-border);
+    }
+    .wallet-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      padding: var(--space-3);
+      background: none;
+      border: none;
+      font-family: inherit;
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      cursor: pointer;
+      transition: color var(--transition-fast);
+    }
+    .wallet-toggle:hover { color: var(--color-text); }
+    .wallet-arrow {
+      width: 12px;
+      height: 12px;
+      transition: transform var(--transition-fast);
+    }
+    .wallet-toggle.expanded .wallet-arrow { transform: rotate(180deg); }
+    .wallet-options {
+      display: none;
+      margin-top: var(--space-4);
+    }
+    .wallet-options.show { display: block; }
+    .wallet-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border-strong);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      margin-bottom: var(--space-2);
+      font-family: inherit;
+      text-align: left;
+    }
+    .wallet-btn:hover { background: var(--color-surface-alt); }
+    .wallet-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .wallet-info {
+      flex: 1;
+    }
+    .wallet-name {
+      font-size: var(--text-base);
+      font-weight: 500;
+      margin: 0;
+    }
+    .wallet-desc {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      margin: 0;
+    }
+
+    .terms {
+      text-align: center;
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      margin-top: var(--space-6);
+      line-height: 1.5;
+    }
+    .terms a {
+      color: var(--color-text-secondary);
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <span class="nav-logo">T</span>
+        <span>TruthStamp</span>
+      </a>
+      <div class="nav-links">
+        <a href="trust.html">Trust</a>
+        <a href="pricing.html">Pricing</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="auth-shell">
+    <div class="auth-card">
+
+      <!-- Header -->
+      <div class="auth-header">
+        <h1 class="auth-title">Start stamping</h1>
+        <p class="auth-subtitle">First 30 stamps free every month. No wallet required.</p>
+      </div>
+
+      <!-- Tabs: Sign up / Sign in -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-panel="signup" onclick="switchPanel('signup')">Sign up</button>
+        <button class="auth-tab" data-panel="signin" onclick="switchPanel('signin')">Sign in</button>
+      </div>
+
+      <!-- Sign up panel -->
+      <div class="auth-panel active" id="panel-signup">
+
+        <!-- Google -->
+        <button class="btn-google" onclick="handleGoogle()">
+          <svg class="google-icon" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Continue with Google
+        </button>
+
+        <div class="auth-divider">or</div>
+
+        <!-- Email signup form -->
+        <form onsubmit="handleSignup(event)">
+          <div class="form-group">
+            <label class="label" for="signup-email">Email</label>
+            <input type="email" class="input" id="signup-email" placeholder="you@example.com" required>
+          </div>
+          <div class="form-group">
+            <label class="label" for="signup-password">Password</label>
+            <input type="password" class="input" id="signup-password" placeholder="At least 8 characters" minlength="8" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg">Create account</button>
+        </form>
+
+        <p class="auth-toggle">
+          Already have an account? <a href="#" onclick="switchPanel('signin'); return false;">Sign in</a>
+        </p>
+      </div>
+
+      <!-- Sign in panel -->
+      <div class="auth-panel" id="panel-signin">
+
+        <button class="btn-google" onclick="handleGoogle()">
+          <svg class="google-icon" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Continue with Google
+        </button>
+
+        <div class="auth-divider">or</div>
+
+        <form onsubmit="handleSignin(event)">
+          <div class="form-group">
+            <label class="label" for="signin-email">Email</label>
+            <input type="email" class="input" id="signin-email" placeholder="you@example.com" required>
+          </div>
+          <div class="form-group">
+            <div class="flex-between">
+              <label class="label" for="signin-password" style="margin-bottom: 0;">Password</label>
+              <a href="#" style="font-size: var(--text-xs); color: var(--brand-primary);">Forgot?</a>
+            </div>
+            <input type="password" class="input" id="signin-password" required style="margin-top: var(--space-2);">
+          </div>
+          <button type="submit" class="btn btn-primary btn-block btn-lg">Sign in</button>
+        </form>
+
+        <p class="auth-toggle">
+          Don't have an account? <a href="#" onclick="switchPanel('signup'); return false;">Sign up</a>
+        </p>
+      </div>
+
+      <!-- Wallet section (collapsed by default — secondary option per peer's advice) -->
+      <div class="wallet-section">
+        <button class="wallet-toggle" id="wallet-toggle" onclick="toggleWallet()">
+          Advanced: connect wallet
+          <svg class="wallet-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="wallet-options" id="wallet-options">
+          <button class="wallet-btn" onclick="connectWallet('metamask')">
+            <div class="wallet-icon" style="background: #F6851B;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M22 4L13 12L9 8L2 15V21H22V4Z"/></svg>
+            </div>
+            <div class="wallet-info">
+              <p class="wallet-name">MetaMask</p>
+              <p class="wallet-desc">Most popular Web3 wallet</p>
+            </div>
+          </button>
+          <button class="wallet-btn" onclick="connectWallet('walletconnect')">
+            <div class="wallet-icon" style="background: var(--color-info-bg);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#185FA5" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12a4 4 0 018 0"/></svg>
+            </div>
+            <div class="wallet-info">
+              <p class="wallet-name">WalletConnect</p>
+              <p class="wallet-desc">Use any wallet via QR code</p>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Terms -->
+      <p class="terms">
+        By continuing, you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.
+      </p>
+    </div>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script>
+    function switchPanel(panel) {
+      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`[data-panel="${panel}"]`).classList.add('active');
+      document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById(`panel-${panel}`).classList.add('active');
+    }
+
+    function toggleWallet() {
+      const toggle = document.getElementById('wallet-toggle');
+      const options = document.getElementById('wallet-options');
+      toggle.classList.toggle('expanded');
+      options.classList.toggle('show');
+      if (window.trackEvent && options.classList.contains('show')) {
+        window.trackEvent('wallet_options_expanded');
+      }
+    }
+
+    function handleGoogle() {
+      if (window.trackEvent) window.trackEvent('auth_attempt', { method: 'google' });
+      // Wires to OAuth flow in v1
+      window.location.href = 'stamp.html';
+    }
+
+    function handleSignup(e) {
+      e.preventDefault();
+      if (window.trackEvent) window.trackEvent('auth_attempt', { method: 'email_signup' });
+      window.location.href = 'stamp.html';
+    }
+
+    function handleSignin(e) {
+      e.preventDefault();
+      if (window.trackEvent) window.trackEvent('auth_attempt', { method: 'email_signin' });
+      window.location.href = 'stamp.html';
+    }
+
+    function connectWallet(type) {
+      if (window.trackEvent) window.trackEvent('auth_attempt', { method: 'wallet', wallet_type: type });
+      // Wires to wallet connection in v1
+      alert(`Wallet connection (${type}) — coming in v1.\n\nFor now, please use email or Google to test the flow.`);
+    }
+  </script>
+</body>
+</html>
