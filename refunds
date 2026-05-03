@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Refund Policy — TruthStamp</title>
+  <meta name="description" content="TruthStamp Refund &amp; Cancellation Policy. Clear rules on when refunds apply.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/components.css">
+  <script src="js/analytics.js"></script>
+
+  <style>
+    .legal-shell { max-width: 760px; margin: 0 auto; padding: var(--space-12) var(--space-6); }
+    .legal-title { font-size: var(--text-3xl); font-weight: 600; letter-spacing: -0.02em; margin: 0 0 var(--space-2); line-height: 1.15; }
+    .legal-updated { font-size: var(--text-sm); color: var(--color-text-muted); margin: 0 0 var(--space-8); }
+    .legal-shell h2 { font-size: var(--text-xl); font-weight: 600; margin: var(--space-8) 0 var(--space-3); letter-spacing: -0.01em; }
+    .legal-shell h3 { font-size: var(--text-md); font-weight: 600; margin: var(--space-6) 0 var(--space-2); }
+    .legal-shell p { font-size: var(--text-base); color: var(--color-text-secondary); margin: 0 0 var(--space-4); line-height: 1.7; }
+    .legal-shell strong { color: var(--color-text); }
+    .legal-shell ul { padding-left: var(--space-5); margin: 0 0 var(--space-4); color: var(--color-text-secondary); line-height: 1.7; }
+    .legal-shell li { margin-bottom: var(--space-2); }
+    .legal-shell a { color: var(--brand-primary); text-decoration: underline; }
+    .summary-card { background: var(--brand-primary-light); padding: var(--space-5); border-radius: var(--radius-lg); margin-bottom: var(--space-8); }
+    .summary-card p { color: var(--color-text); margin-bottom: 0; }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <span class="nav-logo">T</span><span>TruthStamp</span>
+      </a>
+      <div class="nav-links">
+        <a href="how-it-works.html">How it works</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="trust.html">Trust</a>
+        <a href="auth.html" class="btn btn-primary btn-sm">Get started</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="legal-shell">
+    <h1 class="legal-title">Refund Policy</h1>
+    <p class="legal-updated">Last updated: May 3, 2026</p>
+
+    <div class="summary-card">
+      <p><strong>The short version:</strong> Credit purchases are non-refundable once completed, since credits can be used immediately. We do issue refunds for technical errors such as duplicate charges, failed deliveries, and platform errors. Contact us within 30 days for any technical refund issue.</p>
+    </div>
+
+    <h2>1. Credit Purchases Are Non-Refundable</h2>
+    <p>TruthStamp uses a credit pack model. When you purchase a credit pack, the credits are added to your account immediately and can be used to create stamps right away. Because credits are a digital good delivered instantly, <strong>credit pack purchases are non-refundable</strong> once the payment is confirmed.</p>
+    <p>This applies whether you've used the credits or not. Credits never expire, so unused credits remain in your account indefinitely.</p>
+
+    <h2>2. Exceptions: Technical Errors</h2>
+    <p>We will issue a refund in the following technical-error scenarios:</p>
+    <ul>
+      <li><strong>Duplicate charges:</strong> If you were charged twice for the same purchase, we will refund the duplicate. Many duplicate charges are detected and refunded automatically.</li>
+      <li><strong>Failed credit delivery:</strong> If the payment was successful but credits were not added to your account, we will either credit your account or refund the payment, at your choice.</li>
+      <li><strong>Platform-side stamp failure:</strong> If a stamp creation fails due to a technical issue on our end (not user error or content rejection), credits used will be returned to your account.</li>
+      <li><strong>Unauthorized charges:</strong> If you discover charges you did not authorize, contact us immediately. We will investigate and refund if confirmed.</li>
+    </ul>
+
+    <h2>3. Not Eligible for Refunds</h2>
+    <p>We do not issue refunds in the following cases:</p>
+    <ul>
+      <li>Change of mind after purchase</li>
+      <li>Unused credits</li>
+      <li>Account closure (voluntary or due to violation of <a href="terms.html">our Terms of Service</a>)</li>
+      <li>Stamps successfully created (credits cannot be reversed once a stamp is generated, as the cryptographic record is permanent)</li>
+      <li>Inability to use the service due to your local network, browser, or device issues</li>
+    </ul>
+
+    <h2>4. Alternative Payment Methods</h2>
+    <p>For payments made via alternative methods (such as digital asset payments), refund availability and processing may differ from card and bank-based payments. Where the underlying transaction cannot be automatically reversed, we may issue refunds in equivalent USD value via your registered payment method or as account credit. Contact us with the original transaction details and we will work to resolve the issue case-by-case.</p>
+
+    <h2>5. How to Request a Refund</h2>
+    <p>Email <a href="mailto:billing@truthstamp.io">billing@truthstamp.io</a> within <strong>30 days</strong> of the charge with:</p>
+    <ul>
+      <li>Your account email address</li>
+      <li>The credit pack you purchased</li>
+      <li>The date and amount of the charge</li>
+      <li>The technical reason for your refund request</li>
+    </ul>
+    <p>We aim to respond within 2 business days. Approved refunds are processed within 5–7 business days back to your original payment method.</p>
+
+    <h2>6. Disputes and Chargebacks</h2>
+    <p>If you believe a charge is incorrect, please contact us first — we work to resolve issues quickly and fairly. Filing a chargeback or payment dispute before contacting us may result in your account being suspended pending review.</p>
+    <p>Chargebacks issued for purchases that were properly delivered (i.e. credits were added to your account or stamps were successfully created) may be contested with documentation provided to your card issuer.</p>
+
+    <h2>7. Account Closure by TruthStamp</h2>
+    <p>If we close your account for violating our <a href="terms.html">Terms of Service</a>, refunds for unused credits are not provided. We may, at our discretion, refund unused credits in cases of accidental or first-time minor violations.</p>
+    <p>If we discontinue the Service entirely, we will refund the equivalent value of unused credits, calculated at the original purchase rate.</p>
+
+    <h2>8. Changes to This Policy</h2>
+    <p>We may update this Refund Policy from time to time. Material changes will be communicated via email or notice on the website. Continued use of the Service after changes constitutes acceptance of the updated policy.</p>
+
+    <h2>9. Contact</h2>
+    <p>For all refund-related questions, contact <a href="mailto:billing@truthstamp.io">billing@truthstamp.io</a>.</p>
+    <p>For other inquiries, see our <a href="contact.html">contact page</a>.</p>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">
+            <span class="nav-logo">T</span><span>TruthStamp</span>
+          </div>
+          <p class="footer-tagline">Receipts for your ideas. Verifiable, tamper-proof timestamps for the AI era.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="how-it-works.html">How it works</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+            <li><a href="verify.html">Verify a receipt</a></li>
+            <li><a href="trust.html">Trust &amp; permanence</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="terms.html">Terms of Service</a></li>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="refunds.html">Refund Policy</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 TruthStamp · All rights reserved</span>
+        <span>Made with care for creators and professionals.</span>
+      </div>
+    </div>
+  </footer>
+  <script src="js/common.js"></script>
+</body>
+</html>
