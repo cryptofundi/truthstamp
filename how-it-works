@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How TruthStamp works — TruthStamp</title>
+  <meta name="description" content="A clear walkthrough of how TruthStamp creates verifiable, tamper-proof receipts for your work in seconds.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/components.css">
+  <script src="js/analytics.js"></script>
+
+  <style>
+    .how-shell { max-width: 820px; margin: 0 auto; padding: var(--space-10) var(--space-6) var(--space-12); }
+    .how-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      background: var(--brand-primary-light);
+      color: var(--brand-primary-dark);
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      font-weight: 500;
+      margin-bottom: var(--space-5);
+    }
+    .how-shell h1 {
+      font-size: var(--text-3xl);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin: 0 0 var(--space-4);
+      line-height: 1.15;
+    }
+    .how-lead {
+      font-size: var(--text-lg);
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+      margin: 0 0 var(--space-12);
+    }
+    .step-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      margin-bottom: var(--space-5);
+      display: flex;
+      gap: var(--space-5);
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      background: var(--brand-primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: var(--text-md);
+    }
+    .step-content { flex: 1; }
+    .step-content h3 {
+      font-size: var(--text-md);
+      font-weight: 600;
+      margin: 0 0 var(--space-2);
+    }
+    .step-content p {
+      font-size: var(--text-base);
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+      margin: 0 0 var(--space-3);
+    }
+    .step-content p:last-child { margin-bottom: 0; }
+    .visibility-block {
+      background: var(--color-surface-alt);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      margin-top: var(--space-3);
+    }
+    .visibility-block strong { color: var(--color-text); }
+    .visibility-block p { font-size: var(--text-sm); margin-bottom: var(--space-2); }
+    .visibility-block p:last-child { margin-bottom: 0; }
+    .section-heading {
+      font-size: var(--text-2xl);
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin: var(--space-12) 0 var(--space-3);
+    }
+    .section-sub {
+      font-size: var(--text-base);
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+      margin: 0 0 var(--space-6);
+    }
+    .why-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
+    }
+    .why-card {
+      padding: var(--space-5);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+    }
+    .why-card h3 { font-size: var(--text-base); font-weight: 600; margin: 0 0 var(--space-2); }
+    .why-card p { font-size: var(--text-sm); color: var(--color-text-secondary); margin: 0; line-height: 1.6; }
+    .cta-block {
+      text-align: center;
+      padding: var(--space-8) var(--space-4);
+      background: var(--color-surface-alt);
+      border-radius: var(--radius-lg);
+      margin-top: var(--space-10);
+    }
+    @media (max-width: 600px) {
+      .why-grid { grid-template-columns: 1fr; }
+      .step-card { flex-direction: column; gap: var(--space-3); }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <span class="nav-logo">T</span><span>TruthStamp</span>
+      </a>
+      <div class="nav-links">
+        <a href="how-it-works.html" style="color: var(--color-text); font-weight: 500;">How it works</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="trust.html">Trust</a>
+        <a href="auth.html" class="btn btn-primary btn-sm">Start stamping</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="how-shell">
+
+    <div class="how-eyebrow">
+      <span class="badge-dot" style="background: var(--brand-primary);"></span>
+      Takes 60 seconds to create your first receipt
+    </div>
+
+    <h1>How TruthStamp works.</h1>
+    <p class="how-lead">
+      In simple terms: you give us something to seal — a draft, a prediction, a contract, an idea — and we generate a permanent, verifiable receipt that proves exactly when it existed and that it hasn't been tampered with since. Here's the whole flow.
+    </p>
+
+    <!-- Step 1 -->
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h3>Sign up — no wallet, no card needed</h3>
+        <p>Create an account in 30 seconds with email or Google. The free tier lets you create up to 30 text receipts every month — no payment required, no credit card collected.</p>
+        <p>Power users can optionally connect a Web3 wallet for advanced features, but it's never required.</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h3>Drop your content into the composer</h3>
+        <p>Type or paste the text you want to seal. Up to 500 characters per text receipt on the free tier; up to 5,000 on Pro. Add tags if you want to organize your receipts.</p>
+        <p>On paid plans, you can also stamp files (PDFs, images, audio, video) and entire web pages.</p>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h3>Choose how visible the content is</h3>
+        <p>You decide who can see your content. There are three options:</p>
+
+        <div class="visibility-block">
+          <p><strong>🌐 Public</strong> — Best for receipts you want to share. Your content is stored on a decentralized public storage layer; anyone with the link can view and verify it.</p>
+          <p><strong>🔒 Sealed</strong> — Best for predictions. Your content is encrypted and hidden until a date you choose. On that date, it auto-reveals to the world — with mathematical proof you wrote it before any of it happened.</p>
+          <p><strong>🔐 Hash-only</strong> — Best for confidential drafts and trade secrets. Only the cryptographic fingerprint is recorded; the actual content never leaves your device.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step-card">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h3>We generate your receipt — in about 1 second</h3>
+        <p>Behind the scenes: your content is hashed locally in your browser (creating a unique fingerprint), and that fingerprint is permanently sealed in our verification layer with the exact timestamp.</p>
+        <p>The cryptographic proof is independent of TruthStamp's servers — anyone can verify it directly using public tools, even decades from now.</p>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step-card">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <h3>Share your proof URL anywhere</h3>
+        <p>You get a beautiful, permanent URL like <code style="font-family: var(--font-mono); font-size: var(--text-sm); background: var(--color-surface-alt); padding: 2px 8px; border-radius: 4px;">truthstamp.io/v/your-receipt-id</code> that displays your content alongside the verifiable timestamp and cryptographic proof.</p>
+        <p>Share it on social media, embed it in an article, send it to a journalist, attach it to a contract — wherever you need to prove what you wrote and when.</p>
+      </div>
+    </div>
+
+    <!-- Why it works -->
+    <h2 class="section-heading">Why this is different from a screenshot</h2>
+    <p class="section-sub">
+      Screenshots can be edited. Cloud notes can be backdated. Email timestamps can be spoofed. TruthStamp generates evidence that holds up because it's mathematically impossible to fake.
+    </p>
+
+    <div class="why-grid">
+      <div class="why-card">
+        <h3>🔐 Cryptographically signed</h3>
+        <p>Every receipt includes a cryptographic hash that mathematically proves the content hasn't been altered since stamping.</p>
+      </div>
+      <div class="why-card">
+        <h3>⏰ Timestamp from a third party</h3>
+        <p>The timestamp comes from a public, decentralized verification layer — not from TruthStamp's servers, so it can't be manipulated.</p>
+      </div>
+      <div class="why-card">
+        <h3>🌐 Independently verifiable</h3>
+        <p>Anyone can verify your receipt using public tools — they don't have to trust TruthStamp's word for it.</p>
+      </div>
+      <div class="why-card">
+        <h3>♾️ Survives our shutdown</h3>
+        <p>The verification layer works without us. Even if TruthStamp closes tomorrow, your receipts remain provable forever.</p>
+      </div>
+    </div>
+
+    <!-- Verification process -->
+    <h2 class="section-heading">How verification works</h2>
+    <p class="section-sub">
+      When someone wants to verify your receipt, here's exactly what happens.
+    </p>
+
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h3>They open your proof URL</h3>
+        <p>The page shows your content, the exact timestamp, and the cryptographic fingerprint that ties them together.</p>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h3>They click "Verify independently"</h3>
+        <p>Our verifier tool re-hashes the displayed content in their browser and compares it against the cryptographic record. If they match, the receipt is valid.</p>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h3>They can also verify outside our website</h3>
+        <p>Advanced users can verify the cryptographic record directly using public tools. We've open-sourced our verifier so anyone can run it locally — no trust in TruthStamp required. <a href="trust.html" style="color: var(--brand-primary); text-decoration: underline;">Learn more about our permanence promise →</a></p>
+      </div>
+    </div>
+
+    <!-- Final CTA -->
+    <div class="cta-block">
+      <h2 style="font-size: var(--text-xl); font-weight: 600; margin: 0 0 var(--space-3);">Ready to drop your first receipt?</h2>
+      <p style="color: var(--color-text-secondary); font-size: var(--text-base); margin: 0 0 var(--space-5);">First 30 receipts every month are free. Takes 60 seconds to start.</p>
+      <a href="auth.html" class="btn btn-primary btn-lg">Start stamping free</a>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">
+            <span class="nav-logo">T</span>
+            <span>TruthStamp</span>
+          </div>
+          <p class="footer-tagline">Receipts for your ideas. Verifiable, tamper-proof timestamps for the AI era.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="how-it-works.html">How it works</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+            <li><a href="verify.html">Verify a receipt</a></li>
+            <li><a href="trust.html">Trust &amp; permanence</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="terms.html">Terms of Service</a></li>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="refunds.html">Refund Policy</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 TruthStamp · All rights reserved</span>
+        <span>Made with care for creators and professionals.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+</body>
+</html>
