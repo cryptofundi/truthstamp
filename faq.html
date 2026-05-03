@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQ — TruthStamp</title>
+  <meta name="description" content="Common questions about TruthStamp — how it works, pricing, privacy, refunds, and more.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/components.css">
+  <script src="js/analytics.js"></script>
+
+  <style>
+    .faq-shell { max-width: 760px; margin: 0 auto; padding: var(--space-12) var(--space-6); }
+    .faq-eyebrow { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: var(--brand-primary-light); color: var(--brand-primary-dark); border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: 500; margin-bottom: var(--space-5); }
+    .faq-title { font-size: var(--text-3xl); font-weight: 600; letter-spacing: -0.02em; margin: 0 0 var(--space-3); line-height: 1.15; }
+    .faq-lead { font-size: var(--text-md); color: var(--color-text-secondary); margin: 0 0 var(--space-10); line-height: 1.6; }
+
+    .faq-toc {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-5);
+      margin-bottom: var(--space-10);
+    }
+    .faq-toc h2 {
+      font-size: var(--text-sm);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-text-muted);
+      margin: 0 0 var(--space-3);
+      font-weight: 600;
+    }
+    .faq-toc ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-2) var(--space-5);
+    }
+    .faq-toc a {
+      font-size: var(--text-sm);
+      color: var(--brand-primary);
+      text-decoration: none;
+    }
+    .faq-toc a:hover { text-decoration: underline; }
+
+    .faq-category {
+      margin-bottom: var(--space-12);
+    }
+    .faq-category-title {
+      font-size: var(--text-xl);
+      font-weight: 600;
+      margin: 0 0 var(--space-5);
+      letter-spacing: -0.01em;
+      padding-bottom: var(--space-3);
+      border-bottom: 2px solid var(--color-border);
+    }
+    .faq-item {
+      padding: var(--space-5) 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .faq-item:last-child { border-bottom: none; }
+    .faq-q {
+      font-size: var(--text-md);
+      font-weight: 600;
+      margin: 0 0 var(--space-3);
+      color: var(--color-text);
+    }
+    .faq-a {
+      font-size: var(--text-base);
+      color: var(--color-text-secondary);
+      margin: 0;
+      line-height: 1.7;
+    }
+    .faq-a + .faq-a { margin-top: var(--space-3); }
+    .faq-a a { color: var(--brand-primary); text-decoration: underline; }
+    .faq-a strong { color: var(--color-text); }
+
+    .help-cta {
+      background: var(--brand-primary-light);
+      border-radius: var(--radius-lg);
+      padding: var(--space-8);
+      text-align: center;
+      margin-top: var(--space-12);
+    }
+    .help-cta h2 {
+      font-size: var(--text-lg);
+      font-weight: 600;
+      margin: 0 0 var(--space-2);
+      color: var(--brand-primary-dark);
+    }
+    .help-cta p {
+      font-size: var(--text-base);
+      color: var(--color-text);
+      margin: 0 0 var(--space-5);
+    }
+
+    @media (max-width: 600px) {
+      .faq-toc ul { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <span class="nav-logo">T</span><span>TruthStamp</span>
+      </a>
+      <div class="nav-links">
+        <a href="how-it-works.html">How it works</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="trust.html">Trust</a>
+        <a href="auth.html" class="btn btn-primary btn-sm">Get started</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="faq-shell">
+    <div class="faq-eyebrow">
+      <span class="badge-dot" style="background: var(--brand-primary);"></span>
+      Frequently asked questions
+    </div>
+    <h1 class="faq-title">Everything you wanted to know.</h1>
+    <p class="faq-lead">Quick answers to the questions we hear most often. If something isn't covered here, <a href="contact.html" style="color: var(--brand-primary); text-decoration: underline;">reach out</a> — we read every message.</p>
+
+    <!-- Table of contents -->
+    <div class="faq-toc">
+      <h2>Jump to a section</h2>
+      <ul>
+        <li><a href="#getting-started">Getting started</a></li>
+        <li><a href="#how-it-works">How it works</a></li>
+        <li><a href="#privacy">Privacy &amp; security</a></li>
+        <li><a href="#account">Account &amp; pricing</a></li>
+        <li><a href="#payments">Payments &amp; refunds</a></li>
+        <li><a href="#technical">Technical questions</a></li>
+        <li><a href="#legal">Legal &amp; permanence</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+      </ul>
+    </div>
+
+    <!-- Getting started -->
+    <section class="faq-category" id="getting-started">
+      <h2 class="faq-category-title">Getting started</h2>
+
+      <div class="faq-item">
+        <p class="faq-q">What is TruthStamp?</p>
+        <p class="faq-a">TruthStamp is a service that creates verifiable, tamper-proof timestamps for your digital content. When you "stamp" something — a piece of writing, a file, a prediction — we generate a cryptographic fingerprint of it and seal it with a permanent timestamp. Later, you can prove that exact content existed at that exact time, and nobody can dispute it.</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">Do I need any technical knowledge to use it?</p>
+        <p class="faq-a">No. If you can copy-paste text or upload a file, you can use TruthStamp. Sign up with your email or Google account, type or paste your content, click "Stamp it," and you're done. The technical machinery happens invisibly in the background.</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">Is there a free plan?</p>
+        <p class="faq-a">Yes. The free plan gives you 30 text stamps per month, with up to 500 characters per stamp. No credit card required to sign up. Paid plans add file stamps, longer text limits, sealed predictions, and other features. <a href="pricing.html">See full pricing →</a></p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">How long does it take to create my first receipt?</p>
+        <p class="faq-a">About 60 seconds total: 30 seconds to sign up, then a click to stamp. The stamp itself completes in roughly one second. Your shareable proof URL is generated immediately.</p>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="faq-category" id="how-it-works">
+      <h2 class="faq-category-title">How it works</h2>
+
+      <div class="faq-item">
+        <p class="faq-q">What's actually being timestamped?</p>
+        <p class="faq-a">A cryptographic fingerprint (called a "hash") of your content. Your content is run through a one-way function that produces a unique 64-character string. Change one comma in your content and the fingerprint changes completely. We store this fingerprint plus the exact timestamp, plus your verified identity. Later, anyone can re-fingerprint the original content and confirm it matches — proving the content existed at that exact moment.</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">What's the difference between Public, Sealed, and Hash-only?</p>
+        <p class="faq-a"><strong>Public:</strong> Anyone with the link can see the content. Use this for receipts you want to share publicly — proving you wrote a blog post, claiming a prediction, showing client work.</p>
+        <p class="faq-a"><strong>Sealed:</strong> The content is hidden until a date you choose. On that date, it auto-reveals to the public. Perfect for predictions ("I think X will happen by June") where you want the world to verify the timestamp later.</p>
+        <p class="faq-a"><strong>Hash-only:</strong> Only the cryptographic fingerprint is stored. The content stays on your device. Years later, you produce the original file and prove the timestamp matches. Use this for trade secrets, pre-patent disclosures, and anything you want to keep entirely private.</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">What is a "Sealed" prediction, exactly?</p>
+        <p class="faq-a">A sealed stamp lets you make a public prediction whose contents stay hidden until a specific date you set. Until that date, the world can see "Priya stamped something on April 15, 2026, scheduled to reveal June 1, 2026" — but they can't see what. On June 1, the content auto-reveals. This proves you wrote it before any of the events you predicted happened. Impossible to fake; impossible to backdate.</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">Can I edit a stamp after creating it?</p>
+        <p class="faq-a">No. The whole point of TruthStamp is that the proof is permanent and tamper-proof. Once a stamp is created, it cannot be modified or deleted. If you need to update something, create a new stamp — the original stays on record showing what was true at that moment.</p>
+      </div>
+    </section>
+
+    <!-- Privacy & security -->
+    <section class="faq-category" id="privacy">
+      <h2 class="faq-category-title">Privacy &amp; security</h2>
+
+      <div class="faq-item">
+        <p class="faq-q">Can TruthStamp see my content?</p>
+        <p class="faq-a">It depends on the visibility you choose:</p>
+        <p class="faq-a"><strong>Hash-only:</strong> No. Your content is fingerprinted in your browser before anything is sent. We only ever receive the fingerprint, not the content itself.</p>
+        <p class="faq-a"><strong>Sealed:</strong> Temporarily, in encrypted form, until reveal date. After reveal, it becomes publicly accessible.</p>
+        <p class="faq-a"><strong>Public:</strong> Yes — that's the whole point. Public stamps are stored on a permanent decentralized layer so anyone with the link can read them.</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">Where is my content stored?</p>
+        <p class="faq-a">For Public stamps, the content is stored on Arweave — a decentralized permanent storage network with a 200+ year persistence guarantee. For Hash-only stamps, nothing is stored anywhere except the fingerprint. For Sealed stamps, the encrypted content is held by us until reveal, then moved to Arweave.</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">Is my account information private?</p>
+        <p class="faq-a">Yes. Your email, payment details, and account preferences are only visible to you. We never sell your data, and we don't display your email publicly. You'll appear on stamps under your chosen display name. Read our full <a href="privacy.html">Privacy Policy →</a></p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">What if I lose access to my account?</p>
+        <p class="faq-a">If you forget your password, use the "Forgot?" link to reset via email. If you lose access to your email entirely, contact us at <a href="mailto:support@truthstamp.io">support@truthstamp.io</a> with proof of identity — we can recover accounts in most cases. Your stamps themselves are not at risk; they exist on the verification layer regardless of your account state.</p>
+      </div>
+    </section>
+
+    <!-- Account & pricing -->
+    <section class="faq-category" id="account">
+      <h2 class="faq-category-title">Account &amp; pricing</h2>
+
+      <div class="faq-item">
+        <p class="faq-q">Can I upgrade or downgrade my plan?</p>
+        <p class="faq-a">Yes, anytime. Upgrades take effect immediately and we prorate the difference. Downgrades take effect at the end of your current billing period — you keep your higher plan benefits until then.</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">Do unused stamps roll over to the next month?</p>
+        <p class="faq-a">On the Free tier, no. On paid plans, up to 50% of unused stamps roll over for one month, capped at twice your monthly limit. Bonus credits from promotions never expire.</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">What happens if I cancel?</p>
+        <p class="faq-a">You keep access to paid features until the end of your billing period. After that, your account reverts to the Free plan. Your existing stamps remain fully accessible and verifiable forever — they don't depend on your subscription status.</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">Do you offer discounts for students, nonprofits, or open-source projects?</p>
+        <p class="faq-a">Yes. We offer 50% off all paid plans for verified students, nonprofit organizations, and open-source maintainers. Email <a href="mailto:hello@truthstamp.io">hello@truthstamp.io</a> with proof of eligibility (student ID, nonprofit registration, or GitHub org link).</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">Is there an annual discount?</p>
+        <p class="faq-a">Yes — pay yearly and save 20%. The discount applies to all paid tiers (Creator and Pro). Toggle the billing cycle on the <a href="pricing.html">pricing page</a> to see annual rates.</p>
+      </div>
+    </section>
+
+    <!-- Payments & refunds -->
+    <section class="faq-category" id="payments">
+      <h2 class="faq-category-title">Payments &amp; refunds</h2>
+
+      <div class="faq-item">
+        <p class="faq-q">What payment methods do you accept?</p>
+        <p class="faq-a">We accept all major credit and debit cards (Visa, Mastercard, Amex, RuPay), UPI, net banking, and select wallet payments via our payment processors. Subscription billing is automatic.</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">Is my payment information secure?</p>
+        <p class="faq-a">Yes. We never see or store your payment information. All transactions are processed by PCI-DSS-compliant payment providers. We only store the last four digits of your card and an opaque token for renewals.</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">Do you offer refunds?</p>
+        <p class="faq-a">Yes. We offer a 7-day money-back guarantee on new paid subscriptions, no questions asked. After the 7-day window, refunds are evaluated case-by-case. Read our full <a href="refunds.html">Refund Policy →</a></p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">Will I receive a tax invoice?</p>
+        <p class="faq-a">Yes. Every paid invoice is sent to your email with full GST details (for Indian customers) or VAT details (for EU customers). You can also download invoices anytime from your account settings.</p>
+      </div>
+    </section>
+
+    <!-- Technical questions -->
+    <section class="faq-category" id="technical">
+      <h2 class="faq-category-title">Technical questions</h2>
+
+      <div class="faq-item">
+        <p class="faq-q">What hash algorithm does TruthStamp use?</p>
+        <p class="faq-a">We currently use SHA-256, the industry standard for cryptographic hashing. Your content is fingerprinted in your browser before transmission, ensuring the original never leaves your device unless you choose to share it.</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">Can I verify a stamp without TruthStamp existing?</p>
+        <p class="faq-a">Yes. This is one of the most important features. Every stamp is recorded on a public decentralized verification layer that operates independently of TruthStamp. Even if our website disappeared tomorrow, you could still re-fingerprint your original content using any SHA-256 tool, look up the timestamp on a public block explorer, and prove the match. We've open-sourced our verifier to make this easy.</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">Do you have an API?</p>
+        <p class="faq-a">Yes — API access is available on our Pro plan. The API lets you stamp content programmatically, query your existing stamps, and verify stamps from your own application. Documentation is available to Pro subscribers.</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">What's the maximum file size I can stamp?</p>
+        <p class="faq-a">Free plan: text only (no files). Creator plan: files up to 25 MB. Pro plan: files up to 100 MB. Enterprise: custom limits available.</p>
+      </div>
+    </section>
+
+    <!-- Legal & permanence -->
+    <section class="faq-category" id="legal">
+      <h2 class="faq-category-title">Legal &amp; permanence</h2>
+
+      <div class="faq-item">
+        <p class="faq-q">Are TruthStamp receipts legally admissible?</p>
+        <p class="faq-a">In many jurisdictions, cryptographic timestamps are accepted as evidence in legal proceedings — particularly for proving prior creation, IP claims, and document integrity. However, legal acceptance varies by jurisdiction and case type. We recommend consulting a qualified lawyer before relying on TruthStamp for high-stakes legal matters. We do not provide legal advice.</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">What happens to my receipts if TruthStamp shuts down?</p>
+        <p class="faq-a">Your receipts survive. They live on a decentralized verification layer that operates independently of TruthStamp's servers. We've also open-sourced our verifier and committed to publishing all infrastructure documentation if we ever shut down. Read our full <a href="trust.html">Permanence Promise →</a></p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">Can I download my stamps as portable certificates?</p>
+        <p class="faq-a">Yes. Every stamp comes with a downloadable PDF certificate that includes everything needed to verify it independently — the fingerprint, the timestamp, the verification instructions. Save it offline and your proof works forever, on any device, with or without TruthStamp.</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">Is the content of my stamps copyrighted to me?</p>
+        <p class="faq-a">Yes. You retain full copyright and ownership of all content you stamp. TruthStamp doesn't claim any rights to your content. We just provide the timestamping infrastructure. See our <a href="terms.html">Terms of Service</a> for full details.</p>
+      </div>
+    </section>
+
+    <!-- Troubleshooting -->
+    <section class="faq-category" id="troubleshooting">
+      <h2 class="faq-category-title">Troubleshooting</h2>
+
+      <div class="faq-item">
+        <p class="faq-q">My stamp seems stuck on "Pending." What do I do?</p>
+        <p class="faq-a">Stamps usually complete in under 2 seconds. If yours is pending for more than 30 seconds, refresh the page — the stamp likely completed but the dashboard didn't update. If it's still pending after a few minutes, contact <a href="mailto:support@truthstamp.io">support@truthstamp.io</a> with your account email and the time of the stamp.</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">I'm getting "Already stamped" when I try to stamp something.</p>
+        <p class="faq-a">This means you've previously stamped the exact same content (down to every character). To stamp the same content again, edit it slightly (add a date prefix, a version note, etc.) and try again. This duplicate-prevention is intentional — it stops accidentally creating multiple stamps of the same thing.</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">My sealed stamp's reveal date passed but it still shows as sealed.</p>
+        <p class="faq-a">Sealed stamps require an explicit reveal action to make the content public. Visit the stamp on your dashboard and click "Reveal now" — the contents will be published to the verification layer. This requires you to be logged in as the stamp's creator.</p>
+      </div>
+
+      <div class="faq-item">
+        <p class="faq-q">My free stamps reset on the wrong day.</p>
+        <p class="faq-a">Monthly stamp counters reset on the 1st of every month at 00:00 UTC. So if you're in India, your stamps reset around 5:30 AM local time on the 1st. If you believe your counter is wrong, contact support — we can manually reset it for you.</p>
+      </div>
+    </section>
+
+    <!-- Help CTA -->
+    <div class="help-cta">
+      <h2>Still have questions?</h2>
+      <p>We read every message and reply within 24 hours.</p>
+      <a href="contact.html" class="btn btn-primary">Contact us</a>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">
+            <span class="nav-logo">T</span><span>TruthStamp</span>
+          </div>
+          <p class="footer-tagline">Receipts for your ideas. Verifiable, tamper-proof timestamps for the AI era.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="how-it-works.html">How it works</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+            <li><a href="verify.html">Verify a receipt</a></li>
+            <li><a href="trust.html">Trust &amp; permanence</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="terms.html">Terms of Service</a></li>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="refunds.html">Refund Policy</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 TruthStamp · All rights reserved</span>
+        <span>Made with care for creators and professionals.</span>
+      </div>
+    </div>
+  </footer>
+  <script src="js/common.js"></script>
+</body>
+</html>
