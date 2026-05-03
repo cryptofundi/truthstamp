@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pricing — TruthStamp</title>
+  <meta name="description" content="Pay only for what you use. Buy credits in packs that never expire. 10 free credits to start.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -11,83 +12,64 @@
   <link rel="stylesheet" href="css/components.css">
   <script src="js/analytics.js"></script>
   <style>
-    .pricing-shell {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: var(--space-12) var(--space-6);
-    }
-    .pricing-hero {
-      text-align: center;
-      margin-bottom: var(--space-10);
-    }
-    .pricing-title {
-      font-size: var(--text-3xl);
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      margin: 0 0 var(--space-3);
-    }
-    .pricing-subtitle {
-      font-size: var(--text-md);
-      color: var(--color-text-secondary);
+    .pricing-shell { max-width: 1100px; margin: 0 auto; padding: var(--space-12) var(--space-6); }
+    .pricing-hero { text-align: center; margin-bottom: var(--space-10); }
+    .pricing-title { font-size: var(--text-3xl); font-weight: 600; letter-spacing: -0.02em; margin: 0 0 var(--space-3); }
+    .pricing-subtitle { font-size: var(--text-md); color: var(--color-text-secondary); max-width: 540px; margin: 0 auto var(--space-5); }
+
+    /* Free tier card */
+    .free-tier {
       max-width: 540px;
-      margin: 0 auto;
+      margin: 0 auto var(--space-10);
+      padding: var(--space-5) var(--space-6);
+      background: var(--brand-primary-light);
+      border: 1px solid rgba(40, 84, 232, 0.2);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
     }
-
-    .billing-toggle {
-      display: inline-flex;
-      gap: 4px;
-      padding: 4px;
-      background: var(--color-surface-alt);
+    .free-tier-icon {
+      flex-shrink: 0;
+      width: 48px;
+      height: 48px;
+      background: white;
       border-radius: var(--radius-md);
-      margin: var(--space-6) auto 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--brand-primary);
     }
-    .billing-tab {
-      padding: 7px 18px;
-      font-size: var(--text-sm);
-      font-weight: 500;
-      border-radius: var(--radius-sm);
-      border: none;
-      background: none;
-      cursor: pointer;
-      color: var(--color-text-secondary);
-      font-family: inherit;
-    }
-    .billing-tab.active {
-      background: var(--color-surface);
-      color: var(--color-text);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    }
-    .save-badge {
-      font-size: 10px;
-      padding: 2px 6px;
-      background: var(--color-success-bg);
-      color: var(--color-success);
-      border-radius: 4px;
-      margin-left: 6px;
-      font-weight: 600;
-    }
+    .free-tier-content { flex: 1; }
+    .free-tier h3 { font-size: var(--text-base); font-weight: 600; margin: 0 0 4px; color: var(--brand-primary-dark); }
+    .free-tier p { font-size: var(--text-sm); color: var(--color-text); margin: 0; line-height: 1.5; }
 
-    .plans-grid {
+    /* Credit packs grid */
+    .packs-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: var(--space-4);
-      margin-top: var(--space-8);
+      margin-bottom: var(--space-12);
     }
-    .plan-card {
+    .pack-card {
       background: var(--color-surface);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-lg);
       padding: var(--space-6);
       display: flex;
       flex-direction: column;
+      position: relative;
+      transition: all var(--transition-fast);
     }
-    .plan-card.featured {
+    .pack-card:hover {
+      border-color: var(--color-border-strong);
+    }
+    .pack-card.featured {
       border-color: var(--brand-primary);
       border-width: 2px;
       padding: calc(var(--space-6) - 1px);
-      position: relative;
     }
-    .plan-badge {
+    .pack-badge {
       position: absolute;
       top: -12px;
       left: 50%;
@@ -98,72 +80,147 @@
       font-weight: 600;
       padding: 4px 12px;
       border-radius: var(--radius-full);
+      white-space: nowrap;
     }
-    .plan-name {
+    .pack-name {
       font-size: var(--text-base);
       font-weight: 600;
-      margin: 0 0 var(--space-2);
+      margin: 0 0 var(--space-3);
+      color: var(--color-text-secondary);
     }
-    .plan-price {
+    .pack-price {
       display: flex;
       align-items: baseline;
       gap: 4px;
-      margin: 0 0 var(--space-2);
+      margin: 0 0 var(--space-3);
     }
-    .plan-price-value {
+    .pack-price-value {
       font-size: var(--text-2xl);
       font-weight: 700;
       letter-spacing: -0.02em;
     }
-    .plan-price-period {
+    .pack-price-once {
       font-size: var(--text-sm);
       color: var(--color-text-muted);
     }
-    .plan-tagline {
+    .pack-credits {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: var(--space-2);
+    }
+    .pack-base {
+      font-size: var(--text-lg);
+      font-weight: 600;
+      color: var(--color-text);
+    }
+    .pack-bonus {
+      font-size: var(--text-xs);
+      font-weight: 600;
+      color: var(--brand-primary);
+    }
+    .pack-total {
       font-size: var(--text-sm);
       color: var(--color-text-secondary);
+      margin: 0 0 var(--space-3);
+    }
+    .pack-per-credit {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
       margin: 0 0 var(--space-5);
-      min-height: 36px;
     }
-    .plan-cta {
-      margin-bottom: var(--space-5);
-    }
-    .plan-features {
-      list-style: none;
-      padding: 0;
-      margin: 0;
+    .pack-tagline {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+      margin: 0 0 var(--space-5);
       flex: 1;
     }
-    .plan-features li {
+    .pack-cta-btn { width: 100%; }
+
+    /* Cost breakdown */
+    .cost-breakdown {
+      max-width: 720px;
+      margin: 0 auto var(--space-12);
+      padding: var(--space-6);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+    }
+    .cost-breakdown h2 {
+      font-size: var(--text-md);
+      font-weight: 600;
+      margin: 0 0 var(--space-4);
+    }
+    .cost-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-3);
+    }
+    .cost-tile {
+      padding: var(--space-4);
+      background: var(--color-surface-alt);
+      border-radius: var(--radius-md);
+      text-align: center;
+    }
+    .cost-tile-label { font-size: var(--text-sm); font-weight: 500; margin: 0 0 4px; color: var(--color-text); }
+    .cost-tile-value { font-size: var(--text-xl); font-weight: 700; color: var(--brand-primary); margin: 0; }
+    .cost-tile-suffix { font-size: var(--text-xs); color: var(--color-text-muted); margin: 0; }
+
+    /* Payment modal (visual demo for now) */
+    .payment-section {
+      max-width: 720px;
+      margin: 0 auto var(--space-12);
+      text-align: center;
+    }
+    .payment-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-4);
+      margin-top: var(--space-5);
+    }
+    .payment-option {
+      padding: var(--space-5);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      text-align: left;
+      position: relative;
+    }
+    .payment-option-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
       display: flex;
-      align-items: flex-start;
-      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--space-3);
+      color: white;
+      font-weight: 700;
       font-size: var(--text-sm);
-      padding: 6px 0;
-      color: var(--color-text);
-      line-height: 1.5;
     }
-    .plan-features li svg {
-      width: 14px;
-      height: 14px;
-      color: var(--color-success);
-      flex-shrink: 0;
-      margin-top: 4px;
-    }
-    .plan-features li.muted {
-      color: var(--color-text-muted);
-    }
-    .plan-features li.muted svg {
-      color: var(--color-text-muted);
+    .payment-option h3 { font-size: var(--text-base); font-weight: 600; margin: 0 0 4px; }
+    .payment-option p { font-size: var(--text-sm); color: var(--color-text-secondary); margin: 0; line-height: 1.5; }
+    .payment-discount-badge {
+      position: absolute;
+      top: var(--space-4);
+      right: var(--space-4);
+      background: var(--brand-primary-light);
+      color: var(--brand-primary-dark);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: var(--radius-md);
     }
 
+    /* FAQ section */
     .faq-section {
-      margin-top: var(--space-16);
+      margin-top: var(--space-12);
       max-width: 720px;
       margin-left: auto;
       margin-right: auto;
     }
-    .faq-title {
+    .faq-section-title {
       font-size: var(--text-2xl);
       font-weight: 600;
       text-align: center;
@@ -174,16 +231,13 @@
       padding: var(--space-5) 0;
       border-bottom: 1px solid var(--color-border);
     }
-    .faq-q {
-      font-size: var(--text-base);
-      font-weight: 600;
-      margin: 0 0 var(--space-2);
-    }
-    .faq-a {
-      font-size: var(--text-base);
-      color: var(--color-text-secondary);
-      margin: 0;
-      line-height: 1.6;
+    .faq-q { font-size: var(--text-base); font-weight: 600; margin: 0 0 var(--space-2); }
+    .faq-a { font-size: var(--text-base); color: var(--color-text-secondary); margin: 0; line-height: 1.6; }
+    .faq-a a { color: var(--brand-primary); text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      .cost-grid { grid-template-columns: 1fr; }
+      .payment-options { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -195,10 +249,10 @@
         <span class="nav-logo">T</span><span>TruthStamp</span>
       </a>
       <div class="nav-links">
-        <a href="dashboard.html">My stamps</a>
+        <a href="how-it-works.html">How it works</a>
         <a href="pricing.html" style="color: var(--color-text); font-weight: 500;">Pricing</a>
         <a href="trust.html">Trust</a>
-        <a href="auth.html" class="btn btn-primary btn-sm">Sign in</a>
+        <a href="auth.html" class="btn btn-primary btn-sm">Get started</a>
       </div>
     </div>
   </nav>
@@ -207,133 +261,211 @@
 
     <!-- Hero -->
     <div class="pricing-hero">
-      <h1 class="pricing-title">Pricing that scales with your receipts.</h1>
-      <p class="pricing-subtitle">Start free. Upgrade when you need more stamps, files, or the API.</p>
-      <div class="billing-toggle">
-        <button class="billing-tab active">Monthly</button>
-        <button class="billing-tab">Yearly <span class="save-badge">Save 20%</span></button>
+      <h1 class="pricing-title">Pay only for what you use.</h1>
+      <p class="pricing-subtitle">Buy credits in packs. They never expire. Use them whenever you need to stamp something.</p>
+    </div>
+
+    <!-- Free tier banner -->
+    <div class="free-tier">
+      <div class="free-tier-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
+      <div class="free-tier-content">
+        <h3>10 free credits to get you started</h3>
+        <p>Sign up and get 10 credits — that's 10 text stamps to try the product. No credit card required.</p>
       </div>
     </div>
 
-    <!-- Plans -->
-    <div class="plans-grid">
+    <!-- Credit packs -->
+    <div class="packs-grid">
 
-      <!-- Free -->
-      <div class="plan-card">
-        <p class="plan-name">Free</p>
-        <div class="plan-price">
-          <span class="plan-price-value">$0</span>
-          <span class="plan-price-period">forever</span>
+      <!-- Starter -->
+      <div class="pack-card">
+        <p class="pack-name">Starter</p>
+        <div class="pack-price">
+          <span class="pack-price-value">$10</span>
+          <span class="pack-price-once">one-time</span>
         </div>
-        <p class="plan-tagline">Drop your first receipts. No credit card.</p>
-        <a href="auth.html" class="btn btn-secondary btn-block plan-cta">Start free</a>
-        <ul class="plan-features">
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>30 text stamps per month</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Up to 500 chars per stamp</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Public + Hash-only visibility</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Shareable proof URLs</li>
-          <li class="muted"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="6" y1="6" x2="18" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/></svg>Sealed reveal</li>
-          <li class="muted"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="6" y1="6" x2="18" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/></svg>File or URL stamps</li>
-        </ul>
+        <div class="pack-credits">
+          <span class="pack-base">30 credits</span>
+          <span class="pack-bonus">+20 BONUS</span>
+        </div>
+        <p class="pack-total">= 50 credits total</p>
+        <p class="pack-per-credit">$0.20 per credit</p>
+        <p class="pack-tagline">Try it out. Perfect for first-time users.</p>
+        <a href="auth.html" class="btn btn-secondary pack-cta-btn">Buy Starter</a>
       </div>
 
-      <!-- Creator (Featured) -->
-      <div class="plan-card featured">
-        <span class="plan-badge">Most popular</span>
-        <p class="plan-name">Creator</p>
-        <div class="plan-price">
-          <span class="plan-price-value">$9</span>
-          <span class="plan-price-period">/ month</span>
+      <!-- Standard -->
+      <div class="pack-card">
+        <p class="pack-name">Standard</p>
+        <div class="pack-price">
+          <span class="pack-price-value">$25</span>
+          <span class="pack-price-once">one-time</span>
         </div>
-        <p class="plan-tagline">For Crypto Twitter, traders, and creators dropping daily.</p>
-        <a href="auth.html" class="btn btn-primary btn-block plan-cta">Upgrade to Creator</a>
-        <ul class="plan-features">
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>500 text stamps per month</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>50 file stamps per month (up to 25 MB each)</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Sealed reveal — auto-unlock predictions</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Custom URL slug for your stamps</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Verification analytics</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Priority on-chain confirmation</li>
-        </ul>
+        <div class="pack-credits">
+          <span class="pack-base">90 credits</span>
+          <span class="pack-bonus">+35 BONUS</span>
+        </div>
+        <p class="pack-total">= 125 credits total</p>
+        <p class="pack-per-credit">$0.20 per credit</p>
+        <p class="pack-tagline">For regular creators stamping work weekly.</p>
+        <a href="auth.html" class="btn btn-secondary pack-cta-btn">Buy Standard</a>
       </div>
 
-      <!-- Pro -->
-      <div class="plan-card">
-        <p class="plan-name">Pro</p>
-        <div class="plan-price">
-          <span class="plan-price-value">$29</span>
-          <span class="plan-price-period">/ month</span>
+      <!-- Pro Pack (Featured) -->
+      <div class="pack-card featured">
+        <span class="pack-badge">⭐ Best Value</span>
+        <p class="pack-name">Pro Pack</p>
+        <div class="pack-price">
+          <span class="pack-price-value">$50</span>
+          <span class="pack-price-once">one-time</span>
         </div>
-        <p class="plan-tagline">For journalists, researchers, and high-volume users.</p>
-        <a href="auth.html" class="btn btn-secondary btn-block plan-cta">Upgrade to Pro</a>
-        <ul class="plan-features">
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>5,000 text stamps per month</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Unlimited file stamps (up to 100 MB each)</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>URL stamping — capture any webpage</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>API access (1,000 calls / day)</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Bulk import &amp; export</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Custom branding on proof pages</li>
-        </ul>
+        <div class="pack-credits">
+          <span class="pack-base">200 credits</span>
+          <span class="pack-bonus">+100 BONUS</span>
+        </div>
+        <p class="pack-total">= 300 credits total</p>
+        <p class="pack-per-credit">$0.17 per credit</p>
+        <p class="pack-tagline">Most popular. Best value for serious users.</p>
+        <a href="auth.html" class="btn btn-primary pack-cta-btn">Buy Pro Pack</a>
       </div>
 
-      <!-- Enterprise -->
-      <div class="plan-card">
-        <p class="plan-name">Enterprise</p>
-        <div class="plan-price">
-          <span class="plan-price-value">Custom</span>
+      <!-- Power -->
+      <div class="pack-card">
+        <p class="pack-name">Power</p>
+        <div class="pack-price">
+          <span class="pack-price-value">$100</span>
+          <span class="pack-price-once">one-time</span>
         </div>
-        <p class="plan-tagline">For legal firms, news organizations, and compliance teams.</p>
-        <a href="#" class="btn btn-secondary btn-block plan-cta">Contact sales</a>
-        <ul class="plan-features">
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Unlimited stamps</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Court-admissible certificates</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Team accounts &amp; SSO</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Dedicated API capacity</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>SLA &amp; priority support</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>White-label option</li>
-        </ul>
+        <div class="pack-credits">
+          <span class="pack-base">450 credits</span>
+          <span class="pack-bonus">+250 BONUS</span>
+        </div>
+        <p class="pack-total">= 700 credits total</p>
+        <p class="pack-per-credit">$0.14 per credit</p>
+        <p class="pack-tagline">For power users and agencies.</p>
+        <a href="auth.html" class="btn btn-secondary pack-cta-btn">Buy Power</a>
+      </div>
+    </div>
+
+    <!-- Credit consumption breakdown -->
+    <div class="cost-breakdown">
+      <h2>How credits work</h2>
+      <p class="text-secondary" style="font-size: var(--text-sm); margin: 0 0 var(--space-5);">Each stamp uses credits based on its type. Larger content uses more credits because it requires more permanent storage.</p>
+      <div class="cost-grid">
+        <div class="cost-tile">
+          <p class="cost-tile-label">Text stamp</p>
+          <p class="cost-tile-value">1</p>
+          <p class="cost-tile-suffix">credit · up to 500 chars</p>
+        </div>
+        <div class="cost-tile">
+          <p class="cost-tile-label">URL stamp</p>
+          <p class="cost-tile-value">2</p>
+          <p class="cost-tile-suffix">credits · captures full page</p>
+        </div>
+        <div class="cost-tile">
+          <p class="cost-tile-label">File stamp</p>
+          <p class="cost-tile-value">3</p>
+          <p class="cost-tile-suffix">credits · PDF, image, audio, video</p>
+        </div>
+      </div>
+      <p class="text-muted text-center mt-6" style="font-size: var(--text-xs);">Sealed visibility doesn't cost extra. Same credit cost regardless of when content reveals.</p>
+    </div>
+
+    <!-- Payment options -->
+    <div class="payment-section">
+      <h2 class="section-title" style="margin-bottom: var(--space-3);">Payment options</h2>
+      <p class="section-subtitle">Choose what works for you. Both options give you the same credits.</p>
+      <div class="payment-options">
+        <div class="payment-option">
+          <div class="payment-option-icon" style="background: var(--brand-primary);">₹$</div>
+          <h3>Card, UPI, Netbanking</h3>
+          <p>Pay with any major credit/debit card, UPI, or netbanking. Powered by Razorpay. Secure, instant.</p>
+        </div>
+        <div class="payment-option">
+          <span class="payment-discount-badge">10% OFF</span>
+          <div class="payment-option-icon" style="background: var(--brand-accent);">◇</div>
+          <h3>Digital assets</h3>
+          <p>Pay with USDC, ETH, or USDM directly from your wallet. Get 10% off — we save on processor fees and pass the savings to you.</p>
+        </div>
       </div>
     </div>
 
     <!-- FAQ -->
     <div class="faq-section">
-      <h2 class="faq-title">Common questions</h2>
+      <h2 class="faq-section-title">Pricing FAQ</h2>
       <div class="faq-item">
-        <p class="faq-q">What happens to my stamps if I cancel?</p>
-        <p class="faq-a">Your existing stamps stay verifiable forever — they live on MegaETH, not on our servers. Cancelling just stops you from creating new ones at the paid tier limits.</p>
+        <p class="faq-q">Do credits expire?</p>
+        <p class="faq-a">Never. Credits you buy stay in your account forever. Use them tomorrow, next month, or next year — they're yours.</p>
       </div>
       <div class="faq-item">
-        <p class="faq-q">Do unused stamps roll over to next month?</p>
-        <p class="faq-a">Free tier — no rollover. Paid tiers — up to 50% of unused stamps roll over for one month, capped at 2x your monthly limit.</p>
+        <p class="faq-q">Are credit purchases refundable?</p>
+        <p class="faq-a">Credit purchases are non-refundable once completed, since credits can be used immediately. We do issue refunds for technical errors (e.g. duplicate charges). See <a href="refunds.html">our refund policy</a> for details.</p>
       </div>
       <div class="faq-item">
-        <p class="faq-q">What if TruthStamp shuts down?</p>
-        <p class="faq-a">Your stamps survive. They live on MegaETH and Arweave, both of which work without us. We've also open-sourced our verifier — so anyone can verify your proofs forever, even if our website is gone. <a href="trust.html" style="color: var(--brand-primary);">Read our permanence promise →</a></p>
+        <p class="faq-q">What's the launch bonus?</p>
+        <p class="faq-a">For a limited time, every credit pack comes with bonus credits at no extra cost. Pro Pack ($50) currently includes 100 bonus credits — that's 50% more than the base amount. We'll announce when this offer ends.</p>
       </div>
       <div class="faq-item">
-        <p class="faq-q">Can I pay with crypto?</p>
-        <p class="faq-a">Yes. We accept USDC, ETH, and MegaETH's native USDM stablecoin. Crypto payments come with a 10% discount for the first year.</p>
+        <p class="faq-q">Why is paying with digital assets cheaper?</p>
+        <p class="faq-a">Card and bank payments charge us about 2.5% in processor fees. Digital asset payments don't have those fees, so we pass the savings on as a 10% discount. Same product, lower price.</p>
       </div>
       <div class="faq-item">
-        <p class="faq-q">Is there an annual discount?</p>
-        <p class="faq-a">Yes — 20% off when you pay yearly. Toggle the billing switch above to see annual pricing.</p>
+        <p class="faq-q">Will I get a tax invoice?</p>
+        <p class="faq-a">Yes. Every paid invoice is sent to your email with full GST details (for Indian customers). You can also download invoices anytime from your dashboard.</p>
+      </div>
+      <div class="faq-item">
+        <p class="faq-q">Do you offer subscriptions?</p>
+        <p class="faq-a">Not yet — we found that one-time credit packs work better for how most people use TruthStamp. If you'd like a subscription option for unlimited stamps, <a href="contact.html">let us know</a> — we may add this later.</p>
+      </div>
+      <div class="faq-item">
+        <p class="faq-q">Can businesses buy in bulk for a team?</p>
+        <p class="faq-a">Yes. Reach out to <a href="contact.html">our team</a> for enterprise plans with team accounts, custom volumes, invoicing, and dedicated support.</p>
       </div>
     </div>
   </main>
 
   <footer class="footer">
     <div class="footer-inner">
-      <div class="flex gap-2" style="align-items: center;">
-        <span class="nav-logo">T</span>
-        <span style="font-weight: 500; color: var(--color-text);">TruthStamp</span>
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">
+            <span class="nav-logo">T</span><span>TruthStamp</span>
+          </div>
+          <p class="footer-tagline">Receipts for your ideas. Verifiable, tamper-proof timestamps for the AI era.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="how-it-works.html">How it works</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+            <li><a href="verify.html">Verify a receipt</a></li>
+            <li><a href="trust.html">Trust &amp; permanence</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="terms.html">Terms of Service</a></li>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="refunds.html">Refund Policy</a></li>
+          </ul>
+        </div>
       </div>
-      <div class="footer-links">
-        <a href="trust.html">Trust</a>
-        <a href="verify.html">Verify a stamp</a>
+      <div class="footer-bottom">
+        <span>© 2026 TruthStamp · All rights reserved</span>
+        <span>Made with care for creators and professionals.</span>
       </div>
     </div>
   </footer>
-
   <script src="js/common.js"></script>
 </body>
 </html>
