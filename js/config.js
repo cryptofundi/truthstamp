@@ -7,7 +7,6 @@
  * publicly visible in the browser. That's OK — the Supabase anon key is
  * meant to be public (RLS protects your data). NEVER put service_role
  * keys, contract owner private keys, or any other secret here.
- *  SUPABASE_ANON_KEY: 'sb_publishable_oH-0vSs8t4ghRuRJ-LcCaA_sHikte9b',
  */
 
 window.TRUTHSTAMP_CONFIG = {
