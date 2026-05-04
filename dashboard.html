@@ -10,6 +10,9 @@
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/components.css">
   <script src="js/analytics.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase-client.js"></script>
   <style>
     .dash-shell {
       max-width: 900px;
@@ -211,7 +214,8 @@
         <a href="pricing.html">Pricing</a>
         <a href="trust.html">Trust</a>
         <a href="stamp.html" class="btn btn-primary btn-sm">+ New stamp</a>
-        <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--brand-accent-light); color: var(--brand-accent); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">PR</span>
+        <a href="#" id="sign-out-btn" onclick="handleSignOut(event); return false;" style="font-size: var(--text-sm); color: var(--color-text-muted);">Sign out</a>
+        <span id="user-avatar" style="width: 28px; height: 28px; border-radius: 50%; background: var(--brand-accent-light); color: var(--brand-accent); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">··</span>
       </div>
     </div>
   </nav>
@@ -221,8 +225,8 @@
     <!-- Header -->
     <div class="dash-header">
       <div>
-        <h1 class="dash-title">My stamps</h1>
-        <p class="dash-subtitle">Every receipt you've ever dropped.</p>
+        <h1 class="dash-title" id="dash-title">My stamps</h1>
+        <p class="dash-subtitle" id="dash-subtitle">Every receipt you've ever dropped.</p>
       </div>
       <a href="stamp.html" class="btn btn-primary">+ New stamp</a>
     </div>
@@ -231,23 +235,23 @@
     <div class="stat-cards">
       <div class="stat-card">
         <p class="stat-card-label">Total stamps</p>
-        <p class="stat-card-value">47</p>
-        <p class="stat-card-meta">12 this month</p>
+        <p class="stat-card-value" id="stat-total-stamps">—</p>
+        <p class="stat-card-meta">Lifetime count</p>
       </div>
       <div class="stat-card">
         <p class="stat-card-label">Public verifications</p>
-        <p class="stat-card-value">3,124</p>
-        <p class="stat-card-meta">+842 this week</p>
+        <p class="stat-card-value" id="stat-verifications">—</p>
+        <p class="stat-card-meta">Across all your stamps</p>
       </div>
       <div class="stat-card">
         <p class="stat-card-label">Sealed reveals upcoming</p>
-        <p class="stat-card-value">3</p>
-        <p class="stat-card-meta">Next: May 15</p>
+        <p class="stat-card-value" id="stat-sealed-pending">—</p>
+        <p class="stat-card-meta" id="stat-sealed-meta">No reveals scheduled</p>
       </div>
       <div class="stat-card upgrade">
-        <p class="stat-card-label" style="color: var(--brand-accent);">Free plan</p>
-        <p class="stat-card-value">18 of 30 stamps left</p>
-        <p class="stat-card-meta" style="color: var(--brand-accent); margin-top: 8px;"><a href="pricing.html" style="text-decoration: underline; font-weight: 500;">Upgrade →</a></p>
+        <p class="stat-card-label" style="color: var(--brand-accent);">Credit balance</p>
+        <p class="stat-card-value" id="stat-credits">—</p>
+        <p class="stat-card-meta" style="color: var(--brand-accent); margin-top: 8px;"><a href="pricing.html" style="text-decoration: underline; font-weight: 500;">Buy more credits →</a></p>
       </div>
     </div>
 
@@ -361,5 +365,79 @@
   </footer>
 
   <script src="js/common.js"></script>
+  <script>
+    // Require auth — redirect to login if not signed in
+    (async function() {
+      const user = await window.tsRequireAuth();
+      if (!user) return; // tsRequireAuth handles the redirect
+
+      // Load profile + dashboard stats
+      const profile = await window.tsAuth.getProfile();
+      if (!profile) {
+        console.error('Could not load profile');
+        return;
+      }
+
+      // Update header
+      const firstName = (profile.display_name || profile.email || '').split(/\s|@/)[0];
+      const titleEl = document.getElementById('dash-title');
+      const subtitleEl = document.getElementById('dash-subtitle');
+      if (firstName && titleEl) {
+        titleEl.textContent = 'Welcome, ' + firstName;
+      }
+      if (subtitleEl) {
+        subtitleEl.textContent = 'Every receipt you have ever dropped.';
+      }
+
+      // Update avatar (first 2 chars of name or email)
+      const avatarEl = document.getElementById('user-avatar');
+      if (avatarEl) {
+        const seed = (profile.display_name || profile.email || '??').replace(/[^A-Za-z]/g, '');
+        avatarEl.textContent = (seed.slice(0, 2) || '··').toUpperCase();
+      }
+
+      // Update credit balance
+      const creditsEl = document.getElementById('stat-credits');
+      if (creditsEl) {
+        creditsEl.textContent = profile.credits_balance + ' credit' + (profile.credits_balance === 1 ? '' : 's');
+      }
+
+      // Load aggregated stamp stats from the dashboard view we created
+      try {
+        const { data: stats } = await window.tsDB
+          .from('user_dashboard_stats')
+          .select('*')
+          .eq('profile_id', user.id)
+          .maybeSingle();
+
+        if (stats) {
+          document.getElementById('stat-total-stamps').textContent = stats.total_stamps || 0;
+          document.getElementById('stat-verifications').textContent = stats.total_verifications || 0;
+          document.getElementById('stat-sealed-pending').textContent = stats.sealed_pending_reveal || 0;
+        } else {
+          // No stats yet — fresh account
+          document.getElementById('stat-total-stamps').textContent = '0';
+          document.getElementById('stat-verifications').textContent = '0';
+          document.getElementById('stat-sealed-pending').textContent = '0';
+        }
+      } catch (err) {
+        console.error('Could not load dashboard stats:', err);
+        // Fall back to zeros
+        document.getElementById('stat-total-stamps').textContent = '0';
+        document.getElementById('stat-verifications').textContent = '0';
+        document.getElementById('stat-sealed-pending').textContent = '0';
+      }
+    })();
+
+    async function handleSignOut(e) {
+      if (e) e.preventDefault();
+      const { error } = await window.tsAuth.signOut();
+      if (error) {
+        alert('Sign out failed: ' + error.message);
+      } else {
+        window.location.href = 'index.html';
+      }
+    }
+  </script>
 </body>
 </html>
