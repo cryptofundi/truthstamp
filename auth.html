@@ -13,6 +13,9 @@
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/components.css">
   <script src="js/analytics.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase-client.js"></script>
 
   <style>
     .auth-shell {
@@ -293,7 +296,7 @@
           <div class="form-group">
             <div class="flex-between">
               <label class="label" for="signin-password" style="margin-bottom: 0;">Password</label>
-              <a href="#" style="font-size: var(--text-xs); color: var(--brand-primary);">Forgot?</a>
+              <a href="#" onclick="handleForgotPassword(event); return false;" style="font-size: var(--text-xs); color: var(--brand-primary);">Forgot?</a>
             </div>
             <input type="password" class="input" id="signin-password" required style="margin-top: var(--space-2);">
           </div>
@@ -344,11 +347,22 @@
 
   <script src="js/common.js"></script>
   <script>
+    // -----------------------------------------------------------------
+    // If user is already logged in, redirect away from this page
+    // -----------------------------------------------------------------
+    if (window.tsRedirectIfAuthed) {
+      window.tsRedirectIfAuthed();
+    }
+
+    // -----------------------------------------------------------------
+    // UI tab switching (sign up / sign in panels)
+    // -----------------------------------------------------------------
     function switchPanel(panel) {
       document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
       document.querySelector(`[data-panel="${panel}"]`).classList.add('active');
       document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
       document.getElementById(`panel-${panel}`).classList.add('active');
+      hideMessage();
     }
 
     function toggleWallet() {
@@ -361,28 +375,160 @@
       }
     }
 
-    function handleGoogle() {
+    // -----------------------------------------------------------------
+    // Inline message helpers (success / error display)
+    // -----------------------------------------------------------------
+    function showMessage(text, isError) {
+      let msg = document.getElementById('auth-message');
+      if (!msg) {
+        msg = document.createElement('div');
+        msg.id = 'auth-message';
+        msg.style.cssText = 'padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; line-height: 1.5;';
+        const card = document.querySelector('.auth-card');
+        const tabs = card.querySelector('.auth-tabs');
+        card.insertBefore(msg, tabs.nextSibling);
+      }
+      msg.style.background = isError ? '#FEE2E2' : '#D1FAE5';
+      msg.style.color = isError ? '#991B1B' : '#065F46';
+      msg.style.border = isError ? '1px solid #FCA5A5' : '1px solid #6EE7B7';
+      msg.textContent = text;
+      msg.style.display = 'block';
+    }
+    function hideMessage() {
+      const msg = document.getElementById('auth-message');
+      if (msg) msg.style.display = 'none';
+    }
+
+    // -----------------------------------------------------------------
+    // Google OAuth (placeholder — needs Google provider configured in Supabase)
+    // -----------------------------------------------------------------
+    async function handleGoogle() {
       if (window.trackEvent) window.trackEvent('auth_attempt', { method: 'google' });
-      // Wires to OAuth flow in v1
-      window.location.href = 'stamp.html';
+      try {
+        const { error } = await window.tsDB.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: window.location.origin + '/dashboard.html' }
+        });
+        if (error) {
+          showMessage(
+            error.message.includes('not enabled')
+              ? 'Google sign-in is not yet configured. Please use email signup for now.'
+              : ('Sign-in failed: ' + error.message),
+            true
+          );
+        }
+      } catch (err) {
+        showMessage('Could not connect. Please try email signup.', true);
+      }
     }
 
-    function handleSignup(e) {
+    // -----------------------------------------------------------------
+    // Sign up form handler
+    // -----------------------------------------------------------------
+    async function handleSignup(e) {
       e.preventDefault();
+      hideMessage();
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creating account...';
+
       if (window.trackEvent) window.trackEvent('auth_attempt', { method: 'email_signup' });
-      window.location.href = 'stamp.html';
+
+      const { user, error } = await window.tsAuth.signUp(email, password);
+
+      if (error) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create account';
+        // Surface common errors as friendly messages
+        if (error.message && error.message.toLowerCase().includes('already')) {
+          showMessage('An account with that email already exists. Try signing in instead.', true);
+          switchPanel('signin');
+          document.getElementById('signin-email').value = email;
+        } else if (error.message && error.message.toLowerCase().includes('password')) {
+          showMessage(error.message, true);
+        } else {
+          showMessage('Sign up failed: ' + (error.message || 'Unknown error'), true);
+        }
+        return;
+      }
+
+      if (window.trackEvent) window.trackEvent('signup_success');
+
+      // If email confirmation is required, user gets email; otherwise auto-login
+      if (user && !user.email_confirmed_at) {
+        // Email confirmation might be required (depends on Supabase settings)
+        // If signed in immediately, the redirect below kicks off
+        showMessage('Check your email to confirm your account, then sign in.', false);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create account';
+        return;
+      }
+
+      // Logged in — redirect to dashboard
+      window.location.href = window.TRUTHSTAMP_CONFIG.POST_AUTH_REDIRECT;
     }
 
-    function handleSignin(e) {
+    // -----------------------------------------------------------------
+    // Sign in form handler
+    // -----------------------------------------------------------------
+    async function handleSignin(e) {
       e.preventDefault();
+      hideMessage();
+      const email = document.getElementById('signin-email').value;
+      const password = document.getElementById('signin-password').value;
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Signing in...';
+
       if (window.trackEvent) window.trackEvent('auth_attempt', { method: 'email_signin' });
-      window.location.href = 'stamp.html';
+
+      const { user, error } = await window.tsAuth.signIn(email, password);
+
+      if (error) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign in';
+        if (error.message && error.message.toLowerCase().includes('invalid')) {
+          showMessage('Wrong email or password. Try again or reset your password.', true);
+        } else {
+          showMessage('Sign in failed: ' + (error.message || 'Unknown error'), true);
+        }
+        return;
+      }
+
+      if (window.trackEvent) window.trackEvent('signin_success');
+
+      // Honor return_to query param if present
+      const params = new URLSearchParams(window.location.search);
+      const returnTo = params.get('return_to');
+      window.location.href = returnTo || window.TRUTHSTAMP_CONFIG.POST_AUTH_REDIRECT;
     }
 
+    // -----------------------------------------------------------------
+    // Forgot password handler
+    // -----------------------------------------------------------------
+    async function handleForgotPassword(e) {
+      e.preventDefault();
+      const email = document.getElementById('signin-email').value.trim();
+      if (!email) {
+        showMessage('Enter your email above first, then click Forgot.', true);
+        return;
+      }
+      const { error } = await window.tsAuth.sendPasswordReset(email);
+      if (error) {
+        showMessage('Could not send reset email: ' + error.message, true);
+      } else {
+        showMessage('Password reset email sent to ' + email + '.', false);
+      }
+    }
+
+    // -----------------------------------------------------------------
+    // Wallet (placeholder — comes later)
+    // -----------------------------------------------------------------
     function connectWallet(type) {
       if (window.trackEvent) window.trackEvent('auth_attempt', { method: 'wallet', wallet_type: type });
-      // Wires to wallet connection in v1
-      alert(`Wallet connection (${type}) — coming in v1.\n\nFor now, please use email or Google to test the flow.`);
+      showMessage('Wallet sign-in is coming soon. Please use email for now.', true);
     }
   </script>
 </body>
