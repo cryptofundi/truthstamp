@@ -7,6 +7,7 @@
  * publicly visible in the browser. That's OK — the Supabase anon key is
  * meant to be public (RLS protects your data). NEVER put service_role
  * keys, contract owner private keys, or any other secret here.
+ *  SUPABASE_ANON_KEY: 'sb_publishable_oH-0vSs8t4ghRuRJ-LcCaA_sHikte9b',
  */
 
 window.TRUTHSTAMP_CONFIG = {
@@ -14,7 +15,7 @@ window.TRUTHSTAMP_CONFIG = {
   SUPABASE_URL: 'https://stlfgfaaukrgiwwkwceb.supabase.co',
 
   // Supabase anon (publishable) key — safe to expose publicly
-  SUPABASE_ANON_KEY: 'sb_publishable_oH-0vSs8t4ghRuRJ-LcCaA_sHikte9b',
+  SUPABASE_ANON_KEY: 'RmEfUBRPSIKqhNFcNZb2h9ubpqsA+/oEWaMy1X46oDVD5PNKLsIZNzn4lYkiE5oeeDeod4HdJ9mxKv1PWjC/3w==',
 
   // TruthStamp smart contract — deployed on MegaETH testnet
   CONTRACT_ADDRESS: '0x86b369D0a49dBD3D233F07f8e3f08Fb6C73C83F4',
