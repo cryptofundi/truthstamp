@@ -13,6 +13,9 @@
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/components.css">
   <script src="js/analytics.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase-client.js"></script>
 
   <style>
     /* Page-specific styles */
@@ -395,7 +398,7 @@
           premiumDesc.innerHTML = 'Stamp PDFs, images, audio, video — up to 100 MB.<br>Files stored on Arweave. Permanent. Decentralized. Outlives us.';
         } else if (tab === 'url') {
           premiumTitle.textContent = 'URL stamping is a Pro feature';
-          premiumDesc.innerHTML = 'Capture and seal a webpage exactly as it exists today.<br>Perfect for journalists, researchers, and anyone tracking online claims.';
+          premiumDesc.innerHTML = 'Capture and seal a webpage exactly as it exists today.<br>Perfect for researchers, content creators, and anyone tracking online claims.';
         }
         if (window.trackEvent) window.trackEvent('premium_prompt_view', { source: tab });
       }
@@ -450,6 +453,13 @@
       // Simulate stamp success → redirect to proof page
       window.location.href = 'proof.html';
     }
+
+    // Auth guard: redirect to login if not signed in
+    (async function() {
+      if (window.tsRequireAuth) {
+        await window.tsRequireAuth();
+      }
+    })();
   </script>
 </body>
 </html>
