@@ -353,7 +353,7 @@
             <span class="text-secondary">Estimated cost</span>
             <span style="font-weight: 500;">Free · 28 stamps left this month</span>
           </div>
-          <button class="btn btn-primary btn-block btn-lg" onclick="handleStamp()">Stamp this thought · ~1 second</button>
+          <button class="btn btn-primary btn-block btn-lg btn-stamp-action" onclick="handleStamp()">Stamp this thought · ~1 second</button>
         </div>
       </div>
     </div>
@@ -439,19 +439,118 @@
       cc.classList.toggle('danger', len > 480);
     }
 
-    // Stamp action (placeholder — wires to backend later)
-    function handleStamp() {
+    // Real stamp creation — calls Edge Function
+    async function handleStamp() {
       const text = document.getElementById('stamp-text').value.trim();
       if (!text) {
         alert('Please write something to stamp.');
         return;
       }
-      if (window.trackEvent) {
-        const visibility = document.querySelector('.visibility-card.selected')?.id.replace('vis-', '') || 'public';
-        window.trackEvent('stamp_created', { type: 'text', visibility, length: text.length });
+
+      // Get selected visibility
+      const selectedVis = document.querySelector('.visibility-card.selected')?.id?.replace('vis-', '') ?? 'public';
+      const visibility = selectedVis === 'hash-only' ? 'hash_only' : selectedVis;
+
+      // Get seal date if sealed
+      let sealedUntil = 0;
+      if (visibility === 'sealed') {
+        const sealDateInput = document.getElementById('seal-date')?.value;
+        if (!sealDateInput) {
+          alert('Please set a reveal date for your sealed stamp.');
+          return;
+        }
+        sealedUntil = Math.floor(new Date(sealDateInput).getTime() / 1000);
+        if (sealedUntil <= Math.floor(Date.now() / 1000) + 300) {
+          alert('Reveal date must be at least 5 minutes in the future.');
+          return;
+        }
       }
-      // Simulate stamp success → redirect to proof page
-      window.location.href = 'proof.html';
+
+      // Get tags
+      const tags = Array.from(document.querySelectorAll('.tag-pill.selected'))
+        .map(el => el.dataset.tag)
+        .filter(Boolean);
+
+      // UI: show loading state
+      const btn = document.querySelector('.btn-stamp-action');
+      const originalText = btn?.textContent ?? 'Stamp it';
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Stamping... ~1 second';
+      }
+      hideError();
+
+      try {
+        // Get auth token
+        const session = await window.tsDB.auth.getSession();
+        const token = session?.data?.session?.access_token;
+        if (!token) {
+          showError('Please sign in to stamp.');
+          window.location.href = 'auth.html';
+          return;
+        }
+
+        // Call Edge Function
+        const supabaseUrl = window.TRUTHSTAMP_CONFIG.SUPABASE_URL;
+        const response = await fetch(
+          `${supabaseUrl}/functions/v1/stamp-create`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              content: text,
+              content_type: 'text',
+              visibility: visibility,
+              sealed_until: sealedUntil || undefined,
+              tags: tags,
+              display_title: text.slice(0, 60),
+            }),
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.error ?? `Server error (${response.status})`);
+        }
+
+        if (window.trackEvent) {
+          window.trackEvent('stamp_created', {
+            type: 'text', visibility, proof_id: result.proof_id
+          });
+        }
+
+        // Success — redirect to proof page
+        window.location.href = `proof.html?id=${result.proof_id}`;
+
+      } catch (err) {
+        showError(err instanceof Error ? err.message : 'Stamping failed. Please try again.');
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = originalText;
+        }
+      }
+    }
+
+    function showError(msg) {
+      let el = document.getElementById('stamp-error');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'stamp-error';
+        el.style.cssText = 'padding:12px 14px;border-radius:8px;margin:12px 0;font-size:14px;background:#FEE2E2;color:#991B1B;border:1px solid #FCA5A5;';
+        const form = document.querySelector('.stamp-form');
+        if (form) form.prepend(el);
+      }
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function hideError() {
+      const el = document.getElementById('stamp-error');
+      if (el) el.style.display = 'none';
     }
 
     // Auth guard: redirect to login if not signed in
