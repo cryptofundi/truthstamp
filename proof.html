@@ -5,301 +5,326 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Verified stamp — TruthStamp</title>
   <meta name="description" content="A verified TruthStamp proof. Permanently sealed on MegaETH.">
-
-  <!-- Open Graph for rich sharing -->
-  <meta property="og:title" content="Receipt sealed on MegaETH · TruthStamp">
+  <meta property="og:title" content="Verified receipt — TruthStamp">
   <meta property="og:description" content="Independently verifiable proof. Permanent. Tamper-proof.">
   <meta property="og:type" content="article">
-  <meta name="twitter:card" content="summary_large_image">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/components.css">
   <script src="js/analytics.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase-client.js"></script>
 
   <style>
-    .proof-shell {
-      max-width: 680px;
-      margin: 0 auto;
-      padding: var(--space-8) var(--space-6) var(--space-12);
-    }
-    .url-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 18px;
-      background: var(--color-surface-alt);
-      border-radius: var(--radius-md) var(--radius-md) 0 0;
+    .proof-shell { max-width: 680px; margin: 0 auto; padding: var(--space-8) var(--space-5); }
+
+    /* Loading / error states */
+    .state-card {
+      background: var(--color-surface);
       border: 1px solid var(--color-border);
-      border-bottom: none;
-      font-size: var(--text-xs);
+      border-radius: var(--radius-lg);
+      padding: var(--space-12) var(--space-6);
+      text-align: center;
     }
-    .url-text {
-      font-family: var(--font-mono);
-      color: var(--color-text-secondary);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+    .state-icon { font-size: 2.5rem; margin-bottom: var(--space-3); }
+    .state-title { font-size: var(--text-xl); font-weight: 600; margin: 0 0 var(--space-2); }
+    .state-desc { font-size: var(--text-base); color: var(--color-text-secondary); margin: 0; }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--color-border);
+      border-top-color: var(--brand-primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto var(--space-4);
     }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* URL bar */
+    .url-bar {
+      display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-4);
+      flex-wrap: wrap;
+    }
+    .url-text { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-text-secondary); word-break: break-all; }
+
+    /* Main proof card */
     .proof-card {
       background: var(--color-surface);
       border: 1px solid var(--color-border);
-      border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-      padding: var(--space-8);
-    }
-
-    .proof-creator-row {
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
+      border-radius: var(--radius-xl);
+      padding: var(--space-7);
       margin-bottom: var(--space-5);
     }
-    .creator-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: var(--brand-accent-light);
-      color: var(--brand-accent);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      font-size: var(--text-base);
-    }
-    .creator-info {
-      flex: 1;
-      min-width: 0;
-    }
-    .creator-name {
-      font-size: var(--text-base);
-      font-weight: 500;
-      margin: 0;
-    }
-    .creator-meta {
-      font-size: var(--text-xs);
-      color: var(--color-text-muted);
-      margin: 0;
-    }
 
+    /* Visibility badge */
+    .visibility-banner {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm);
+      font-weight: 500;
+      margin-bottom: var(--space-5);
+    }
+    .visibility-banner.public { background: var(--brand-primary-light); color: var(--brand-primary-dark); }
+    .visibility-banner.hash_only { background: var(--color-surface-alt); color: var(--color-text-secondary); }
+    .visibility-banner.sealed { background: #FEF3C7; color: #92400E; }
+
+    /* Creator row */
+    .proof-creator-row {
+      display: flex; align-items: center; gap: var(--space-3);
+      margin-bottom: var(--space-5);
+      flex-wrap: wrap;
+    }
+    .creator-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--brand-accent-light); color: var(--brand-accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: var(--text-sm); font-weight: 700; flex-shrink: 0;
+    }
+    .creator-info { flex: 1; min-width: 0; }
+    .creator-name { font-size: var(--text-base); font-weight: 600; margin: 0 0 2px; }
+    .creator-meta { font-size: var(--text-xs); color: var(--color-text-muted); margin: 0; }
+
+    /* Content block */
     .proof-content-block {
+      background: var(--color-surface-alt);
       border-left: 3px solid var(--brand-primary);
-      padding: var(--space-1) 0 var(--space-1) var(--space-5);
-      margin: 0 0 var(--space-6);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      padding: var(--space-5);
+      margin: 0 0 var(--space-5);
     }
     .proof-content-text {
       font-family: var(--font-serif);
       font-size: var(--text-lg);
-      line-height: 1.6;
+      line-height: 1.65;
       margin: 0;
       color: var(--color-text);
     }
+    .proof-content-hash-only {
+      text-align: center;
+      padding: var(--space-6);
+      color: var(--color-text-muted);
+      font-size: var(--text-sm);
+    }
 
+    /* Arweave content link */
+    .arweave-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: var(--text-xs); color: var(--brand-primary);
+      text-decoration: none; margin-top: var(--space-3);
+    }
+    .arweave-link:hover { text-decoration: underline; }
+
+    /* Tags */
+    .tags-row { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-5); }
+
+    /* Stat grid */
     .stat-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--space-3);
-      margin-bottom: var(--space-5);
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-3); margin-bottom: var(--space-5);
     }
     .stat-tile {
       background: var(--color-surface-alt);
       border-radius: var(--radius-md);
-      padding: var(--space-3) var(--space-4);
+      padding: var(--space-4);
+      text-align: center;
     }
-    .stat-label {
-      font-size: var(--text-xs);
-      color: var(--color-text-muted);
-      margin: 0 0 4px;
-    }
-    .stat-value {
-      font-size: var(--text-sm);
-      font-weight: 500;
-      margin: 0;
-    }
-    .stat-value.mono {
-      font-family: var(--font-mono);
-    }
+    .stat-label { font-size: var(--text-xs); color: var(--color-text-muted); margin: 0 0 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .stat-value { font-size: var(--text-base); font-weight: 600; margin: 0; }
+    .mono { font-family: var(--font-mono); font-size: var(--text-sm) !important; }
 
+    /* Tech rows */
     .tech-row {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: 12px 16px;
-      margin-bottom: var(--space-3);
+      padding: var(--space-3) 0;
+      border-top: 1px solid var(--color-border);
     }
-    .tech-label {
-      font-size: var(--text-xs);
-      color: var(--color-text-muted);
-      margin: 0 0 4px;
-    }
+    .tech-label { font-size: var(--text-xs); color: var(--color-text-muted); margin: 0 0 4px; text-transform: uppercase; letter-spacing: 0.04em; }
     .tech-value {
-      font-family: var(--font-mono);
-      font-size: var(--text-xs);
-      font-weight: 500;
-      margin: 0;
+      font-family: var(--font-mono); font-size: var(--text-xs);
+      color: var(--color-text-secondary); margin: 0;
       word-break: break-all;
-      line-height: 1.5;
     }
-    .tech-value.link {
-      color: var(--brand-primary);
-    }
+    .tech-value a { color: var(--brand-primary); text-decoration: none; }
+    .tech-value a:hover { text-decoration: underline; }
 
-    .action-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--space-2);
-      margin-top: var(--space-6);
-    }
-
-    .tag-display {
-      display: inline-flex;
-      align-items: center;
-      padding: 3px 10px;
-      font-size: var(--text-xs);
-      border-radius: var(--radius-md);
-      background: var(--brand-primary-light);
-      color: var(--brand-primary-dark);
-      font-weight: 500;
-    }
-
+    /* Permanence note */
     .permanence-note {
-      margin-top: var(--space-6);
+      display: flex; align-items: flex-start; gap: var(--space-3);
       padding: var(--space-4);
       background: var(--brand-primary-light);
       border-radius: var(--radius-md);
-      display: flex;
-      align-items: flex-start;
-      gap: var(--space-3);
+      margin: var(--space-5) 0;
     }
-    .permanence-icon {
-      width: 20px;
-      height: 20px;
-      color: var(--brand-primary);
-      flex-shrink: 0;
-      margin-top: 2px;
-    }
-    .permanence-text {
-      font-size: var(--text-sm);
-      color: var(--brand-primary-dark);
-      margin: 0;
-      line-height: 1.5;
-    }
-    .permanence-text a {
-      text-decoration: underline;
-      font-weight: 500;
+    .permanence-icon { width: 18px; height: 18px; flex-shrink: 0; color: var(--brand-primary); margin-top: 1px; }
+    .permanence-text { font-size: var(--text-sm); color: var(--color-text); margin: 0; line-height: 1.5; }
+    .permanence-text a { color: var(--brand-primary); text-decoration: underline; }
+
+    /* Action row */
+    .action-row { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+
+    /* Verification seal */
+    .verify-seal {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      background: #D1FAE5; border-radius: var(--radius-full);
+      font-size: var(--text-xs); font-weight: 600; color: #065F46;
+      margin-left: auto;
     }
 
     @media (max-width: 600px) {
-      .stat-grid { grid-template-columns: 1fr; }
-      .action-row { grid-template-columns: 1fr; }
       .proof-card { padding: var(--space-5); }
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .action-row { flex-direction: column; }
     }
   </style>
 </head>
 <body>
-
-  <!-- Navigation -->
   <nav class="nav">
     <div class="nav-inner">
       <a href="index.html" class="nav-brand">
-        <span class="nav-logo">T</span>
-        <span>TruthStamp</span>
+        <span class="nav-logo">T</span><span>TruthStamp</span>
       </a>
       <div class="nav-links">
         <a href="dashboard.html">My stamps</a>
-        <a href="verify.html">Verify a stamp</a>
-        <a href="auth.html" class="btn btn-primary btn-sm">Stamp something</a>
+        <a href="verify.html">Verify</a>
+        <a href="stamp.html" class="btn btn-primary btn-sm">+ New stamp</a>
       </div>
     </div>
   </nav>
 
-  <!-- Proof page -->
   <main class="proof-shell">
 
-    <!-- URL bar header -->
-    <div class="url-bar">
-      <span class="url-text">truthstamp.io/t/priya-mega-prediction</span>
-      <span class="badge badge-success">
-        <span class="badge-dot"></span> Verified on MegaETH
-      </span>
+    <!-- Loading state -->
+    <div id="state-loading">
+      <div class="state-card">
+        <div class="spinner"></div>
+        <p class="state-title">Loading proof...</p>
+        <p class="state-desc">Fetching stamp from the database.</p>
+      </div>
     </div>
 
-    <!-- Main proof card -->
-    <article class="proof-card">
-
-      <!-- Creator -->
-      <div class="proof-creator-row">
-        <div class="creator-avatar">PR</div>
-        <div class="creator-info">
-          <p class="creator-name">Priya R.</p>
-          <p class="creator-meta">Stamped May 1, 2026 · 14:32:07 UTC</p>
-        </div>
-        <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end;">
-          <span class="tag-display">#prediction</span>
-          <span class="tag-display">#crypto</span>
-        </div>
+    <!-- Error state -->
+    <div id="state-error" style="display:none;">
+      <div class="state-card">
+        <div class="state-icon">🔍</div>
+        <p class="state-title">Stamp not found</p>
+        <p class="state-desc" id="error-message">This stamp may not exist or may have been removed.</p>
+        <a href="stamp.html" class="btn btn-primary" style="margin-top: var(--space-5);">Create your own stamp</a>
       </div>
-
-      <!-- The actual stamped content -->
-      <blockquote class="proof-content-block">
-        <p class="proof-content-text">MEGA hits $1 before end of June 2026. Volume + ecosystem catalysts + airdrop sell pressure exhausted by mid-May. This is the inflection point most people will miss.</p>
-      </blockquote>
-
-      <!-- Quick stats -->
-      <div class="stat-grid">
-        <div class="stat-tile">
-          <p class="stat-label">Block</p>
-          <p class="stat-value mono">2,847,193</p>
-        </div>
-        <div class="stat-tile">
-          <p class="stat-label">Network</p>
-          <p class="stat-value">MegaETH</p>
-        </div>
-        <div class="stat-tile">
-          <p class="stat-label">Verifications</p>
-          <p class="stat-value">1,247</p>
-        </div>
-      </div>
-
-      <!-- Technical proof details -->
-      <div class="tech-row">
-        <p class="tech-label">Content fingerprint (SHA-256)</p>
-        <p class="tech-value">0x9b2e5f8a3c1d7e4b6f9a2c5d8e1b4a7f0c3d6e9b8a4f7c2d5e8b1a4f7c0d3e6b</p>
-      </div>
-      <div class="tech-row">
-        <p class="tech-label">MegaETH transaction</p>
-        <p class="tech-value link">0x3e8a91b4d7c2f5e9a8b1c4d7f0e3a6b9c2d5f8e1d4a7b0c3f6e9b2a5d8c1f4e7</p>
-      </div>
-
-      <!-- Permanence note -->
-      <div class="permanence-note">
-        <svg class="permanence-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 2L2 7v10l10 5 10-5V7l-10-5z"/>
-          <path d="M9 12l2 2 4-4"/>
-        </svg>
-        <p class="permanence-text">
-          This proof exists on MegaETH and works independently of TruthStamp.
-          <a href="verify.html">Verify it yourself →</a>
-        </p>
-      </div>
-
-      <!-- Actions -->
-      <div class="action-row">
-        <button class="btn btn-secondary" onclick="shareToTwitter()">Share on X</button>
-        <button class="btn btn-secondary" onclick="copyLink()">Copy proof link</button>
-        <button class="btn btn-secondary" onclick="downloadCertificate()">Download certificate</button>
-      </div>
-    </article>
-
-    <!-- Footer CTA -->
-    <div class="text-center mt-8">
-      <p class="text-secondary" style="font-size: var(--text-sm); margin: 0 0 var(--space-3);">Want to drop your own receipts?</p>
-      <a href="auth.html" class="btn btn-primary">Start stamping free</a>
     </div>
+
+    <!-- Proof content (hidden until loaded) -->
+    <div id="state-proof" style="display:none;">
+
+      <!-- URL bar -->
+      <div class="url-bar">
+        <span class="url-text" id="proof-url">truthstamp.io/proof.html?id=...</span>
+        <div class="verify-seal">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          Verified on MegaETH
+        </div>
+      </div>
+
+      <!-- Main proof card -->
+      <article class="proof-card">
+
+        <!-- Visibility banner -->
+        <div class="visibility-banner" id="visibility-banner">
+          <span id="visibility-icon">🌐</span>
+          <span id="visibility-label">Public stamp</span>
+        </div>
+
+        <!-- Creator -->
+        <div class="proof-creator-row">
+          <div class="creator-avatar" id="creator-avatar">?</div>
+          <div class="creator-info">
+            <p class="creator-name" id="creator-name">Loading...</p>
+            <p class="creator-meta" id="creator-meta"></p>
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div class="tags-row" id="tags-row"></div>
+
+        <!-- Content -->
+        <blockquote class="proof-content-block" id="content-block">
+          <p class="proof-content-text" id="content-text"></p>
+          <a class="arweave-link" id="arweave-link" href="#" target="_blank" rel="noopener" style="display:none;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            View on Arweave (permanent storage)
+          </a>
+        </blockquote>
+
+        <!-- Stats -->
+        <div class="stat-grid">
+          <div class="stat-tile">
+            <p class="stat-label">Block</p>
+            <p class="stat-value mono" id="stat-block">—</p>
+          </div>
+          <div class="stat-tile">
+            <p class="stat-label">Network</p>
+            <p class="stat-value">MegaETH</p>
+          </div>
+          <div class="stat-tile">
+            <p class="stat-label">Type</p>
+            <p class="stat-value" id="stat-type">—</p>
+          </div>
+        </div>
+
+        <!-- Technical details -->
+        <div class="tech-row">
+          <p class="tech-label">Content fingerprint (SHA-256)</p>
+          <p class="tech-value" id="tech-hash">—</p>
+        </div>
+        <div class="tech-row">
+          <p class="tech-label">MegaETH transaction</p>
+          <p class="tech-value" id="tech-tx">—</p>
+        </div>
+        <div class="tech-row" id="tech-arweave-row" style="display:none;">
+          <p class="tech-label">Permanent storage (Arweave)</p>
+          <p class="tech-value" id="tech-arweave">—</p>
+        </div>
+        <div class="tech-row">
+          <p class="tech-label">Proof ID</p>
+          <p class="tech-value" id="tech-proof-id">—</p>
+        </div>
+
+        <!-- Permanence note -->
+        <div class="permanence-note">
+          <svg class="permanence-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7v10l10 5 10-5V7l-10-5z"/><path d="M9 12l2 2 4-4"/>
+          </svg>
+          <p class="permanence-text">
+            This proof lives on MegaETH and is independently verifiable — no need to trust TruthStamp.
+            <a href="verify.html">Verify it yourself →</a>
+          </p>
+        </div>
+
+        <!-- Actions -->
+        <div class="action-row">
+          <button class="btn btn-secondary" onclick="shareToX()">Share on X</button>
+          <button class="btn btn-secondary" onclick="copyLink()">Copy proof link</button>
+          <a id="explorer-link" href="#" target="_blank" class="btn btn-ghost">View on explorer →</a>
+        </div>
+      </article>
+
+      <!-- Footer CTA for non-logged-in users -->
+      <div class="text-center mt-8" id="footer-cta" style="display:none;">
+        <p class="text-secondary" style="font-size: var(--text-sm); margin: 0 0 var(--space-3);">Want to drop your own receipts?</p>
+        <a href="auth.html" class="btn btn-primary">Get started · free</a>
+      </div>
+
+    </div><!-- /state-proof -->
   </main>
 
-  <!-- Footer -->
   <footer class="footer">
     <div class="footer-inner">
       <div class="flex gap-2" style="align-items: center;">
@@ -308,7 +333,7 @@
       </div>
       <div class="footer-links">
         <a href="trust.html">Trust</a>
-        <a href="verify.html">Verify a stamp</a>
+        <a href="verify.html">Verify</a>
         <a href="pricing.html">Pricing</a>
       </div>
     </div>
@@ -316,27 +341,216 @@
 
   <script src="js/common.js"></script>
   <script>
-    function shareToTwitter() {
-      const url = window.location.href;
-      const text = "I dropped a receipt on @MegaETH_ — permanent, tamper-proof, sealed forever.";
-      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
-      if (window.trackEvent) window.trackEvent('proof_shared', { channel: 'twitter' });
+  (async function() {
+    // ── Get proof ID from URL ──────────────────────────────────────────────
+    const params = new URLSearchParams(window.location.search);
+    const proofId = params.get('id');
+
+    if (!proofId || isNaN(Number(proofId))) {
+      showError('No proof ID specified. Use ?id=1 in the URL.');
+      return;
     }
 
-    function copyLink() {
-      navigator.clipboard.writeText(window.location.href).then(() => {
-        const btns = document.querySelectorAll('.action-row button');
-        btns[1].textContent = 'Copied ✓';
-        setTimeout(() => { btns[1].textContent = 'Copy proof link'; }, 2000);
+    document.getElementById('proof-url').textContent =
+      `truthstamp.io/proof.html?id=${proofId}`;
+
+    // ── Fetch stamp from Supabase ──────────────────────────────────────────
+    // Use the stamps_with_creator view which joins safe profile fields
+    const { data: stamp, error } = await window.tsDB
+      .from('stamps_with_creator')
+      .select('*')
+      .eq('proof_id', proofId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('DB error:', error);
+      showError('Failed to load stamp. Please try again.');
+      return;
+    }
+
+    if (!stamp) {
+      showError(`Stamp #${proofId} was not found. It may not exist yet — the blockchain indexer might still be catching up.`);
+      return;
+    }
+
+    // ── Render stamp data ──────────────────────────────────────────────────
+    renderProof(stamp);
+  })();
+
+  function renderProof(stamp) {
+    // Visibility banner
+    const bannerEl = document.getElementById('visibility-banner');
+    const iconEl   = document.getElementById('visibility-icon');
+    const labelEl  = document.getElementById('visibility-label');
+
+    if (stamp.visibility === 'public') {
+      bannerEl.className = 'visibility-banner public';
+      iconEl.textContent = '🌐';
+      labelEl.textContent = 'Public stamp — content is publicly viewable';
+    } else if (stamp.visibility === 'sealed') {
+      bannerEl.className = 'visibility-banner sealed';
+      iconEl.textContent = '🔒';
+      const revealDate = stamp.sealed_until
+        ? new Date(stamp.sealed_until).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+        : 'unknown date';
+      labelEl.textContent = stamp.revealed
+        ? `Sealed stamp — revealed on ${revealDate}`
+        : `Sealed stamp — auto-reveals on ${revealDate}`;
+    } else {
+      bannerEl.className = 'visibility-banner hash_only';
+      iconEl.textContent = '🔐';
+      labelEl.textContent = 'Hash-only stamp — content stays private, hash is public';
+    }
+
+    // Creator
+    const name = stamp.creator_display_name || stamp.creator_identity?.split('-')[0] || 'Anonymous';
+    const initials = name.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase() || '??';
+    document.getElementById('creator-avatar').textContent = initials;
+    document.getElementById('creator-name').textContent = name;
+
+    const stamped = stamp.block_timestamp
+      ? new Date(stamp.block_timestamp).toUTCString().replace('GMT', 'UTC')
+      : 'Unknown time';
+    document.getElementById('creator-meta').textContent = `Stamped ${stamped}`;
+
+    // Tags
+    const tagsRow = document.getElementById('tags-row');
+    if (stamp.tags && stamp.tags.length > 0) {
+      tagsRow.innerHTML = stamp.tags
+        .map(t => `<span class="tag-display">#${t}</span>`)
+        .join('');
+    } else {
+      tagsRow.style.display = 'none';
+    }
+
+    // Content
+    const contentBlock = document.getElementById('content-block');
+    const contentText  = document.getElementById('content-text');
+
+    if (stamp.visibility === 'hash_only') {
+      contentBlock.innerHTML = `
+        <div class="proof-content-hash-only">
+          <div style="font-size: 2rem; margin-bottom: 8px;">🔐</div>
+          <p style="margin: 0; color: var(--color-text-secondary);">
+            Content is private. Only the fingerprint is stored on-chain.<br>
+            The owner can prove authorship by providing the original content.
+          </p>
+        </div>`;
+    } else if (stamp.visibility === 'sealed' && !stamp.revealed) {
+      const revealDate = stamp.sealed_until
+        ? new Date(stamp.sealed_until).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+        : 'a future date';
+      contentBlock.innerHTML = `
+        <div class="proof-content-hash-only">
+          <div style="font-size: 2rem; margin-bottom: 8px;">🔒</div>
+          <p style="margin: 0; color: var(--color-text-secondary);">
+            Content is sealed until <strong>${revealDate}</strong>.<br>
+            The timestamp is locked in — content will reveal automatically.
+          </p>
+        </div>`;
+    } else {
+      // Public or revealed sealed — show content
+      const text = stamp.text_content || stamp.display_title || '';
+      if (text) {
+        contentText.textContent = text;
+      } else if (stamp.file_name) {
+        contentText.textContent = `📄 ${stamp.file_name}`;
+      } else {
+        contentText.textContent = '(Content not available in cache — view on Arweave)';
+      }
+
+      // Arweave link
+      if (stamp.storage_uri) {
+        const arweaveLink = document.getElementById('arweave-link');
+        const txId = stamp.storage_uri.replace('ar://', '');
+        // Try Turbo's gateway first (fastest propagation), fallback to arweave.net
+        arweaveLink.href = `https://arweave.net/${txId}`;
+        arweaveLink.style.display = 'inline-flex';
+      }
+    }
+
+    // Stats
+    document.getElementById('stat-block').textContent =
+      stamp.block_number ? stamp.block_number.toLocaleString() : '—';
+    document.getElementById('stat-type').textContent =
+      stamp.content_type ? stamp.content_type.charAt(0).toUpperCase() + stamp.content_type.slice(1) : '—';
+
+    // Technical details
+    // content_hash from DB is bytea — Supabase returns it as hex string like \xabc123
+    const rawHash = stamp.content_hash;
+    if (rawHash) {
+      // Convert \xabc123 → 0xabc123
+      const hexHash = typeof rawHash === 'string'
+        ? '0x' + rawHash.replace(/^\\x/, '')
+        : rawHash;
+      document.getElementById('tech-hash').textContent = hexHash;
+    }
+
+    if (stamp.tx_hash) {
+      const cfg = window.TRUTHSTAMP_CONFIG;
+      const explorerBase = cfg?.CONTRACT_EXPLORER ?? 'https://megaeth-testnet-v2.blockscout.com';
+      document.getElementById('tech-tx').innerHTML =
+        `<a href="${explorerBase}/tx/${stamp.tx_hash}" target="_blank" rel="noopener">${stamp.tx_hash}</a>`;
+
+      const explorerLink = document.getElementById('explorer-link');
+      explorerLink.href = `${explorerBase}/tx/${stamp.tx_hash}`;
+    }
+
+    if (stamp.storage_uri) {
+      const txId = stamp.storage_uri.replace('ar://', '');
+      document.getElementById('tech-arweave').innerHTML =
+        `<a href="https://arweave.net/${txId}" target="_blank" rel="noopener">${stamp.storage_uri}</a>`;
+      document.getElementById('tech-arweave-row').style.display = 'block';
+    }
+
+    document.getElementById('tech-proof-id').textContent = `#${stamp.proof_id}`;
+
+    // Check if user is logged in — hide footer CTA if they are
+    if (window.tsAuth) {
+      window.tsAuth.getUser().then(user => {
+        if (!user) {
+          document.getElementById('footer-cta').style.display = 'block';
+        }
       });
-      if (window.trackEvent) window.trackEvent('proof_link_copied');
     }
 
-    function downloadCertificate() {
-      // Placeholder — will generate PDF certificate in v1 backend
-      alert('Certificate download — coming in v1.\n\nThis will give you a portable PDF that proves your stamp even if TruthStamp goes away.');
-      if (window.trackEvent) window.trackEvent('certificate_download');
+    // Update page title and OG tags
+    document.title = `Proof #${stamp.proof_id} — TruthStamp`;
+
+    // Show proof, hide loading
+    document.getElementById('state-loading').style.display = 'none';
+    document.getElementById('state-proof').style.display = 'block';
+
+    if (window.trackEvent) {
+      window.trackEvent('proof_viewed', { proof_id: stamp.proof_id, visibility: stamp.visibility });
     }
+  }
+
+  function showError(message) {
+    document.getElementById('state-loading').style.display = 'none';
+    document.getElementById('error-message').textContent = message;
+    document.getElementById('state-error').style.display = 'block';
+  }
+
+  function shareToX() {
+    const proofId = new URLSearchParams(window.location.search).get('id');
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent(
+      `I just dropped a permanent receipt on @MegaETH_ — tamper-proof timestamp, sealed forever. Proof #${proofId} on @TruthStamp_io`
+    );
+    window.open(`https://x.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+    if (window.trackEvent) window.trackEvent('proof_shared', { channel: 'x' });
+  }
+
+  function copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      const btn = event.target;
+      const orig = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = orig; }, 2000);
+    });
+    if (window.trackEvent) window.trackEvent('proof_link_copied');
+  }
   </script>
 </body>
 </html>
