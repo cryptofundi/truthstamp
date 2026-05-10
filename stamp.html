@@ -350,8 +350,8 @@
         <!-- Stamp CTA -->
         <div class="stamp-cta-section">
           <div class="meta-row">
-            <span class="text-secondary">Estimated cost</span>
-            <span style="font-weight: 500;">Free · 28 stamps left this month</span>
+            <span class="text-secondary" id="stamp-cost-label">Estimated cost</span>
+            <span style="font-weight: 500;" id="stamp-credit-display">Loading...</span>
           </div>
           <button class="btn btn-primary btn-block btn-lg btn-stamp-action" onclick="handleStamp()">Stamp this thought · ~1 second</button>
         </div>
@@ -553,12 +553,44 @@
       if (el) el.style.display = 'none';
     }
 
-    // Auth guard: redirect to login if not signed in
+    // Auth guard + load real credit balance
     (async function() {
       if (window.tsRequireAuth) {
-        await window.tsRequireAuth();
+        const user = await window.tsRequireAuth();
+        if (!user) return;
+
+        // Load credit balance and update the display
+        try {
+          const profile = await window.tsAuth.getProfile();
+          if (profile) {
+            const credits = profile.credits_balance ?? 0;
+            updateCreditDisplay(credits, 'text'); // default to text cost
+          }
+        } catch (err) {
+          console.error('Could not load profile:', err);
+          document.getElementById('stamp-credit-display').textContent = '— credits';
+        }
       }
     })();
+
+    // Update credit display when content type changes
+    function updateCreditDisplay(totalCredits, contentType) {
+      const cost = contentType === 'text' ? 1 : contentType === 'url' ? 2 : 3;
+      const displayEl = document.getElementById('stamp-credit-display');
+      if (!displayEl) return;
+      if (totalCredits === null || totalCredits === undefined) return;
+      displayEl.textContent = `${cost} credit · ${totalCredits} remaining`;
+      displayEl.style.color = totalCredits < cost ? '#DC2626' : '';
+    }
+
+    // Hook into content type selection to update cost display
+    document.querySelectorAll('[id^="tab-"]').forEach(tab => {
+      tab.addEventListener('click', async () => {
+        const type = tab.id.replace('tab-', '');
+        const profile = await window.tsAuth?.getProfile?.();
+        if (profile) updateCreditDisplay(profile.credits_balance, type);
+      });
+    });
   </script>
 </body>
 </html>
