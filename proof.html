@@ -180,53 +180,6 @@
     }
 
     /* Owner hash verifier */
-    .owner-verifier {
-      padding: var(--space-5);
-    }
-    .owner-verifier-title {
-      font-size: var(--text-sm); font-weight: 600;
-      color: var(--brand-primary); margin: 0 0 var(--space-2);
-      display: flex; align-items: center; gap: 6px;
-    }
-    .owner-verifier-desc {
-      font-size: var(--text-xs); color: var(--color-text-muted);
-      margin: 0 0 var(--space-3);
-    }
-    .owner-verifier textarea {
-      width: 100%; box-sizing: border-box;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: var(--space-3);
-      font-family: var(--font-base); font-size: var(--text-sm);
-      background: var(--color-surface);
-      color: var(--color-text);
-      resize: vertical; min-height: 80px;
-      margin-bottom: var(--space-3);
-    }
-    .owner-verifier textarea:focus { outline: none; border-color: var(--brand-primary); }
-    .verify-result {
-      padding: var(--space-3) var(--space-4);
-      border-radius: var(--radius-md);
-      font-size: var(--text-sm); font-weight: 500;
-      display: none;
-    }
-    .verify-result.match {
-      background: #D1FAE5; color: #065F46;
-      display: block;
-    }
-    .verify-result.no-match {
-      background: #FEE2E2; color: #991B1B;
-      display: block;
-    }
-    .content-revealed {
-      font-family: var(--font-serif);
-      font-size: var(--text-lg);
-      line-height: 1.65;
-      padding: var(--space-4) var(--space-5);
-      border-left: 3px solid var(--brand-primary);
-      background: var(--color-surface-alt);
-      border-radius: 0 var(--radius-md) var(--radius-md) 0;
-    }
       .proof-card { padding: var(--space-5); }
       .stat-grid { grid-template-columns: repeat(2, 1fr); }
       .action-row { flex-direction: column; }
@@ -425,15 +378,11 @@
   })();
 
   function renderProof(stamp) {
-    // ── Check if current user is the owner ────────────────────────────────
-    // We'll async-check this and update the UI after render
-    let isOwner = false;
+    // ── Check if current user is the owner — update content block after auth resolves
     window.tsDB.auth.getUser().then(({ data }) => {
-      if (data?.user?.id && data.user.id === stamp.creator_identity) {
-        isOwner = true;
-        if (stamp.visibility === 'hash_only') {
-          renderOwnerHashVerifier(stamp);
-        }
+      const isOwner = data?.user?.id && data.user.id === stamp.creator_identity;
+      if (stamp.visibility === 'hash_only') {
+        renderHashOnlyContent(stamp, isOwner);
       }
     });
     // Visibility banner
@@ -486,8 +435,9 @@
     const contentText  = document.getElementById('content-text');
 
     if (stamp.visibility === 'hash_only') {
+      // Rendered async by owner check above — show spinner briefly
       contentBlock.innerHTML = `
-        <div class="proof-content-hash-only" id="hash-only-public">
+        <div class="proof-content-hash-only" id="hash-only-content">
           <div style="font-size: 2rem; margin-bottom: 8px;">🔐</div>
           <p style="margin: 0; color: var(--color-text-secondary);">
             Content is private. Only the fingerprint is stored on-chain.<br>
@@ -584,75 +534,34 @@
     }
   }
 
-  // ── Owner hash verifier for hash-only stamps ────────────────────────────
-  function renderOwnerHashVerifier(stamp) {
-    const contentBlock = document.getElementById('content-block');
-    if (!contentBlock) return;
+  // ── Hash-only content rendering ──────────────────────────────────────────
+  function renderHashOnlyContent(stamp, isOwner) {
+    const el = document.getElementById('hash-only-content');
+    if (!el) return;
 
-    contentBlock.innerHTML = `
-      <div class="owner-verifier">
-        <p class="owner-verifier-title">
-          🔑 This is your stamp
-        </p>
-        <p class="owner-verifier-desc">
-          Paste your original content below to verify it matches the fingerprint on-chain.
-          Nothing is sent to our servers — the hash is computed entirely in your browser.
-        </p>
-        <textarea
-          id="verify-input"
-          placeholder="Paste your original content here..."
-          oninput="verifyContent(this.value)"
-        ></textarea>
-        <div class="verify-result" id="verify-result"></div>
-        <div id="revealed-content" style="display:none; margin-top: var(--space-3);">
-          <p style="font-size: var(--text-xs); color: var(--color-text-muted); margin: 0 0 var(--space-2); text-transform: uppercase; letter-spacing: 0.04em;">Your content</p>
-          <div class="content-revealed" id="revealed-text"></div>
-        </div>
-      </div>`;
-
-    // Store stamp content_hash for comparison
-    // DB returns bytea as \xabc123 — convert to 0xabc123
-    window._stampContentHash = stamp.content_hash
-      ? stamp.content_hash.replace(/^\\x/, '').toLowerCase()
-      : null;
-  }
-
-  async function verifyContent(input) {
-    const resultEl = document.getElementById('verify-result');
-    const revealedEl = document.getElementById('revealed-content');
-    const revealedText = document.getElementById('revealed-text');
-
-    if (!input.trim()) {
-      resultEl.className = 'verify-result';
-      resultEl.textContent = '';
-      revealedEl.style.display = 'none';
-      return;
+    if (isOwner && stamp.text_content) {
+      // Owner + content stored in DB → show it directly
+      // Replace the entire content block (parent) with the full styled view
+      const contentBlock = document.getElementById('content-block');
+      contentBlock.innerHTML = `
+        <p class="proof-content-text">${escapeHtml(stamp.text_content)}</p>
+        <div style="margin-top: var(--space-3); display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 11px; background: var(--color-surface-alt); border: 1px solid var(--color-border); border-radius: var(--radius-full); padding: 3px 8px; color: var(--color-text-muted);">
+            🔐 Visible only to you — content stays private to others
+          </span>
+        </div>`;
+    } else if (isOwner && !stamp.text_content) {
+      // Owner but no stored content (file stamp or pre-storage stamps)
+      el.innerHTML = `
+        <div style="font-size: 2rem; margin-bottom: 8px;">🔐</div>
+        <p style="margin: 0; color: var(--color-text-secondary);">
+          This is your private stamp. The content fingerprint is locked on MegaETH.<br>
+          <span style="font-size: var(--text-xs); margin-top: 4px; display: block;">
+            File or URL stamps store only the hash, not the original content.
+          </span>
+        </p>`;
     }
-
-    if (!window._stampContentHash) {
-      resultEl.className = 'verify-result no-match';
-      resultEl.textContent = '⚠ Could not load fingerprint from database.';
-      return;
-    }
-
-    // SHA-256 hash the input (same algorithm used by the Edge Function)
-    const encoder = new TextEncoder();
-    const data = encoder.encode(input);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashHex = Array.from(new Uint8Array(hashBuffer))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-
-    if (hashHex === window._stampContentHash) {
-      resultEl.className = 'verify-result match';
-      resultEl.innerHTML = '✓ Content verified — this matches the fingerprint on-chain. You are the original author.';
-      revealedText.textContent = input;
-      revealedEl.style.display = 'block';
-    } else {
-      resultEl.className = 'verify-result no-match';
-      resultEl.textContent = '✗ Content does not match. Try checking for extra spaces or different formatting.';
-      revealedEl.style.display = 'none';
-    }
+    // else: not owner → keep default "Content is private" display
   }
 
   function showError(message) {
