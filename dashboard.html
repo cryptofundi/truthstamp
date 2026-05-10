@@ -258,96 +258,26 @@
     <!-- Filter bar -->
     <div class="filter-bar">
       <div class="filter-tabs">
-        <button class="filter-tab active">All</button>
-        <button class="filter-tab">Public</button>
-        <button class="filter-tab">Sealed</button>
-        <button class="filter-tab">Hash only</button>
+        <button class="filter-tab active" data-filter="all">All</button>
+        <button class="filter-tab" data-filter="public">Public</button>
+        <button class="filter-tab" data-filter="sealed">Sealed</button>
+        <button class="filter-tab" data-filter="hash_only">Hash only</button>
       </div>
       <input type="text" class="input search-input" placeholder="Search your stamps...">
     </div>
 
     <!-- Stamps list -->
-    <div class="stamp-list">
-
-      <a href="proof.html" class="stamp-row" style="text-decoration: none; color: inherit; display: flex;">
-        <div class="stamp-icon text">TXT</div>
-        <div class="stamp-content">
-          <p class="stamp-preview">MEGA hits $1 before end of June 2026. Volume + ecosystem catalysts...</p>
-          <p class="stamp-meta">Today · 14:32 · Public · 1,247 verifications</p>
-        </div>
-        <div class="stamp-status">
-          <span class="badge badge-success"><span class="badge-dot"></span> Verified</span>
-        </div>
-      </a>
-
-      <div class="stamp-row">
-        <div class="stamp-icon text">TXT</div>
-        <div class="stamp-content">
-          <p class="stamp-preview">Sealed prediction — auto-reveals June 1, 2026</p>
-          <p class="stamp-meta">May 1 · Sealed · Reveals in 31 days</p>
-        </div>
-        <div class="stamp-status">
-          <span class="badge badge-accent">Sealed</span>
-        </div>
-      </div>
-
-      <div class="stamp-row">
-        <div class="stamp-icon text">TXT</div>
-        <div class="stamp-content">
-          <p class="stamp-preview">Calling it now — the next narrative is X. 3 reasons why.</p>
-          <p class="stamp-meta">Apr 28 · Public · 412 verifications</p>
-        </div>
-        <div class="stamp-status">
-          <span class="badge badge-success"><span class="badge-dot"></span> Verified</span>
-        </div>
-      </div>
-
-      <div class="stamp-row">
-        <div class="stamp-icon pdf">PDF</div>
-        <div class="stamp-content">
-          <p class="stamp-preview">my-research-2026.pdf</p>
-          <p class="stamp-meta">Apr 25 · Hash only · 2.4 MB</p>
-        </div>
-        <div class="stamp-status">
-          <span class="badge badge-success"><span class="badge-dot"></span> Verified</span>
-        </div>
-      </div>
-
-      <div class="stamp-row">
-        <div class="stamp-icon text">TXT</div>
-        <div class="stamp-content">
-          <p class="stamp-preview">Hot take that nobody's ready for yet — bookmark this.</p>
-          <p class="stamp-meta">Apr 22 · Public · 89 verifications</p>
-        </div>
-        <div class="stamp-status">
-          <span class="badge badge-success"><span class="badge-dot"></span> Verified</span>
-        </div>
-      </div>
-
-      <div class="stamp-row">
-        <div class="stamp-icon image">IMG</div>
-        <div class="stamp-content">
-          <p class="stamp-preview">brand-mockup-final-v3.jpg</p>
-          <p class="stamp-meta">Apr 18 · Public · 156 verifications</p>
-        </div>
-        <div class="stamp-status">
-          <span class="badge badge-success"><span class="badge-dot"></span> Verified</span>
-        </div>
-      </div>
-
-      <div class="stamp-row">
-        <div class="stamp-icon audio">MP3</div>
-        <div class="stamp-content">
-          <p class="stamp-preview">podcast-ep-12-original.mp3</p>
-          <p class="stamp-meta">Apr 12 · Public · 234 verifications</p>
-        </div>
-        <div class="stamp-status">
-          <span class="badge badge-success"><span class="badge-dot"></span> Verified</span>
-        </div>
+    <div id="stamps-container">
+      <!-- Loaded dynamically by JS below -->
+      <div id="stamps-loading" class="stamp-list" style="padding: var(--space-8); text-align: center; color: var(--color-text-muted);">
+        Loading your stamps...
       </div>
     </div>
+    </div>
 
-    <p class="text-center text-muted mt-6" style="font-size: var(--text-sm);">Showing 7 of 47 stamps · <a href="#" style="color: var(--brand-primary);">Load more</a></p>
+    <p class="text-center text-muted mt-6" id="stamps-pagination" style="font-size: var(--text-sm); display:none;">
+      <a href="#" id="load-more-btn" style="color: var(--brand-primary);">Load more</a>
+    </p>
   </main>
 
   <footer class="footer">
@@ -415,19 +345,174 @@
           document.getElementById('stat-verifications').textContent = stats.total_verifications || 0;
           document.getElementById('stat-sealed-pending').textContent = stats.sealed_pending_reveal || 0;
         } else {
-          // No stats yet — fresh account
           document.getElementById('stat-total-stamps').textContent = '0';
           document.getElementById('stat-verifications').textContent = '0';
           document.getElementById('stat-sealed-pending').textContent = '0';
         }
       } catch (err) {
         console.error('Could not load dashboard stats:', err);
-        // Fall back to zeros
         document.getElementById('stat-total-stamps').textContent = '0';
         document.getElementById('stat-verifications').textContent = '0';
         document.getElementById('stat-sealed-pending').textContent = '0';
       }
+
+      // Load stamps list
+      await loadStamps(user.id, 'all', 0);
     })();
+
+    // ── Stamp list loader ────────────────────────────────────────────────────
+    const PAGE_SIZE = 10;
+    let currentFilter = 'all';
+    let currentOffset = 0;
+
+    async function loadStamps(userId, filter, offset) {
+      currentFilter = filter;
+      currentOffset = offset;
+
+      if (offset === 0) {
+        document.getElementById('stamps-container').innerHTML =
+          '<div id="stamps-loading" class="stamp-list" style="padding: var(--space-8); text-align: center; color: var(--color-text-muted);">Loading your stamps...</div>';
+      }
+
+      let query = window.tsDB
+        .from('stamps')
+        .select('proof_id, content_type, visibility, display_title, text_content, file_name, file_size_bytes, tags, block_timestamp, status, storage_uri, sealed_until, revealed')
+        .eq('creator_profile_id', userId)
+        .eq('status', 'confirmed')
+        .order('block_timestamp', { ascending: false })
+        .range(offset, offset + PAGE_SIZE - 1);
+
+      if (filter === 'public')   query = query.eq('visibility', 'public');
+      if (filter === 'sealed')   query = query.eq('visibility', 'sealed');
+      if (filter === 'hash_only') query = query.eq('visibility', 'hash_only');
+
+      const { data: stamps, error } = await query;
+
+      if (error) {
+        console.error('Failed to load stamps:', error);
+        document.getElementById('stamps-container').innerHTML =
+          '<div class="stamp-list" style="padding: var(--space-6); text-align: center; color: var(--color-text-muted);">Failed to load stamps. Please refresh.</div>';
+        return;
+      }
+
+      if (!stamps || stamps.length === 0) {
+        if (offset === 0) {
+          document.getElementById('stamps-container').innerHTML = renderEmptyState(filter);
+        }
+        document.getElementById('stamps-pagination').style.display = 'none';
+        return;
+      }
+
+      const listHTML = stamps.map(renderStampRow).join('');
+
+      if (offset === 0) {
+        document.getElementById('stamps-container').innerHTML =
+          `<div class="stamp-list">${listHTML}</div>`;
+      } else {
+        document.querySelector('.stamp-list').insertAdjacentHTML('beforeend', listHTML);
+      }
+
+      // Show/hide load more
+      const pagination = document.getElementById('stamps-pagination');
+      if (stamps.length === PAGE_SIZE) {
+        pagination.style.display = 'block';
+        document.getElementById('load-more-btn').onclick = (e) => {
+          e.preventDefault();
+          loadStamps(
+            document.getElementById('user-avatar').__userId,
+            currentFilter,
+            currentOffset + PAGE_SIZE
+          );
+        };
+      } else {
+        pagination.style.display = 'none';
+      }
+    }
+
+    function renderStampRow(stamp) {
+      const typeLabel = {
+        text: 'TXT', file: 'FILE', url: 'URL'
+      }[stamp.content_type] ?? 'TXT';
+
+      const typeClass = {
+        text: 'text', file: 'pdf', url: 'text'
+      }[stamp.content_type] ?? 'text';
+
+      // Preview text
+      let preview = stamp.display_title
+        || stamp.text_content?.slice(0, 80)
+        || stamp.file_name
+        || '(no preview)';
+      if (preview.length > 80) preview = preview.slice(0, 77) + '...';
+
+      // Meta line
+      const date = stamp.block_timestamp
+        ? formatDate(new Date(stamp.block_timestamp))
+        : '—';
+      const visLabel = { public: 'Public', sealed: 'Sealed', hash_only: 'Hash only' }[stamp.visibility] ?? stamp.visibility;
+      const meta = `${date} · ${visLabel}`;
+
+      // Badge
+      let badge = '';
+      if (stamp.visibility === 'sealed' && !stamp.revealed) {
+        const revealDate = stamp.sealed_until
+          ? formatDate(new Date(stamp.sealed_until))
+          : '?';
+        badge = `<span class="badge badge-accent">Sealed · reveals ${revealDate}</span>`;
+      } else {
+        badge = `<span class="badge badge-success"><span class="badge-dot"></span> Verified</span>`;
+      }
+
+      return `
+        <a href="proof.html?id=${stamp.proof_id}" class="stamp-row" style="text-decoration: none; color: inherit; display: flex;">
+          <div class="stamp-icon ${typeClass}">${typeLabel}</div>
+          <div class="stamp-content">
+            <p class="stamp-preview">${escapeHtml(preview)}</p>
+            <p class="stamp-meta">${meta}</p>
+          </div>
+          <div class="stamp-status">${badge}</div>
+        </a>`;
+    }
+
+    function renderEmptyState(filter) {
+      const msgs = {
+        all:      { icon: '🖊️', title: 'No stamps yet', desc: 'Create your first stamp to lock in a permanent timestamp.' },
+        public:   { icon: '🌐', title: 'No public stamps', desc: 'Public stamps share full content on Arweave.' },
+        sealed:   { icon: '🔒', title: 'No sealed stamps', desc: 'Sealed stamps auto-reveal on a date you choose.' },
+        hash_only:{ icon: '🔐', title: 'No hash-only stamps', desc: 'Hash-only stamps keep content private while proving you had it.' },
+      };
+      const { icon, title, desc } = msgs[filter] || msgs.all;
+      return `
+        <div class="stamp-list" style="padding: var(--space-10); text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: var(--space-3);">${icon}</div>
+          <p style="font-weight: 600; margin: 0 0 var(--space-2);">${title}</p>
+          <p style="color: var(--color-text-muted); font-size: var(--text-sm); margin: 0 0 var(--space-5);">${desc}</p>
+          <a href="stamp.html" class="btn btn-primary">+ New stamp</a>
+        </div>`;
+    }
+
+    function formatDate(d) {
+      const now = new Date();
+      const diffDays = Math.floor((now - d) / 86400000);
+      if (diffDays === 0) return 'Today';
+      if (diffDays === 1) return 'Yesterday';
+      if (diffDays < 7) return `${diffDays}d ago`;
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Filter tabs ──────────────────────────────────────────────────────────
+    document.querySelectorAll('[data-filter]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const { data: { user } } = await window.tsDB.auth.getUser();
+        if (user) loadStamps(user.id, btn.dataset.filter, 0);
+      });
+    });
 
     async function handleSignOut(e) {
       if (e) e.preventDefault();
