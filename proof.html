@@ -196,6 +196,10 @@
         <a href="dashboard.html">My stamps</a>
         <a href="verify.html">Verify</a>
         <a href="stamp.html" class="btn btn-primary btn-sm">+ New stamp</a>
+        <span id="proof-nav-user" style="display:none; align-items:center; gap:6px; font-size:var(--text-xs); color:var(--color-text-muted);">
+          <span id="proof-nav-avatar" style="width:24px;height:24px;border-radius:50%;background:var(--brand-accent-light);color:var(--brand-accent);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">?</span>
+          <span id="proof-nav-name"></span>
+        </span>
       </div>
     </div>
   </nav>
@@ -380,7 +384,33 @@
   function renderProof(stamp) {
     // ── Check if current user is the owner — update content block after auth resolves
     window.tsDB.auth.getUser().then(({ data }) => {
-      const isOwner = data?.user?.id && data.user.id === stamp.creator_identity;
+      const user = data?.user;
+      const isOwner = !!(user?.id && user.id === stamp.creator_identity);
+
+      // Debug info — always log so we can diagnose
+      console.log('[TruthStamp] Logged in user ID:', user?.id ?? 'NOT LOGGED IN');
+      console.log('[TruthStamp] Stamp creator_identity:', stamp.creator_identity ?? 'NULL');
+      console.log('[TruthStamp] Is owner:', isOwner);
+      console.log('[TruthStamp] encrypted_content exists:', !!stamp.encrypted_content);
+      console.log('[TruthStamp] text_content exists:', !!stamp.text_content);
+
+      // Show logged-in user in nav
+      if (user) {
+        const profile = stamp.creator_display_name; // best we have without extra query
+        window.tsAuth?.getProfile?.().then(p => {
+          if (p) {
+            const name = p.display_name || user.email || '?';
+            const initials = name.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase() || '??';
+            const navUser = document.getElementById('proof-nav-user');
+            const navAvatar = document.getElementById('proof-nav-avatar');
+            const navName = document.getElementById('proof-nav-name');
+            if (navUser) navUser.style.display = 'inline-flex';
+            if (navAvatar) navAvatar.textContent = initials;
+            if (navName) navName.textContent = p.display_name || '';
+          }
+        });
+      }
+
       if (stamp.visibility === 'hash_only') {
         renderHashOnlyContent(stamp, isOwner);
       }
