@@ -438,12 +438,17 @@
         text: 'text', file: 'pdf', url: 'text'
       }[stamp.content_type] ?? 'text';
 
-      // Preview text
-      let preview = stamp.display_title
-        || stamp.text_content?.slice(0, 80)
-        || stamp.file_name
-        || '(no preview)';
-      if (preview.length > 80) preview = preview.slice(0, 77) + '...';
+      // Preview text — never show actual content for hash-only stamps
+      let preview;
+      if (stamp.visibility === 'hash_only') {
+        preview = '🔐 Private stamp · content encrypted';
+      } else {
+        preview = stamp.display_title
+          || stamp.text_content?.slice(0, 80)
+          || stamp.file_name
+          || '(no preview)';
+        if (preview.length > 80) preview = preview.slice(0, 77) + '...';
+      }
 
       // Meta line
       const date = stamp.block_timestamp
