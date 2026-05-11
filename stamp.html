@@ -358,8 +358,25 @@
       </div>
     </div>
 
-    <!-- Premium prompt (hidden by default, shown when File or URL clicked) -->
-    <div class="premium-prompt" id="premium-prompt">
+    <!-- File upload area (shown when File tab selected) -->
+    <div class="premium-prompt" id="file-upload-area" style="display:none;">
+      <div style="text-align: center; padding: var(--space-6);">
+        <div style="font-size: 2rem; margin-bottom: var(--space-3);">📄</div>
+        <h3 style="font-size: var(--text-lg); font-weight: 600; margin: 0 0 var(--space-2);">Stamp any file</h3>
+        <p style="font-size: var(--text-sm); color: var(--color-text-muted); margin: 0 0 var(--space-4);">
+          PDF, image, audio, video — up to 100 MB. Costs 3 credits.<br>
+          File hash stored on MegaETH. Content stored on Arweave permanently.
+        </p>
+        <label for="file-input" class="btn btn-secondary" style="cursor: pointer; display: inline-block;">
+          Choose file
+        </label>
+        <input type="file" id="file-input" style="display:none;" onchange="handleFileSelect(this)">
+        <div id="file-selected" style="display:none; margin-top: var(--space-4); padding: var(--space-3); background: var(--color-surface-alt); border-radius: var(--radius-md); font-size: var(--text-sm);">
+          <span id="file-name-display"></span>
+          <span id="file-size-display" style="color: var(--color-text-muted); margin-left: 8px;"></span>
+        </div>
+      </div>
+    </div>
       <div class="premium-icon">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
       </div>
@@ -390,16 +407,18 @@
       if (tab === 'text') {
         textContent.classList.remove('hide');
         premium.classList.remove('show');
-      } else {
+        updateCreditCost('text');
+      } else if (tab === 'file') {
         textContent.classList.add('hide');
+        premium.classList.remove('show');
+        document.getElementById('file-upload-area').classList.remove('hide');
+        updateCreditCost('file');
+      } else if (tab === 'url') {
+        textContent.classList.add('hide');
+        document.getElementById('file-upload-area').classList.add('hide');
         premium.classList.add('show');
-        if (tab === 'file') {
-          premiumTitle.textContent = 'File stamping is a Pro feature';
-          premiumDesc.innerHTML = 'Stamp PDFs, images, audio, video — up to 100 MB.<br>Files stored on Arweave. Permanent. Decentralized. Outlives us.';
-        } else if (tab === 'url') {
-          premiumTitle.textContent = 'URL stamping is a Pro feature';
-          premiumDesc.innerHTML = 'Capture and seal a webpage exactly as it exists today.<br>Perfect for researchers, content creators, and anyone tracking online claims.';
-        }
+        premiumTitle.textContent = 'URL stamping — coming soon';
+        premiumDesc.innerHTML = 'Capture and seal a webpage exactly as it exists today.<br>Will cost 2 credits per stamp. Coming in the next update.';
         if (window.trackEvent) window.trackEvent('premium_prompt_view', { source: tab });
       }
     }
@@ -441,9 +460,17 @@
 
     // Real stamp creation — calls Edge Function
     async function handleStamp() {
+      // Detect active tab
+      const activeTab = document.querySelector('.tab.active')?.dataset?.tab ?? 'text';
+
+      if (activeTab === 'file') {
+        await handleFileStamp();
+        return;
+      }
+
       const text = document.getElementById('stamp-text').value.trim();
       if (!text) {
-        alert('Please write something to stamp.');
+        showError('Please write something to stamp.');
         return;
       }
 
@@ -595,6 +622,97 @@
       return new TextDecoder().decode(decrypted);
     }
 
+    // ── File selection handler ───────────────────────────────────────────────
+    let selectedFile = null;
+    const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+
+    function handleFileSelect(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      if (file.size > MAX_FILE_SIZE) {
+        showError(`File too large: ${(file.size / 1024 / 1024).toFixed(1)} MB. Maximum is 100 MB.`);
+        input.value = '';
+        selectedFile = null;
+        document.getElementById('file-selected').style.display = 'none';
+        return;
+      }
+
+      selectedFile = file;
+      document.getElementById('file-name-display').textContent = file.name;
+      document.getElementById('file-size-display').textContent =
+        `(${(file.size / 1024).toFixed(1)} KB)`;
+      document.getElementById('file-selected').style.display = 'block';
+      hideError();
+    }
+
+    async function handleFileStamp() {
+      if (!selectedFile) {
+        showError('Please choose a file to stamp.');
+        return;
+      }
+
+      const btn = document.querySelector('.btn-stamp-action');
+      const originalText = btn?.textContent ?? 'Stamp it';
+      if (btn) { btn.disabled = true; btn.textContent = 'Stamping file...'; }
+      hideError();
+
+      try {
+        const session = await window.tsDB.auth.getSession();
+        const token = session?.data?.session?.access_token;
+        if (!token) { window.location.href = 'auth.html'; return; }
+
+        // Read file as base64
+        const fileData = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = e => resolve(e.target.result); // data:mime;base64,xxx
+          reader.onerror = reject;
+          reader.readAsDataURL(selectedFile);
+        });
+
+        const visibility = document.querySelector('.visibility-card.selected')?.id?.replace('vis-', '') ?? 'public';
+        const mappedVisibility = visibility === 'none' ? 'hash_only' : visibility;
+
+        const supabaseUrl = window.TRUTHSTAMP_CONFIG.SUPABASE_URL;
+        const response = await fetch(`${supabaseUrl}/functions/v1/stamp-create`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            content_type: 'file',
+            visibility: mappedVisibility,
+            file_name: selectedFile.name,
+            file_mime_type: selectedFile.type,
+            file_data: fileData,
+            display_title: selectedFile.name,
+          }),
+        });
+
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          throw new Error(result.error ?? `Server error (${response.status})`);
+        }
+        window.location.href = `proof.html?id=${result.proof_id}`;
+      } catch (err) {
+        showError(err instanceof Error ? err.message : 'File stamping failed. Please try again.');
+        if (btn) { btn.disabled = false; btn.textContent = originalText; }
+      }
+    }
+
+    function updateCreditCost(type) {
+      const cost = type === 'text' ? 1 : type === 'url' ? 2 : 3;
+      const displayEl = document.getElementById('stamp-credit-display');
+      if (!displayEl) return;
+      const profile = window._cachedProfile;
+      if (profile) {
+        const remaining = profile.credits_balance ?? 0;
+        displayEl.textContent = `${cost} credit${cost > 1 ? 's' : ''} · ${remaining} remaining`;
+        displayEl.style.color = remaining < cost ? '#DC2626' : '';
+      }
+    }
+
     function showError(msg) {
       let el = document.getElementById('stamp-error');
       if (!el) {
@@ -623,8 +741,8 @@
         try {
           const profile = await window.tsAuth.getProfile();
           if (profile) {
-            const credits = profile.credits_balance ?? 0;
-            updateCreditDisplay(credits, 'text'); // default to text cost
+            window._cachedProfile = profile;
+            updateCreditCost('text');
           }
         } catch (err) {
           console.error('Could not load profile:', err);
@@ -633,22 +751,11 @@
       }
     })();
 
-    // Update credit display when content type changes
-    function updateCreditDisplay(totalCredits, contentType) {
-      const cost = contentType === 'text' ? 1 : contentType === 'url' ? 2 : 3;
-      const displayEl = document.getElementById('stamp-credit-display');
-      if (!displayEl) return;
-      if (totalCredits === null || totalCredits === undefined) return;
-      displayEl.textContent = `${cost} credit · ${totalCredits} remaining`;
-      displayEl.style.color = totalCredits < cost ? '#DC2626' : '';
-    }
-
     // Hook into content type selection to update cost display
     document.querySelectorAll('[id^="tab-"]').forEach(tab => {
       tab.addEventListener('click', async () => {
         const type = tab.id.replace('tab-', '');
-        const profile = await window.tsAuth?.getProfile?.();
-        if (profile) updateCreditDisplay(profile.credits_balance, type);
+        updateCreditCost(type);
       });
     });
   </script>
