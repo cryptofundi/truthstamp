@@ -594,6 +594,10 @@
     const el = document.getElementById('hash-only-content');
     if (!el) return;
 
+    console.log('[TruthStamp] renderHashOnlyContent - isOwner:', isOwner,
+      'encrypted_content:', stamp.encrypted_content ? stamp.encrypted_content.slice(0,20)+'...' : 'NULL',
+      'text_content:', stamp.text_content ? 'EXISTS' : 'NULL');
+
     if (!isOwner) {
       // Not the owner — keep default lock message
       return;
