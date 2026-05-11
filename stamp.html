@@ -262,7 +262,7 @@
         <a href="pricing.html">Pricing</a>
         <a href="trust.html">Trust</a>
         <span style="display: inline-flex; align-items: center; gap: 8px;">
-          <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--brand-accent-light); color: var(--brand-accent); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">PR</span>
+          <span id="nav-user-avatar" style="width: 28px; height: 28px; border-radius: 50%; background: var(--brand-accent-light); color: var(--brand-accent); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">?</span>
         </span>
       </div>
     </div>
@@ -407,15 +407,16 @@
       if (tab === 'text') {
         textContent.classList.remove('hide');
         premium.classList.remove('show');
+        document.getElementById('file-upload-area').style.display = 'none';
         updateCreditCost('text');
       } else if (tab === 'file') {
         textContent.classList.add('hide');
         premium.classList.remove('show');
-        document.getElementById('file-upload-area').classList.remove('hide');
+        document.getElementById('file-upload-area').style.display = 'block';
         updateCreditCost('file');
       } else if (tab === 'url') {
         textContent.classList.add('hide');
-        document.getElementById('file-upload-area').classList.add('hide');
+        document.getElementById('file-upload-area').style.display = 'none';
         premium.classList.add('show');
         premiumTitle.textContent = 'URL stamping — coming soon';
         premiumDesc.innerHTML = 'Capture and seal a webpage exactly as it exists today.<br>Will cost 2 credits per stamp. Coming in the next update.';
@@ -731,7 +732,7 @@
       if (el) el.style.display = 'none';
     }
 
-    // Auth guard + load real credit balance
+    // Auth guard + load real credit balance + update nav avatar
     (async function() {
       if (window.tsRequireAuth) {
         const user = await window.tsRequireAuth();
@@ -743,6 +744,12 @@
           if (profile) {
             window._cachedProfile = profile;
             updateCreditCost('text');
+
+            // Update nav avatar with real user initials
+            const name = profile.display_name || user.email || '?';
+            const initials = name.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase() || '??';
+            const avatarEl = document.getElementById('nav-user-avatar');
+            if (avatarEl) avatarEl.textContent = initials;
           }
         } catch (err) {
           console.error('Could not load profile:', err);
