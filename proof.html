@@ -358,13 +358,14 @@
     document.getElementById('proof-url').textContent =
       `truthstamp.io/proof.html?id=${proofId}`;
 
-    // ── Fetch stamp from Supabase ──────────────────────────────────────────
-    // Use the stamps_with_creator view which joins safe profile fields
-    const { data: stamp, error } = await window.tsDB
-      .from('stamps_with_creator')
-      .select('*')
-      .eq('proof_id', proofId)
-      .maybeSingle();
+    // ── Fetch stamp AND current user in parallel ───────────────────────────
+    const [stampResult, authResult] = await Promise.all([
+      window.tsDB.from('stamps_with_creator').select('*').eq('proof_id', proofId).maybeSingle(),
+      window.tsDB.auth.getUser()
+    ]);
+
+    const { data: stamp, error } = stampResult;
+    const currentUser = authResult.data?.user ?? null;
 
     if (error) {
       console.error('DB error:', error);
@@ -377,45 +378,33 @@
       return;
     }
 
+    const isOwner = !!(currentUser?.id && currentUser.id === stamp.creator_identity);
+
+    console.log('[TruthStamp] user:', currentUser?.id ?? 'anon');
+    console.log('[TruthStamp] creator_identity:', stamp.creator_identity);
+    console.log('[TruthStamp] isOwner:', isOwner);
+    console.log('[TruthStamp] encrypted_content:', !!stamp.encrypted_content);
+
     // ── Render stamp data ──────────────────────────────────────────────────
-    renderProof(stamp);
+    await renderProof(stamp, currentUser, isOwner);
   })();
 
-  function renderProof(stamp) {
-    // ── Check if current user is the owner — update content block after auth resolves
-    window.tsDB.auth.getUser().then(({ data }) => {
-      const user = data?.user;
-      const isOwner = !!(user?.id && user.id === stamp.creator_identity);
-
-      console.log('[TruthStamp] Logged in user ID:', user?.id ?? 'NOT LOGGED IN');
-      console.log('[TruthStamp] Stamp creator_identity:', stamp.creator_identity ?? 'NULL');
-      console.log('[TruthStamp] Is owner:', isOwner);
-      console.log('[TruthStamp] encrypted_content exists:', !!stamp.encrypted_content);
-      console.log('[TruthStamp] text_content exists:', !!stamp.text_content);
-
-      // Show logged-in user in nav
-      if (user) {
-        window.tsAuth?.getProfile?.().then(p => {
-          if (p) {
-            const name = p.display_name || user.email || '?';
-            const initials = name.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase() || '??';
-            const navUser = document.getElementById('proof-nav-user');
-            const navAvatar = document.getElementById('proof-nav-avatar');
-            const navName = document.getElementById('proof-nav-name');
-            if (navUser) navUser.style.display = 'inline-flex';
-            if (navAvatar) navAvatar.textContent = initials;
-            if (navName) navName.textContent = p.display_name || '';
-          }
-        });
-      }
-
-      if (stamp.visibility === 'hash_only') {
-        // renderHashOnlyContent is async — must call it and handle the promise
-        renderHashOnlyContent(stamp, isOwner, user).catch(err => {
-          console.error('[TruthStamp] renderHashOnlyContent failed:', err);
-        });
-      }
-    });
+  async function renderProof(stamp, currentUser, isOwner) {
+    // Show nav user if logged in
+    if (currentUser) {
+      window.tsAuth?.getProfile?.().then(p => {
+        if (p) {
+          const name = p.display_name || currentUser.email || '?';
+          const initials = name.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase() || '??';
+          const navUser = document.getElementById('proof-nav-user');
+          const navAvatar = document.getElementById('proof-nav-avatar');
+          const navName = document.getElementById('proof-nav-name');
+          if (navUser) navUser.style.display = 'inline-flex';
+          if (navAvatar) navAvatar.textContent = initials;
+          if (navName) navName.textContent = p.display_name || '';
+        }
+      });
+    }
     // Visibility banner
     const bannerEl = document.getElementById('visibility-banner');
     const iconEl   = document.getElementById('visibility-icon');
@@ -466,7 +455,7 @@
     const contentText  = document.getElementById('content-text');
 
     if (stamp.visibility === 'hash_only') {
-      // Rendered async by owner check above — show spinner briefly
+      // Set placeholder first, then immediately overwrite if owner
       contentBlock.innerHTML = `
         <div class="proof-content-hash-only" id="hash-only-content">
           <div style="font-size: 2rem; margin-bottom: 8px;">🔐</div>
@@ -475,6 +464,8 @@
             The owner can prove authorship by providing the original content.
           </p>
         </div>`;
+      // await here — this is inside an async function so it works correctly
+      await renderHashOnlyContent(stamp, isOwner, currentUser);
     } else if (stamp.visibility === 'sealed' && !stamp.revealed) {
       const revealDate = stamp.sealed_until
         ? new Date(stamp.sealed_until).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
