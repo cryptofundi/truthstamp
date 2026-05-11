@@ -521,15 +521,14 @@
         }
 
         // For hash-only stamps: encrypt content client-side before sending
-        // The encrypted_content is stored in DB but is unreadable without the user's key
-        // Key is derived from user UUID — deterministic, never stored server-side
         let encryptedContent = undefined;
         if (visibility === 'hash_only') {
           try {
             const userId = session.data.session.user.id;
             encryptedContent = await encryptForUser(text, userId);
+            console.log('[TruthStamp] Content encrypted, length:', encryptedContent?.length);
           } catch (encErr) {
-            console.warn('Encryption failed, sending without encrypted backup:', encErr);
+            console.error('[TruthStamp] Encryption failed:', encErr);
           }
         }
 
@@ -549,7 +548,8 @@
               visibility: visibility,
               sealed_until: sealedUntil || undefined,
               tags: tags,
-              display_title: text.slice(0, 60),
+              // Don't send display_title for hash-only — server sets 'Private stamp'
+              display_title: visibility === 'hash_only' ? undefined : text.slice(0, 60),
               encrypted_content: encryptedContent,
             }),
           }
