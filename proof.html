@@ -387,7 +387,6 @@
       const user = data?.user;
       const isOwner = !!(user?.id && user.id === stamp.creator_identity);
 
-      // Debug info — always log so we can diagnose
       console.log('[TruthStamp] Logged in user ID:', user?.id ?? 'NOT LOGGED IN');
       console.log('[TruthStamp] Stamp creator_identity:', stamp.creator_identity ?? 'NULL');
       console.log('[TruthStamp] Is owner:', isOwner);
@@ -396,7 +395,6 @@
 
       // Show logged-in user in nav
       if (user) {
-        const profile = stamp.creator_display_name; // best we have without extra query
         window.tsAuth?.getProfile?.().then(p => {
           if (p) {
             const name = p.display_name || user.email || '?';
@@ -412,7 +410,10 @@
       }
 
       if (stamp.visibility === 'hash_only') {
-        renderHashOnlyContent(stamp, isOwner);
+        // renderHashOnlyContent is async — must call it and handle the promise
+        renderHashOnlyContent(stamp, isOwner, user).catch(err => {
+          console.error('[TruthStamp] renderHashOnlyContent failed:', err);
+        });
       }
     });
     // Visibility banner
@@ -589,41 +590,37 @@
     return new TextDecoder().decode(decrypted);
   }
 
-  // ── Hash-only content rendering ──────────────────────────────────────────
-  async function renderHashOnlyContent(stamp, isOwner) {
+  async function renderHashOnlyContent(stamp, isOwner, user) {
     const el = document.getElementById('hash-only-content');
     if (!el) return;
 
     console.log('[TruthStamp] renderHashOnlyContent - isOwner:', isOwner,
-      'encrypted_content:', stamp.encrypted_content ? stamp.encrypted_content.slice(0,20)+'...' : 'NULL',
-      'text_content:', stamp.text_content ? 'EXISTS' : 'NULL');
+      'encrypted:', !!stamp.encrypted_content, 'text:', !!stamp.text_content);
 
-    if (!isOwner) {
-      // Not the owner — keep default lock message
-      return;
-    }
+    if (!isOwner) return;
 
-    // Owner: try to decrypt encrypted_content first, fall back to text_content
     let content = null;
 
-    if (stamp.encrypted_content) {
+    // Try decryption first
+    if (stamp.encrypted_content && user?.id) {
       try {
-        const { data: { user } } = await window.tsDB.auth.getUser();
-        if (user) {
-          content = await decryptForUser(stamp.encrypted_content, user.id);
-        }
+        content = await decryptForUser(stamp.encrypted_content, user.id);
+        console.log('[TruthStamp] Decryption succeeded, content length:', content?.length);
       } catch (err) {
-        console.warn('Decryption failed, trying text_content fallback:', err);
+        console.error('[TruthStamp] Decryption failed:', err);
       }
     }
 
-    // Fallback: text_content (for older stamps or non-encrypted ones)
+    // Fallback to plaintext (older stamps)
     if (!content && stamp.text_content) {
       content = stamp.text_content;
+      console.log('[TruthStamp] Using text_content fallback');
     }
 
+    const contentBlock = document.getElementById('content-block');
+    if (!contentBlock) return;
+
     if (content) {
-      const contentBlock = document.getElementById('content-block');
       contentBlock.innerHTML = `
         <p class="proof-content-text">${escapeHtml(content)}</p>
         <div style="margin-top: var(--space-3);">
@@ -635,9 +632,9 @@
       el.innerHTML = `
         <div style="font-size: 2rem; margin-bottom: 8px;">🔐</div>
         <p style="margin: 0; color: var(--color-text-secondary);">
-          This is your private stamp. Content is encrypted and only visible to you.<br>
+          This is your private stamp. Content encrypted and only visible to you.<br>
           <span style="font-size: var(--text-xs); margin-top: 4px; display: block; color: var(--color-text-muted);">
-            (Stamps created before encryption was enabled show content here once re-stamped)
+            (Stamps from before encryption show content here once re-stamped)
           </span>
         </p>`;
     }
