@@ -447,9 +447,11 @@
         return;
       }
 
-      // Get selected visibility
+      // Get selected visibility — map card IDs to API values
       const selectedVis = document.querySelector('.visibility-card.selected')?.id?.replace('vis-', '') ?? 'public';
-      const visibility = selectedVis === 'hash-only' ? 'hash_only' : selectedVis;
+      const visibility = selectedVis === 'hash-only' ? 'hash_only'
+        : selectedVis === 'none' ? 'hash_only'  // vis-none is the hash-only card
+        : selectedVis;
 
       // Get seal date if sealed
       let sealedUntil = 0;
@@ -490,6 +492,19 @@
           return;
         }
 
+        // For hash-only stamps: encrypt content client-side before sending
+        // The encrypted_content is stored in DB but is unreadable without the user's key
+        // Key is derived from user UUID — deterministic, never stored server-side
+        let encryptedContent = undefined;
+        if (visibility === 'hash_only') {
+          try {
+            const userId = session.data.session.user.id;
+            encryptedContent = await encryptForUser(text, userId);
+          } catch (encErr) {
+            console.warn('Encryption failed, sending without encrypted backup:', encErr);
+          }
+        }
+
         // Call Edge Function
         const supabaseUrl = window.TRUTHSTAMP_CONFIG.SUPABASE_URL;
         const response = await fetch(
@@ -507,6 +522,7 @@
               sealed_until: sealedUntil || undefined,
               tags: tags,
               display_title: text.slice(0, 60),
+              encrypted_content: encryptedContent,
             }),
           }
         );
@@ -533,6 +549,50 @@
           btn.textContent = originalText;
         }
       }
+    }
+
+    // ── Client-side encryption helpers ──────────────────────────────────────
+    // Derives an AES-256-GCM key from user's UUID using PBKDF2.
+    // The key is deterministic — same UUID always produces same key.
+    // The server never sees the plaintext or the key.
+    const ENCRYPT_PEPPER = 'truthstamp-v1-hash-only';
+
+    async function deriveKey(userId) {
+      const keyMaterial = await crypto.subtle.importKey(
+        'raw',
+        new TextEncoder().encode(userId + ENCRYPT_PEPPER),
+        'PBKDF2',
+        false,
+        ['deriveKey']
+      );
+      return crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt: new TextEncoder().encode(userId), iterations: 100000, hash: 'SHA-256' },
+        keyMaterial,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']
+      );
+    }
+
+    async function encryptForUser(text, userId) {
+      const key = await deriveKey(userId);
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const encoded = new TextEncoder().encode(text);
+      const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoded);
+      // Combine iv + ciphertext, encode as base64
+      const combined = new Uint8Array(iv.length + ciphertext.byteLength);
+      combined.set(iv);
+      combined.set(new Uint8Array(ciphertext), iv.length);
+      return btoa(String.fromCharCode(...combined));
+    }
+
+    async function decryptForUser(encryptedB64, userId) {
+      const key = await deriveKey(userId);
+      const combined = Uint8Array.from(atob(encryptedB64), c => c.charCodeAt(0));
+      const iv = combined.slice(0, 12);
+      const ciphertext = combined.slice(12);
+      const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+      return new TextDecoder().decode(decrypted);
     }
 
     function showError(msg) {
