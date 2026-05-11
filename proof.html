@@ -534,34 +534,79 @@
     }
   }
 
+  // ── Client-side decryption (mirrors stamp.html logic) ───────────────────
+  const ENCRYPT_PEPPER = 'truthstamp-v1-hash-only';
+
+  async function deriveKey(userId) {
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(userId + ENCRYPT_PEPPER),
+      'PBKDF2', false, ['deriveKey']
+    );
+    return crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt: new TextEncoder().encode(userId), iterations: 100000, hash: 'SHA-256' },
+      keyMaterial,
+      { name: 'AES-GCM', length: 256 }, false, ['decrypt']
+    );
+  }
+
+  async function decryptForUser(encryptedB64, userId) {
+    const key = await deriveKey(userId);
+    const combined = Uint8Array.from(atob(encryptedB64), c => c.charCodeAt(0));
+    const iv = combined.slice(0, 12);
+    const ciphertext = combined.slice(12);
+    const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+    return new TextDecoder().decode(decrypted);
+  }
+
   // ── Hash-only content rendering ──────────────────────────────────────────
-  function renderHashOnlyContent(stamp, isOwner) {
+  async function renderHashOnlyContent(stamp, isOwner) {
     const el = document.getElementById('hash-only-content');
     if (!el) return;
 
-    if (isOwner && stamp.text_content) {
-      // Owner + content stored in DB → show it directly
-      // Replace the entire content block (parent) with the full styled view
+    if (!isOwner) {
+      // Not the owner — keep default lock message
+      return;
+    }
+
+    // Owner: try to decrypt encrypted_content first, fall back to text_content
+    let content = null;
+
+    if (stamp.encrypted_content) {
+      try {
+        const { data: { user } } = await window.tsDB.auth.getUser();
+        if (user) {
+          content = await decryptForUser(stamp.encrypted_content, user.id);
+        }
+      } catch (err) {
+        console.warn('Decryption failed, trying text_content fallback:', err);
+      }
+    }
+
+    // Fallback: text_content (for older stamps or non-encrypted ones)
+    if (!content && stamp.text_content) {
+      content = stamp.text_content;
+    }
+
+    if (content) {
       const contentBlock = document.getElementById('content-block');
       contentBlock.innerHTML = `
-        <p class="proof-content-text">${escapeHtml(stamp.text_content)}</p>
-        <div style="margin-top: var(--space-3); display: flex; align-items: center; gap: 6px;">
+        <p class="proof-content-text">${escapeHtml(content)}</p>
+        <div style="margin-top: var(--space-3);">
           <span style="font-size: 11px; background: var(--color-surface-alt); border: 1px solid var(--color-border); border-radius: var(--radius-full); padding: 3px 8px; color: var(--color-text-muted);">
-            🔐 Visible only to you — content stays private to others
+            🔐 Visible only to you · encrypted storage
           </span>
         </div>`;
-    } else if (isOwner && !stamp.text_content) {
-      // Owner but no stored content (file stamp or pre-storage stamps)
+    } else {
       el.innerHTML = `
         <div style="font-size: 2rem; margin-bottom: 8px;">🔐</div>
         <p style="margin: 0; color: var(--color-text-secondary);">
-          This is your private stamp. The content fingerprint is locked on MegaETH.<br>
-          <span style="font-size: var(--text-xs); margin-top: 4px; display: block;">
-            File or URL stamps store only the hash, not the original content.
+          This is your private stamp. Content is encrypted and only visible to you.<br>
+          <span style="font-size: var(--text-xs); margin-top: 4px; display: block; color: var(--color-text-muted);">
+            (Stamps created before encryption was enabled show content here once re-stamped)
           </span>
         </p>`;
     }
-    // else: not owner → keep default "Content is private" display
   }
 
   function showError(message) {
