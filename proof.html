@@ -346,6 +346,7 @@
   <script src="js/common.js"></script>
   <script>
   (async function() {
+    try {
     // ── Get proof ID from URL ──────────────────────────────────────────────
     const params = new URLSearchParams(window.location.search);
     const proofId = params.get('id');
@@ -359,13 +360,20 @@
       `truthstamp.io/proof.html?id=${proofId}`;
 
     // ── Fetch stamp AND current user in parallel ───────────────────────────
-    const [stampResult, authResult] = await Promise.all([
-      window.tsDB.from('stamps_with_creator').select('*').eq('proof_id', proofId).maybeSingle(),
-      window.tsDB.auth.getUser()
-    ]);
+    let stampResult, authResult;
+    try {
+      [stampResult, authResult] = await Promise.all([
+        window.tsDB.from('stamps_with_creator').select('*').eq('proof_id', proofId).maybeSingle(),
+        window.tsDB.auth.getUser()
+      ]);
+    } catch (fetchErr) {
+      console.error('Fetch error:', fetchErr);
+      showError('Failed to connect to database. Please refresh the page.');
+      return;
+    }
 
     const { data: stamp, error } = stampResult;
-    const currentUser = authResult.data?.user ?? null;
+    const currentUser = authResult?.data?.user ?? null;
 
     if (error) {
       console.error('DB error:', error);
@@ -387,6 +395,11 @@
 
     // ── Render stamp data ──────────────────────────────────────────────────
     await renderProof(stamp, currentUser, isOwner);
+
+    } catch (topErr) {
+      console.error('Proof page error:', topErr);
+      showError('Something went wrong loading this proof. Please refresh. Error: ' + topErr.message);
+    }
   })();
 
   async function renderProof(stamp, currentUser, isOwner) {
