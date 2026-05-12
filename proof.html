@@ -430,12 +430,21 @@
     } else if (stamp.visibility === 'sealed') {
       bannerEl.className = 'visibility-banner sealed';
       iconEl.textContent = '🔒';
-      const revealDate = stamp.sealed_until
-        ? new Date(stamp.sealed_until).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-        : 'unknown date';
-      labelEl.textContent = stamp.revealed
-        ? `Sealed stamp — revealed on ${revealDate}`
-        : `Sealed stamp — auto-reveals on ${revealDate}`;
+      const sealedUntil = stamp.sealed_until ? new Date(stamp.sealed_until) : null;
+      const isExpired = sealedUntil && sealedUntil <= new Date();
+      if (stamp.revealed || isExpired) {
+        iconEl.textContent = '🔓';
+        const revealDate = sealedUntil
+          ? sealedUntil.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+          : 'unknown date';
+        labelEl.textContent = `Sealed stamp — revealed on ${revealDate}`;
+        bannerEl.className = 'visibility-banner public';
+      } else {
+        const revealDate = sealedUntil
+          ? sealedUntil.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+          : 'unknown date';
+        labelEl.textContent = `Sealed stamp — auto-reveals on ${revealDate}`;
+      }
     } else {
       bannerEl.className = 'visibility-banner hash_only';
       iconEl.textContent = '🔐';
@@ -479,18 +488,38 @@
         </div>`;
       // await here — this is inside an async function so it works correctly
       await renderHashOnlyContent(stamp, isOwner, currentUser);
-    } else if (stamp.visibility === 'sealed' && !stamp.revealed) {
-      const revealDate = stamp.sealed_until
-        ? new Date(stamp.sealed_until).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-        : 'a future date';
-      contentBlock.innerHTML = `
-        <div class="proof-content-hash-only">
-          <div style="font-size: 2rem; margin-bottom: 8px;">🔒</div>
-          <p style="margin: 0; color: var(--color-text-secondary);">
-            Content is sealed until <strong>${revealDate}</strong>.<br>
-            The timestamp is locked in — content will reveal automatically.
-          </p>
-        </div>`;
+    } else if (stamp.visibility === 'sealed') {
+      const sealedUntil = stamp.sealed_until ? new Date(stamp.sealed_until) : null;
+      const isExpired = sealedUntil && sealedUntil <= new Date();
+      const isRevealed = stamp.revealed || isExpired;
+
+      if (!isRevealed) {
+        const revealDate = sealedUntil
+          ? sealedUntil.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })
+          : 'a future date';
+        contentBlock.innerHTML = `
+          <div class="proof-content-hash-only">
+            <div style="font-size: 2rem; margin-bottom: 8px;">🔒</div>
+            <p style="margin: 0; color: var(--color-text-secondary);">
+              Content is sealed until <strong>${revealDate}</strong>.<br>
+              The timestamp is locked in — content will reveal automatically.
+            </p>
+          </div>`;
+      } else {
+        // Seal date has passed — show content
+        const text = stamp.text_content || stamp.display_title || '';
+        if (text) {
+          contentText.textContent = text;
+        } else {
+          contentText.textContent = '(Content stored on Arweave — view link below)';
+        }
+        if (stamp.storage_uri) {
+          const arweaveLink = document.getElementById('arweave-link');
+          const txId = stamp.storage_uri.replace('ar://', '');
+          arweaveLink.href = `https://arweave.net/${txId}`;
+          arweaveLink.style.display = 'inline-flex';
+        }
+      }
     } else {
       // Public or revealed sealed — show content
       const text = stamp.text_content || stamp.display_title || '';
@@ -642,6 +671,16 @@
           </span>
         </p>`;
     }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   function showError(message) {
