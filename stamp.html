@@ -24,6 +24,15 @@
       margin: 0 auto;
       padding: var(--space-8) var(--space-6) var(--space-12);
     }
+
+    @media (max-width: 600px) {
+      .composer-shell { padding: var(--space-5) var(--space-4) var(--space-10); }
+      .composer-title { font-size: var(--text-xl); }
+      .visibility-cards { flex-direction: column; }
+      .visibility-card { width: 100%; }
+      .input, textarea { font-size: 16px !important; } /* Prevents iOS zoom */
+      .meta-row { flex-direction: column; gap: var(--space-1); }
+    }
     .composer-header {
       margin-bottom: var(--space-6);
     }
@@ -191,6 +200,21 @@
     .seal-quick:hover {
       border-color: var(--brand-accent);
       color: var(--brand-accent);
+    }
+
+    /* Spinner for stamp button loading state */
+    @keyframes ts-spin { to { transform: rotate(360deg); } }
+    .btn-spinning { position: relative; color: transparent !important; pointer-events: none; }
+    .btn-spinning::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 18px; height: 18px;
+      margin: -9px 0 0 -9px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: ts-spin 0.7s linear infinite;
     }
 
     .stamp-cta-section {
@@ -501,12 +525,11 @@
         .map(el => el.dataset.tag)
         .filter(Boolean);
 
-      // UI: show loading state
       const btn = document.querySelector('.btn-stamp-action');
-      const originalText = btn?.textContent ?? 'Stamp it';
+      const originalText = btn?.textContent ?? 'Stamp this thought';
       if (btn) {
         btn.disabled = true;
-        btn.textContent = 'Stamping... ~1 second';
+        btn.classList.add('btn-spinning');
       }
       hideError();
 
@@ -574,7 +597,7 @@
         showError(err instanceof Error ? err.message : 'Stamping failed. Please try again.');
         if (btn) {
           btn.disabled = false;
-          btn.textContent = originalText;
+          btn.classList.remove('btn-spinning');
         }
       }
     }
