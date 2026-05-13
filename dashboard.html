@@ -263,7 +263,7 @@
         <button class="filter-tab" data-filter="sealed">Sealed</button>
         <button class="filter-tab" data-filter="hash_only">Hash only</button>
       </div>
-      <input type="text" class="input search-input" placeholder="Search your stamps...">
+      <input type="text" class="input search-input" id="stamp-search" placeholder="Search your stamps..." oninput="handleSearch(this.value)">
     </div>
 
     <!-- Stamps list -->
@@ -356,16 +356,27 @@
         document.getElementById('stat-sealed-pending').textContent = '0';
       }
 
+      // Store userId for search/filter use
+      window._dashUserId = user.id;
+
       // Load stamps list
       await loadStamps(user.id, 'all', 0);
     })();
 
     // ── Stamp list loader ────────────────────────────────────────────────────
-    const PAGE_SIZE = 10;
+    const PAGE_SIZE = 20; // Show 20 per page
     let currentFilter = 'all';
     let currentOffset = 0;
+    let searchDebounce = null;
 
-    async function loadStamps(userId, filter, offset) {
+    function handleSearch(value) {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => {
+        if (window._dashUserId) loadStamps(window._dashUserId, currentFilter, 0, value.trim());
+      }, 300);
+    }
+
+    async function loadStamps(userId, filter, offset, searchQuery = '') {
       currentFilter = filter;
       currentOffset = offset;
 
@@ -382,9 +393,16 @@
         .order('block_timestamp', { ascending: false })
         .range(offset, offset + PAGE_SIZE - 1);
 
-      if (filter === 'public')   query = query.eq('visibility', 'public');
-      if (filter === 'sealed')   query = query.eq('visibility', 'sealed');
+      if (filter === 'public')    query = query.eq('visibility', 'public');
+      if (filter === 'sealed')    query = query.eq('visibility', 'sealed');
       if (filter === 'hash_only') query = query.eq('visibility', 'hash_only');
+
+      // Search across display_title, file_name, tags
+      if (searchQuery) {
+        query = query.or(
+          `display_title.ilike.%${searchQuery}%,file_name.ilike.%${searchQuery}%`
+        );
+      }
 
       const { data: stamps, error } = await query;
 
@@ -397,7 +415,11 @@
 
       if (!stamps || stamps.length === 0) {
         if (offset === 0) {
-          document.getElementById('stamps-container').innerHTML = renderEmptyState(filter);
+          document.getElementById('stamps-container').innerHTML =
+            searchQuery ? `<div class="stamp-list" style="padding: var(--space-8); text-align:center; color: var(--color-text-muted);">
+              <div style="font-size:2rem;margin-bottom:8px;">🔍</div>
+              <p style="margin:0;">No stamps found for "<strong>${escapeHtml(searchQuery)}</strong>"</p>
+            </div>` : renderEmptyState(filter);
         }
         document.getElementById('stamps-pagination').style.display = 'none';
         return;
@@ -514,8 +536,8 @@
       btn.addEventListener('click', async () => {
         document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        const { data: { user } } = await window.tsDB.auth.getUser();
-        if (user) loadStamps(user.id, btn.dataset.filter, 0);
+        const searchVal = document.getElementById('stamp-search')?.value?.trim() ?? '';
+        if (window._dashUserId) loadStamps(window._dashUserId, btn.dataset.filter, 0, searchVal);
       });
     });
 
