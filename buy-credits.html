@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buy credits — TruthStamp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/components.css">
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/analytics.js"></script>
+
+  <style>
+    .credits-shell {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: var(--space-8) var(--space-5) var(--space-12);
+    }
+    .credits-header { margin-bottom: var(--space-8); }
+    .credits-title { font-size: var(--text-2xl); font-weight: 700; margin: 0 0 var(--space-2); letter-spacing: -0.01em; }
+    .credits-subtitle { color: var(--color-text-secondary); margin: 0; font-size: var(--text-base); }
+
+    .balance-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--space-4) var(--space-5);
+      background: var(--brand-primary-light);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-8);
+      flex-wrap: wrap; gap: var(--space-3);
+    }
+    .balance-label { font-size: var(--text-sm); color: var(--color-text-secondary); margin: 0; }
+    .balance-amount { font-size: var(--text-xl); font-weight: 700; color: var(--brand-primary); margin: 0; }
+
+    /* Pack grid */
+    .pack-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
+    }
+
+    .pack-card {
+      background: var(--color-surface);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+      text-align: center;
+    }
+    .pack-card:hover { border-color: var(--brand-primary); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    .pack-card.selected { border-color: var(--brand-primary); background: var(--brand-primary-light); }
+
+    .pack-badge {
+      position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+      background: var(--brand-primary); color: white;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: var(--radius-full);
+      white-space: nowrap;
+    }
+
+    .pack-name { font-size: var(--text-base); font-weight: 600; margin: 0 0 var(--space-2); }
+    .pack-credits { font-size: 2.5rem; font-weight: 800; color: var(--brand-primary); margin: 0; line-height: 1; }
+    .pack-credits-label { font-size: var(--text-xs); color: var(--color-text-muted); margin: 0 0 var(--space-3); }
+    .pack-price { font-size: var(--text-lg); font-weight: 600; margin: 0 0 2px; }
+    .pack-per-credit { font-size: var(--text-xs); color: var(--color-text-muted); margin: 0; }
+
+    .pack-uses {
+      margin-top: var(--space-4);
+      padding-top: var(--space-4);
+      border-top: 1px solid var(--color-border);
+    }
+    .pack-use { font-size: var(--text-xs); color: var(--color-text-secondary); margin: 2px 0; }
+
+    /* CTA */
+    .checkout-section {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+    }
+    .checkout-summary {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: var(--space-5); flex-wrap: wrap; gap: var(--space-3);
+    }
+    .checkout-selected { font-size: var(--text-base); font-weight: 600; margin: 0; }
+    .checkout-price { font-size: var(--text-xl); font-weight: 700; color: var(--brand-primary); margin: 0; }
+
+    .checkout-notes {
+      display: flex; gap: var(--space-4); flex-wrap: wrap;
+      margin-top: var(--space-4);
+      padding-top: var(--space-4);
+      border-top: 1px solid var(--color-border);
+    }
+    .checkout-note { font-size: var(--text-xs); color: var(--color-text-muted); display: flex; align-items: center; gap: 4px; }
+
+    .error-msg {
+      padding: var(--space-3) var(--space-4);
+      background: #FEE2E2; color: #991B1B; border-radius: var(--radius-md);
+      font-size: var(--text-sm); margin-top: var(--space-4); display: none;
+    }
+    .success-msg {
+      padding: var(--space-4) var(--space-5);
+      background: #D1FAE5; color: #065F46; border-radius: var(--radius-lg);
+      font-size: var(--text-base); font-weight: 500; margin-top: var(--space-4); display: none;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .pack-grid { grid-template-columns: 1fr 1fr; }
+      .credits-shell { padding: var(--space-5) var(--space-4) var(--space-8); }
+    }
+    @media (max-width: 400px) {
+      .pack-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <span class="nav-logo">T</span><span>TruthStamp</span>
+      </a>
+      <div class="nav-links">
+        <a href="dashboard.html">My stamps</a>
+        <a href="stamp.html" class="btn btn-primary btn-sm">+ New stamp</a>
+        <span id="nav-user-avatar" style="width:28px;height:28px;border-radius:50%;background:var(--brand-accent-light);color:var(--brand-accent);display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">?</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="credits-shell">
+    <div class="credits-header">
+      <h1 class="credits-title">Buy credits</h1>
+      <p class="credits-subtitle">One-time purchase. Credits never expire. Use for text, file, or URL stamps.</p>
+    </div>
+
+    <!-- Current balance bar -->
+    <div class="balance-bar">
+      <div>
+        <p class="balance-label">Your current balance</p>
+        <p class="balance-amount" id="current-balance">Loading...</p>
+      </div>
+      <div style="font-size: var(--text-sm); color: var(--color-text-secondary);">
+        Text = 1 credit &nbsp;·&nbsp; File = 3 credits &nbsp;·&nbsp; URL = 2 credits
+      </div>
+    </div>
+
+    <!-- Pack selection -->
+    <div class="pack-grid">
+
+      <div class="pack-card" id="pack-starter" onclick="selectPack('starter')">
+        <p class="pack-name">Starter</p>
+        <p class="pack-credits">50</p>
+        <p class="pack-credits-label">credits</p>
+        <p class="pack-price">₹830</p>
+        <p class="pack-per-credit">₹16.60 per credit</p>
+        <div class="pack-uses">
+          <p class="pack-use">50 text stamps</p>
+          <p class="pack-use">or 16 file stamps</p>
+        </div>
+      </div>
+
+      <div class="pack-card" id="pack-standard" onclick="selectPack('standard')">
+        <p class="pack-name">Standard</p>
+        <p class="pack-credits">125</p>
+        <p class="pack-credits-label">credits</p>
+        <p class="pack-price">₹2,075</p>
+        <p class="pack-per-credit">₹16.60 per credit</p>
+        <div class="pack-uses">
+          <p class="pack-use">125 text stamps</p>
+          <p class="pack-use">or 41 file stamps</p>
+        </div>
+      </div>
+
+      <div class="pack-card" id="pack-pro" onclick="selectPack('pro')" style="border-color: var(--brand-primary);">
+        <span class="pack-badge">⭐ Best value</span>
+        <p class="pack-name">Pro Pack</p>
+        <p class="pack-credits">300</p>
+        <p class="pack-credits-label">credits</p>
+        <p class="pack-price">₹4,150</p>
+        <p class="pack-per-credit">₹13.83 per credit</p>
+        <div class="pack-uses">
+          <p class="pack-use">300 text stamps</p>
+          <p class="pack-use">or 100 file stamps</p>
+        </div>
+      </div>
+
+      <div class="pack-card" id="pack-power" onclick="selectPack('power')">
+        <p class="pack-name">Power</p>
+        <p class="pack-credits">700</p>
+        <p class="pack-credits-label">credits</p>
+        <p class="pack-price">₹8,300</p>
+        <p class="pack-per-credit">₹11.86 per credit</p>
+        <div class="pack-uses">
+          <p class="pack-use">700 text stamps</p>
+          <p class="pack-use">or 233 file stamps</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Checkout section -->
+    <div class="checkout-section">
+      <div class="checkout-summary">
+        <div>
+          <p class="checkout-selected" id="checkout-selected-text">Select a pack above</p>
+          <p style="font-size: var(--text-sm); color: var(--color-text-muted); margin: 2px 0 0;">
+            Credits added instantly after payment
+          </p>
+        </div>
+        <p class="checkout-price" id="checkout-price-display" style="display:none;"></p>
+      </div>
+
+      <button
+        class="btn btn-primary btn-block btn-lg"
+        id="pay-btn"
+        onclick="startCheckout()"
+        disabled
+        style="opacity:0.5;"
+      >
+        Pay securely with Razorpay
+      </button>
+
+      <div class="error-msg" id="error-msg"></div>
+      <div class="success-msg" id="success-msg"></div>
+
+      <div class="checkout-notes">
+        <span class="checkout-note">🔒 Secured by Razorpay</span>
+        <span class="checkout-note">✓ UPI, cards, net banking accepted</span>
+        <span class="checkout-note">✓ Credits never expire</span>
+        <span class="checkout-note">✓ Non-refundable (except technical errors)</span>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const PACKS = {
+      starter:  { name: 'Starter',  credits: 50,  price: '₹830',   amount: 83000 },
+      standard: { name: 'Standard', credits: 125, price: '₹2,075', amount: 207500 },
+      pro:      { name: 'Pro Pack', credits: 300, price: '₹4,150', amount: 415000 },
+      power:    { name: 'Power',    credits: 700, price: '₹8,300', amount: 830000 },
+    };
+
+    let selectedPack = null;
+
+    // ── Auth guard + load balance ──────────────────────────────────────────
+    (async function() {
+      if (window.tsRequireAuth) {
+        const user = await window.tsRequireAuth();
+        if (!user) return;
+
+        const profile = await window.tsAuth.getProfile();
+        if (profile) {
+          document.getElementById('current-balance').textContent =
+            `${profile.credits_balance ?? 0} credits`;
+          const name = profile.display_name || user.email || '?';
+          const initials = name.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase();
+          document.getElementById('nav-user-avatar').textContent = initials;
+        }
+      }
+
+      // Pre-select Pro pack (best value)
+      selectPack('pro');
+    })();
+
+    // ── Pack selection ─────────────────────────────────────────────────────
+    function selectPack(packId) {
+      // Clear all selections
+      document.querySelectorAll('.pack-card').forEach(el => el.classList.remove('selected'));
+
+      // Select chosen pack
+      document.getElementById(`pack-${packId}`)?.classList.add('selected');
+      selectedPack = packId;
+
+      const pack = PACKS[packId];
+      document.getElementById('checkout-selected-text').textContent =
+        `${pack.name} — ${pack.credits} credits`;
+      document.getElementById('checkout-price-display').textContent = pack.price;
+      document.getElementById('checkout-price-display').style.display = 'block';
+
+      const btn = document.getElementById('pay-btn');
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.textContent = `Pay ${pack.price} — Get ${pack.credits} credits`;
+    }
+
+    // ── Razorpay checkout ──────────────────────────────────────────────────
+    async function startCheckout() {
+      if (!selectedPack) return;
+
+      const btn = document.getElementById('pay-btn');
+      hideError();
+
+      // Show loading state
+      btn.disabled = true;
+      btn.textContent = 'Creating order...';
+      btn.style.opacity = '0.7';
+
+      try {
+        // Get auth token
+        const { data: { session } } = await window.tsDB.auth.getSession();
+        if (!session) {
+          window.location.href = 'auth.html';
+          return;
+        }
+
+        // Step 1: Create Razorpay order via Edge Function
+        const supabaseUrl = window.TRUTHSTAMP_CONFIG.SUPABASE_URL;
+        const orderRes = await fetch(
+          `${supabaseUrl}/functions/v1/razorpay-create-order`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ pack_id: selectedPack }),
+          }
+        );
+
+        const orderData = await orderRes.json();
+        if (!orderRes.ok) {
+          throw new Error(orderData.error ?? 'Failed to create order');
+        }
+
+        const pack = PACKS[selectedPack];
+
+        // Step 2: Open Razorpay modal
+        const options = {
+          key: orderData.key_id,
+          amount: orderData.amount,
+          currency: orderData.currency,
+          name: 'TruthStamp',
+          description: `${pack.name} — ${pack.credits} credits`,
+          order_id: orderData.order_id,
+          // Pre-fill user details if available
+          prefill: {
+            email: session.user.email ?? '',
+          },
+          theme: {
+            color: '#2563EB',
+          },
+          modal: {
+            ondismiss: function() {
+              // User closed the modal without paying
+              btn.disabled = false;
+              btn.style.opacity = '1';
+              btn.textContent = `Pay ${pack.price} — Get ${pack.credits} credits`;
+            }
+          },
+          handler: async function(response) {
+            // Step 3: Verify payment signature
+            btn.textContent = 'Verifying payment...';
+            await verifyPayment(response, session.access_token);
+          }
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function(response) {
+          showError(`Payment failed: ${response.error.description}`);
+          btn.disabled = false;
+          btn.style.opacity = '1';
+          btn.textContent = `Pay ${pack.price} — Get ${pack.credits} credits`;
+        });
+
+        rzp.open();
+
+      } catch (err) {
+        showError(err instanceof Error ? err.message : 'Payment failed. Please try again.');
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.textContent = `Pay ${PACKS[selectedPack].price} — Get ${PACKS[selectedPack].credits} credits`;
+      }
+    }
+
+    // ── Payment verification ───────────────────────────────────────────────
+    async function verifyPayment(razorpayResponse, token) {
+      const btn = document.getElementById('pay-btn');
+      try {
+        const supabaseUrl = window.TRUTHSTAMP_CONFIG.SUPABASE_URL;
+        const verifyRes = await fetch(
+          `${supabaseUrl}/functions/v1/razorpay-verify-payment`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+              razorpay_order_id:   razorpayResponse.razorpay_order_id,
+              razorpay_signature:  razorpayResponse.razorpay_signature,
+            }),
+          }
+        );
+
+        const result = await verifyRes.json();
+
+        if (!verifyRes.ok || !result.success) {
+          throw new Error(result.error ?? 'Verification failed');
+        }
+
+        // ✅ Success!
+        const successEl = document.getElementById('success-msg');
+        successEl.innerHTML = `
+          ✅ Payment successful! <strong>${result.credits_added} credits</strong> added to your account.
+          New balance: <strong>${result.new_balance} credits</strong>.
+          <a href="dashboard.html" style="color: #065F46; margin-left: 8px;">Go to dashboard →</a>
+        `;
+        successEl.style.display = 'block';
+
+        btn.textContent = '✓ Credits added!';
+        btn.style.background = '#10B981';
+        btn.disabled = true;
+
+        // Update balance display
+        document.getElementById('current-balance').textContent = `${result.new_balance} credits`;
+
+        if (window.trackEvent) {
+          window.trackEvent('purchase_completed', {
+            pack_id: selectedPack,
+            credits: result.credits_added,
+            amount: PACKS[selectedPack].amount,
+          });
+        }
+
+        // Redirect to dashboard after 3 seconds
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 3000);
+
+      } catch (err) {
+        showError(`Payment verified by Razorpay but credit update failed: ${err.message}. Please contact support with your payment ID: ${razorpayResponse.razorpay_payment_id}`);
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.textContent = `Pay ${PACKS[selectedPack].price} — Get ${PACKS[selectedPack].credits} credits`;
+      }
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error-msg');
+      el.textContent = msg;
+      el.style.display = 'block';
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function hideError() {
+      document.getElementById('error-msg').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
