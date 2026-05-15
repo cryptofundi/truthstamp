@@ -214,8 +214,22 @@
         <a href="pricing.html">Pricing</a>
         <a href="trust.html">Trust</a>
         <a href="stamp.html" class="btn btn-primary btn-sm">+ New stamp</a>
-        <a href="#" id="sign-out-btn" onclick="handleSignOut(event); return false;" style="font-size: var(--text-sm); color: var(--color-text-muted);">Sign out</a>
-        <span id="user-avatar" style="width: 28px; height: 28px; border-radius: 50%; background: var(--brand-accent-light); color: var(--brand-accent); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">··</span>
+        <!-- Account menu -->
+        <div style="position: relative; display: inline-block;">
+          <button id="user-avatar"
+            onclick="toggleAccountMenu()"
+            style="width: 28px; height: 28px; border-radius: 50%; background: var(--brand-accent-light); color: var(--brand-accent); border: none; cursor: pointer; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center;">··</button>
+          <div id="account-menu" style="display:none; position:absolute; right:0; top:36px; background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); box-shadow:0 4px 16px rgba(0,0,0,0.1); min-width:200px; z-index:100; padding:var(--space-2) 0;">
+            <div id="account-menu-header" style="padding:var(--space-3) var(--space-4); border-bottom:1px solid var(--color-border);">
+              <p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0 0 2px;">Signed in as</p>
+              <p id="account-menu-identity" style="font-size:var(--text-sm); font-weight:600; margin:0; word-break:break-all;"></p>
+            </div>
+            <a href="buy-credits.html" style="display:block; padding:var(--space-3) var(--space-4); font-size:var(--text-sm); color:var(--color-text); text-decoration:none;">Buy credits</a>
+            <a href="auth.html" id="switch-account-btn" onclick="handleSwitchAccount(event)" style="display:block; padding:var(--space-3) var(--space-4); font-size:var(--text-sm); color:var(--color-text); text-decoration:none;">Switch account</a>
+            <div style="border-top:1px solid var(--color-border); margin-top:var(--space-1);"></div>
+            <a href="#" id="sign-out-btn" onclick="handleSignOut(event); return false;" style="display:block; padding:var(--space-3) var(--space-4); font-size:var(--text-sm); color:#DC2626; text-decoration:none;">Sign out</a>
+          </div>
+        </div>
       </div>
     </div>
   </nav>
@@ -251,7 +265,7 @@
       <div class="stat-card upgrade">
         <p class="stat-card-label" style="color: var(--brand-accent);">Credit balance</p>
         <p class="stat-card-value" id="stat-credits">—</p>
-        <p class="stat-card-meta" style="color: var(--brand-accent); margin-top: 8px;"><a href="buy-credits.html" style="text-decoration: underline; font-weight: 500;">Buy more credits →</a></p>
+        <p class="stat-card-meta" style="color: var(--brand-accent); margin-top: 8px;"><a href="pricing.html" style="text-decoration: underline; font-weight: 500;">Buy more credits →</a></p>
       </div>
     </div>
 
@@ -319,11 +333,36 @@
         subtitleEl.textContent = 'Every receipt you have ever dropped.';
       }
 
-      // Update avatar (first 2 chars of name or email)
+      // Update avatar and account menu
       const avatarEl = document.getElementById('user-avatar');
+      const isWallet = profile.auth_method === 'wallet' || profile.wallet_address;
+      const identity = isWallet
+        ? (profile.wallet_address
+            ? profile.wallet_address.slice(0,6) + '...' + profile.wallet_address.slice(-4)
+            : profile.display_name)
+        : (profile.display_name || user.email || '??');
+
       if (avatarEl) {
-        const seed = (profile.display_name || profile.email || '??').replace(/[^A-Za-z]/g, '');
+        const seed = (profile.display_name || '??').replace(/[^A-Za-z0-9]/g, '');
         avatarEl.textContent = (seed.slice(0, 2) || '··').toUpperCase();
+      }
+
+      // Populate account menu identity
+      const menuIdentity = document.getElementById('account-menu-identity');
+      if (menuIdentity) {
+        menuIdentity.textContent = isWallet
+          ? (profile.wallet_address ?? profile.display_name ?? 'Wallet user')
+          : (user.email ?? profile.display_name ?? 'User');
+        // Show full wallet address in menu, truncated in avatar
+        if (isWallet && profile.wallet_address) {
+          menuIdentity.style.fontSize = 'var(--text-xs)';
+        }
+      }
+
+      // Show/hide disconnect wallet option
+      const switchBtn = document.getElementById('switch-account-btn');
+      if (switchBtn && isWallet) {
+        switchBtn.textContent = 'Switch account / wallet';
       }
 
       // Update credit balance
@@ -540,6 +579,27 @@
         if (window._dashUserId) loadStamps(window._dashUserId, btn.dataset.filter, 0, searchVal);
       });
     });
+
+    function toggleAccountMenu() {
+      const menu = document.getElementById('account-menu');
+      if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function(e) {
+      const menu = document.getElementById('account-menu');
+      const avatar = document.getElementById('user-avatar');
+      if (menu && menu.style.display !== 'none' &&
+          !menu.contains(e.target) && e.target !== avatar) {
+        menu.style.display = 'none';
+      }
+    });
+
+    async function handleSwitchAccount(e) {
+      if (e) e.preventDefault();
+      await window.tsAuth.signOut();
+      window.location.href = 'auth.html';
+    }
 
     async function handleSignOut(e) {
       if (e) e.preventDefault();
