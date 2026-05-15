@@ -190,6 +190,14 @@
       justify-content: center;
       flex-shrink: 0;
     }
+    .spinner-sm {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: wallet-spin 0.7s linear infinite;
+    }
+    @keyframes wallet-spin { to { transform: rotate(360deg); } }
     .wallet-info {
       flex: 1;
     }
@@ -321,7 +329,7 @@
       <!-- Wallet section (collapsed by default — secondary option per peer's advice) -->
       <div class="wallet-section">
         <button class="wallet-toggle" id="wallet-toggle" onclick="toggleWallet()">
-         
+          Advanced: connect wallet
           <svg class="wallet-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="6 9 12 15 18 9"/>
           </svg>
@@ -536,9 +544,111 @@
     // -----------------------------------------------------------------
     // Wallet (placeholder — comes later)
     // -----------------------------------------------------------------
-    function connectWallet(type) {
+    // -----------------------------------------------------------------
+    // Wallet authentication — MetaMask + WalletConnect
+    // Uses Sign-In With Ethereum (SIWE) pattern
+    // -----------------------------------------------------------------
+    async function connectWallet(type) {
       if (window.trackEvent) window.trackEvent('auth_attempt', { method: 'wallet', wallet_type: type });
-      showMessage('Wallet sign-in is coming soon. Please use email for now.', true);
+
+      if (type === 'walletconnect') {
+        showMessage('WalletConnect coming soon. Use MetaMask for now.', true);
+        return;
+      }
+
+      // Check MetaMask is installed
+      if (!window.ethereum) {
+        showMessage(
+          'MetaMask not found. Please install the MetaMask browser extension at metamask.io, then try again.',
+          true
+        );
+        return;
+      }
+
+      // Update button state
+      const btn = document.querySelector('[onclick="connectWallet(\'metamask\')"]');
+      const originalHTML = btn?.innerHTML;
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<div class="wallet-icon" style="background:#F6851B;"><div class="spinner-sm"></div></div>
+          <div class="wallet-info"><p class="wallet-name">Connecting...</p></div>`;
+      }
+      hideMessage();
+
+      try {
+        // Step 1: Request wallet access
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const address = accounts[0];
+        if (!address) throw new Error('No account selected');
+
+        showMessage(`Wallet connected: ${address.slice(0,6)}...${address.slice(-4)}. Requesting signature...`, false);
+
+        // Step 2: Get nonce from our Edge Function
+        const supabaseUrl = window.TRUTHSTAMP_CONFIG.SUPABASE_URL;
+        const nonceRes = await fetch(`${supabaseUrl}/functions/v1/wallet-auth`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'nonce', address }),
+        });
+
+        const nonceData = await nonceRes.json();
+        if (!nonceRes.ok) throw new Error(nonceData.error ?? 'Failed to get nonce');
+
+        // Step 3: Ask user to sign the message (MetaMask popup)
+        showMessage('Please sign the message in MetaMask to verify wallet ownership...', false);
+
+        let signature;
+        try {
+          signature = await window.ethereum.request({
+            method: 'personal_sign',
+            params: [nonceData.message, address],
+          });
+        } catch (signErr) {
+          if (signErr.code === 4001) {
+            throw new Error('Signature cancelled. You must sign the message to sign in.');
+          }
+          throw signErr;
+        }
+
+        showMessage('Verifying signature...', false);
+
+        // Step 4: Verify signature and get session from Edge Function
+        const verifyRes = await fetch(`${supabaseUrl}/functions/v1/wallet-auth`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'verify',
+            address,
+            signature,
+            nonce: nonceData.nonce,
+          }),
+        });
+
+        const verifyData = await verifyRes.json();
+        if (!verifyRes.ok) throw new Error(verifyData.error ?? 'Signature verification failed');
+
+        // Step 5: Set Supabase session from returned tokens
+        const { error: sessionErr } = await window.tsDB.auth.setSession({
+          access_token: verifyData.access_token,
+          refresh_token: verifyData.refresh_token,
+        });
+
+        if (sessionErr) throw new Error('Failed to establish session');
+
+        // Success
+        showMessage(`✓ Signed in with wallet ${address.slice(0,6)}...${address.slice(-4)}! Redirecting...`, false);
+        if (window.trackEvent) window.trackEvent('wallet_signin_success', { address });
+
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 1200);
+
+      } catch (err) {
+        console.error('Wallet auth error:', err);
+        showMessage(err.message || 'Wallet connection failed. Please try again.', true);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalHTML;
+        }
+      }
     }
   </script>
 </body>
