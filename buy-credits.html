@@ -623,42 +623,17 @@
         const platformWei = ethToWei(platformEth).toString(16);
         const gasWei      = ethToWei(gasEth).toString(16);
 
-        // ── Step 3: Switch to MegaETH network ──────────────────────────────
-        cryptoBtn.innerHTML = `<span style="opacity:0.7;">Adding MegaETH network...</span>`;
+        // ── Step 3: Verify we're on MegaETH ────────────────────────────────
+        cryptoBtn.innerHTML = `<span style="opacity:0.7;">Checking network...</span>`;
 
-        // Always try to add first — MetaMask handles "already exists" gracefully
-        try {
-          await window.ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [{
-              chainId: MEGAETH_CHAIN_ID,
-              chainName: 'MegaETH Testnet',
-              nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
-              rpcUrls: [MEGAETH_RPC],
-              blockExplorerUrls: ['https://megaeth-testnet-v2.blockscout.com'],
-            }],
-          });
-        } catch (addErr) {
-          // Code -32602 or "already exists" = chain is already added, just switch
-          if (addErr.code === 4001) {
-            throw new Error('Network switch cancelled. Please allow MegaETH in MetaMask.');
-          }
-          // Any other error — try plain switch as fallback
-          try {
-            await window.ethereum.request({
-              method: 'wallet_switchEthereumChain',
-              params: [{ chainId: MEGAETH_CHAIN_ID }],
-            });
-          } catch (switchErr) {
-            if (switchErr.code === 4001) throw new Error('Network switch cancelled.');
-            throw new Error('Could not switch to MegaETH. Please add it manually in MetaMask using RPC: https://carrot.megaeth.com/rpc (Chain ID: 6342)');
-          }
-        }
-
-        // Confirm we're on the right chain
         const currentChain = await window.ethereum.request({ method: 'eth_chainId' });
+        console.log('Current chain:', currentChain, 'Expected:', MEGAETH_CHAIN_ID);
+
         if (currentChain.toLowerCase() !== MEGAETH_CHAIN_ID.toLowerCase()) {
-          throw new Error(`Wrong network. Please switch to MegaETH Testnet (Chain ID: 6342) in MetaMask.`);
+          throw new Error(
+            `Wrong network detected (${currentChain}). ` +
+            `Please manually switch to MegaETH Testnet in MetaMask (Chain ID: 6342), then try again.`
+          );
         }
 
         // ── Step 4: Get wallet address ──────────────────────────────────────
