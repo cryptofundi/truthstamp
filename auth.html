@@ -580,14 +580,11 @@
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         const address = accounts[0];
         if (!address) throw new Error('No account selected');
-        alert('STEP 1 OK\nAddress: ' + address);
 
         showMessage(`Wallet connected: ${address.slice(0,6)}...${address.slice(-4)}. Requesting signature...`, false);
 
         // Step 2: Get nonce from our Edge Function
         const supabaseUrl = window.TRUTHSTAMP_CONFIG.SUPABASE_URL;
-        alert('STEP 2: Calling nonce endpoint\nURL: ' + supabaseUrl + '/functions/v1/wallet-auth');
-
         const nonceRes = await fetch(`${supabaseUrl}/functions/v1/wallet-auth`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -595,8 +592,6 @@
         });
 
         const nonceData = await nonceRes.json();
-        alert('STEP 2 RESPONSE\nStatus: ' + nonceRes.status + '\nBody: ' + JSON.stringify(nonceData));
-
         if (!nonceRes.ok) throw new Error(nonceData.error ?? 'Failed to get nonce');
 
         // Step 3: Ask user to sign the message (MetaMask popup)
@@ -608,7 +603,6 @@
             method: 'personal_sign',
             params: [nonceData.message, address],
           });
-          alert('STEP 3 OK\nSignature: ' + signature.slice(0,20) + '...');
         } catch (signErr) {
           if (signErr.code === 4001) {
             throw new Error('Signature cancelled. You must sign the message to sign in.');
@@ -631,8 +625,6 @@
         });
 
         const verifyData = await verifyRes.json();
-        alert('STEP 4 RESPONSE\nStatus: ' + verifyRes.status + '\nBody: ' + JSON.stringify(verifyData));
-
         if (!verifyRes.ok) throw new Error(verifyData.error ?? 'Signature verification failed');
 
         // Step 5: Set Supabase session from returned tokens
@@ -641,14 +633,8 @@
           refresh_token: verifyData.refresh_token,
         });
 
-        if (sessionErr) {
-          alert('STEP 5 ERROR\n' + JSON.stringify(sessionErr));
-          throw new Error('Failed to establish session');
-        }
+        if (sessionErr) throw new Error('Failed to establish session');
 
-        alert('STEP 5 OK — Session set! Redirecting...');
-
-        // Success
         showMessage(`✓ Signed in with wallet ${address.slice(0,6)}...${address.slice(-4)}! Redirecting...`, false);
         if (window.trackEvent) window.trackEvent('wallet_signin_success', { address });
 
