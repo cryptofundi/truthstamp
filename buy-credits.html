@@ -331,16 +331,16 @@
     // USD: $10, $25, $50, $100 (rounded from INR at ~₹83/USD)
     const PACK_PRICING = {
       INR: {
-        starter:  { display: '₹830',    perCredit: '₹16.60', amountPaise: 83000,  amountSmallest: 83000  },
-        standard: { display: '₹2,075',  perCredit: '₹16.60', amountPaise: 207500, amountSmallest: 207500 },
-        pro:      { display: '₹4,150',  perCredit: '₹13.83', amountPaise: 415000, amountSmallest: 415000 },
-        power:    { display: '₹8,300',  perCredit: '₹11.86', amountPaise: 830000, amountSmallest: 830000 },
+        starter:  { display: '₹830',    perCredit: '₹16.60', amountPaise: 83000,  amountSmallest: 83000,  usdEquivalent: 10  },
+        standard: { display: '₹2,075',  perCredit: '₹16.60', amountPaise: 207500, amountSmallest: 207500, usdEquivalent: 25  },
+        pro:      { display: '₹4,150',  perCredit: '₹13.83', amountPaise: 415000, amountSmallest: 415000, usdEquivalent: 50  },
+        power:    { display: '₹8,300',  perCredit: '₹11.86', amountPaise: 830000, amountSmallest: 830000, usdEquivalent: 100 },
       },
       USD: {
-        starter:  { display: '$10',  perCredit: '$0.20', amountPaise: 83000,  amountSmallest: 1000  }, // 1000 cents = $10
-        standard: { display: '$25',  perCredit: '$0.20', amountPaise: 207500, amountSmallest: 2500  },
-        pro:      { display: '$50',  perCredit: '$0.17', amountPaise: 415000, amountSmallest: 5000  },
-        power:    { display: '$100', perCredit: '$0.14', amountPaise: 830000, amountSmallest: 10000 },
+        starter:  { display: '$10',  perCredit: '$0.20', amountPaise: 83000,  amountSmallest: 1000,  usdEquivalent: 10  },
+        standard: { display: '$25',  perCredit: '$0.20', amountPaise: 207500, amountSmallest: 2500,  usdEquivalent: 25  },
+        pro:      { display: '$50',  perCredit: '$0.17', amountPaise: 415000, amountSmallest: 5000,  usdEquivalent: 50  },
+        power:    { display: '$100', perCredit: '$0.14', amountPaise: 830000, amountSmallest: 10000, usdEquivalent: 100 },
       }
     };
 
@@ -422,7 +422,8 @@
       document.getElementById('crypto-disclaimer').style.display = 'block';
 
       // Fetch live ETH price and update display
-      const usdAmount = pack.amountSmallest / 100; // cents to USD
+      // Always use USD equivalent for ETH conversion regardless of display currency
+      const usdAmount = pack.usdEquivalent;
       getEthPrice().then(ethPrice => {
         const ethAmount = usdToEth(usdAmount, ethPrice);
         document.getElementById('checkout-eth-display').textContent = `≈ ${ethAmount} ETH`;
@@ -612,7 +613,7 @@
         cryptoBtn.innerHTML = `<span style="opacity:0.7;">Fetching ETH price...</span>`;
 
         const ethPrice = await getEthPrice();
-        const usdAmount = pack.amountSmallest / 100;
+        const usdAmount = pack.usdEquivalent; // always USD for ETH conversion
         const totalEth = parseFloat(usdToEth(usdAmount, ethPrice));
 
         // Split: 90% to platform wallet, 10% to gas wallet
@@ -632,18 +633,37 @@
           });
         } catch (switchErr) {
           if (switchErr.code === 4902) {
-            // Network not added yet — add it
-            await window.ethereum.request({
-              method: 'wallet_addEthereumChain',
-              params: [{
-                chainId: MEGAETH_CHAIN_ID,
-                chainName: 'MegaETH Testnet',
-                nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
-                rpcUrls: [MEGAETH_RPC],
-                blockExplorerUrls: ['https://megaeth-testnet-v2.blockscout.com'],
-              }],
-            });
-          } else throw switchErr;
+            // Network not added — add it
+            try {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId: MEGAETH_CHAIN_ID,
+                  chainName: 'MegaETH Testnet',
+                  nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                  rpcUrls: [MEGAETH_RPC],
+                  blockExplorerUrls: ['https://megaeth-testnet-v2.blockscout.com'],
+                }],
+              });
+            } catch (addErr) {
+              // If "same RPC endpoint" error, network already exists — try switching again
+              if (addErr.message?.includes('same RPC') || addErr.code === -32603) {
+                await window.ethereum.request({
+                  method: 'wallet_switchEthereumChain',
+                  params: [{ chainId: MEGAETH_CHAIN_ID }],
+                });
+              } else throw addErr;
+            }
+          } else if (switchErr.code !== 4001) {
+            // Ignore user rejection at switch step — they may already be on MegaETH
+            throw switchErr;
+          }
+        }
+
+        // Verify we're now on the right chain
+        const currentChain = await window.ethereum.request({ method: 'eth_chainId' });
+        if (currentChain.toLowerCase() !== MEGAETH_CHAIN_ID.toLowerCase()) {
+          throw new Error(`Please switch to MegaETH Testnet (chain ${parseInt(MEGAETH_CHAIN_ID, 16)}) in MetaMask and try again.`);
         }
 
         // ── Step 4: Get wallet address ──────────────────────────────────────
