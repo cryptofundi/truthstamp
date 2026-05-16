@@ -329,56 +329,6 @@
           <button class="tag-pill" type="button">+ #alpha</button>
           <button class="tag-pill add" type="button">+ Add tag</button>
         </div>
-
-        <!-- Visibility -->
-        <div class="visibility-section">
-          <p class="label">Visibility</p>
-          <div class="visibility-grid">
-            <button type="button" class="visibility-card selected" id="vis-public" onclick="selectVisibility('public')">
-              <div class="visibility-card-head">
-                <p class="visibility-card-title">Public</p>
-                <svg class="visibility-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"/></svg>
-              </div>
-              <p class="visibility-card-desc">Shareable proof URL. Anyone can verify it.</p>
-            </button>
-            <button type="button" class="visibility-card" id="vis-sealed" onclick="selectVisibility('sealed')">
-              <div class="visibility-card-head">
-                <p class="visibility-card-title">Sealed</p>
-                <svg class="visibility-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-              </div>
-              <p class="visibility-card-desc">Hidden until a date you choose. Auto-reveals.</p>
-            </button>
-          </div>
-
-          <!-- None option as a smaller secondary -->
-          <button type="button" class="visibility-card" id="vis-none" onclick="selectVisibility('none')" style="margin-top: var(--space-3);">
-            <div class="visibility-card-head">
-              <p class="visibility-card-title">Hash only · Maximum privacy</p>
-              <svg class="visibility-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10 10 0 0112 20c-7 0-10-8-10-8a18.5 18.5 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 10 8 10 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M2 2l20 20"/></svg>
-            </div>
-            <p class="visibility-card-desc">Only your fingerprint goes on-chain. Content stays with you.</p>
-          </button>
-
-          <!-- Seal options (shown only when Sealed is selected) -->
-          <div class="seal-options" id="seal-options">
-            <p class="seal-label">Auto-reveal on</p>
-            <div class="seal-input-row">
-              <input type="date" class="input" id="seal-date" style="flex: 1; min-width: 180px;">
-              <button class="seal-quick" type="button" onclick="setSealDate(7)">+7 days</button>
-              <button class="seal-quick" type="button" onclick="setSealDate(30)">+30 days</button>
-              <button class="seal-quick" type="button" onclick="setSealDate(90)">+90 days</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Stamp CTA -->
-        <div class="stamp-cta-section">
-          <div class="meta-row">
-            <span class="text-secondary" id="stamp-cost-label">Estimated cost</span>
-            <span style="font-weight: 500;" id="stamp-credit-display">Loading...</span>
-          </div>
-          <button class="btn btn-primary btn-block btn-lg btn-stamp-action" onclick="handleStamp()">Stamp this thought · ~1 second</button>
-        </div>
       </div>
     </div>
 
@@ -402,7 +352,7 @@
       </div>
     </div>
 
-    <!-- URL coming soon / premium prompt -->
+    <!-- URL coming soon -->
     <div class="premium-prompt" id="premium-prompt">
       <div class="premium-icon">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
@@ -416,6 +366,55 @@
         <button class="btn btn-ghost" type="button" onclick="switchTab('text')">Back to text</button>
       </div>
     </div>
+
+    <!-- Visibility + CTA — shown for ALL tabs (text and file) -->
+    <div id="stamp-bottom" class="card" style="margin-top: var(--space-4);">
+      <!-- Visibility -->
+      <div class="visibility-section">
+        <p class="label">Visibility</p>
+        <div class="visibility-grid">
+          <button type="button" class="visibility-card selected" id="vis-public" onclick="selectVisibility('public')">
+            <div class="visibility-card-head">
+              <p class="visibility-card-title">Public</p>
+              <svg class="visibility-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"/></svg>
+            </div>
+            <p class="visibility-card-desc">Shareable proof URL. Anyone can verify it.</p>
+          </button>
+          <button type="button" class="visibility-card" id="vis-sealed" onclick="selectVisibility('sealed')">
+            <div class="visibility-card-head">
+              <p class="visibility-card-title">Sealed</p>
+              <svg class="visibility-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </div>
+            <p class="visibility-card-desc">Hidden until a date you choose. Auto-reveals.</p>
+          </button>
+        </div>
+        <button type="button" class="visibility-card" id="vis-none" onclick="selectVisibility('none')" style="margin-top: var(--space-3);">
+          <div class="visibility-card-head">
+            <p class="visibility-card-title">Hash only · Maximum privacy</p>
+            <svg class="visibility-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10 10 0 0112 20c-7 0-10-8-10-8a18.5 18.5 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 10 8 10 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M2 2l20 20"/></svg>
+          </div>
+          <p class="visibility-card-desc">Only your fingerprint goes on-chain. Content stays with you.</p>
+        </button>
+        <div class="seal-options" id="seal-options">
+          <p class="seal-label">Auto-reveal on</p>
+          <div class="seal-input-row">
+            <input type="date" class="input" id="seal-date" style="flex: 1; min-width: 180px;">
+            <button class="seal-quick" type="button" onclick="setSealDate(7)">+7 days</button>
+            <button class="seal-quick" type="button" onclick="setSealDate(30)">+30 days</button>
+            <button class="seal-quick" type="button" onclick="setSealDate(90)">+90 days</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stamp CTA -->
+      <div class="stamp-cta-section">
+        <div class="meta-row">
+          <span class="text-secondary" id="stamp-cost-label">Estimated cost</span>
+          <span style="font-weight: 500;" id="stamp-credit-display">Loading...</span>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg btn-stamp-action" onclick="handleStamp()">Stamp this thought · ~1 second</button>
+      </div>
+    </div>
   </main>
 
   <script src="js/common.js"></script>
@@ -425,27 +424,28 @@
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
 
-      const textContent = document.getElementById('text-content');
-      const premium = document.getElementById('premium-prompt');
+      const textContent  = document.getElementById('text-content');
+      const fileArea     = document.getElementById('file-upload-area');
+      const premium      = document.getElementById('premium-prompt');
+      const stampBottom  = document.getElementById('stamp-bottom');
       const premiumTitle = document.getElementById('premium-title');
-      const premiumDesc = document.getElementById('premium-desc');
+      const premiumDesc  = document.getElementById('premium-desc');
+
+      // Reset all
+      textContent.classList.add('hide');
+      fileArea.style.display    = 'none';
+      premium.classList.remove('show');
+      stampBottom.style.display = 'block';
 
       if (tab === 'text') {
         textContent.classList.remove('hide');
-        premium.classList.remove('show');
-        document.getElementById('file-upload-area').style.display = 'none';
         updateCreditCost('text');
       } else if (tab === 'file') {
-        textContent.classList.add('hide');
-        premium.classList.remove('show');
-        document.getElementById('file-upload-area').style.display = 'block';
+        fileArea.style.display = 'block';
         updateCreditCost('file');
       } else if (tab === 'url') {
-        textContent.classList.add('hide');
-        document.getElementById('file-upload-area').style.display = 'none';
         premium.classList.add('show');
-        premiumTitle.textContent = 'URL stamping — coming soon';
-        premiumDesc.innerHTML = 'Capture and seal a webpage exactly as it exists today.<br>Will cost 2 credits per stamp. Coming in the next update.';
+        stampBottom.style.display = 'none'; // hide stamp button for URL (coming soon)
         if (window.trackEvent) window.trackEvent('premium_prompt_view', { source: tab });
       }
     }
