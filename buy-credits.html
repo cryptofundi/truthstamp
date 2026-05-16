@@ -649,7 +649,7 @@
             from: fromAddress,
             to: PLATFORM_WALLET,
             value: '0x' + platformWei,
-            gas: '0x5208', // 21000 — standard ETH transfer
+            gas: '0x13880', // 80000 — MegaETH requires higher intrinsic gas
           }],
         });
 
@@ -663,7 +663,7 @@
               from: fromAddress,
               to: GAS_WALLET,
               value: '0x' + gasWei,
-              gas: '0x5208',
+              gas: '0x13880',
             }],
           });
         } catch (gasErr) {
