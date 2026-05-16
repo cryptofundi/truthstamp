@@ -587,7 +587,7 @@
     // Platform wallet receives payment (90%) + gas wallet top-up (10%)
     const PLATFORM_WALLET  = '0x689d21A3fa8c43dc73199dC2Ab8Cf8461A3B65E5';
     const GAS_WALLET       = '0x10A8c1A61da4cf598674714A6B3CeC7511122BA3';
-    const MEGAETH_CHAIN_ID = '0x18C6'; // 6342 in hex
+    const MEGAETH_CHAIN_ID = '0x18C7'; // 6342 in hex
     const MEGAETH_RPC      = 'https://carrot.megaeth.com/rpc';
 
     async function startCryptoCheckout() {
@@ -632,7 +632,7 @@
         if (currentChain.toLowerCase() !== MEGAETH_CHAIN_ID.toLowerCase()) {
           throw new Error(
             `Wrong network detected (${currentChain}). ` +
-            `Please manually switch to MegaETH Testnet in MetaMask (Chain ID: 6342), then try again.`
+            `Please manually switch to MegaETH Testnet in MetaMask (Chain ID: 6343), then try again.`
           );
         }
 
@@ -689,7 +689,7 @@
             pack_id: selectedPack,
             from_address: fromAddress,
             eth_amount: totalEth.toString(),
-            chain_id: 6342,
+            chain_id: 6343,
           }),
         });
 
