@@ -19,7 +19,7 @@ window.TRUTHSTAMP_CONFIG = {
   // TruthStamp smart contract — deployed on MegaETH testnet
   CONTRACT_ADDRESS: '0x86b369D0a49dBD3D233F07f8e3f08Fb6C73C83F4',
   CONTRACT_NETWORK: 'megaeth_testnet',
-  CONTRACT_CHAIN_ID: 6342,
+  CONTRACT_CHAIN_ID: 6343,
   CONTRACT_RPC_URL: 'https://carrot.megaeth.com/rpc',
   CONTRACT_EXPLORER: 'https://megaeth-testnet-v2.blockscout.com',
 
