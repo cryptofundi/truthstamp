@@ -746,7 +746,7 @@
       document.getElementById('file-selected').style.display = 'block';
       hideError();
 
-      // SHA-256 hash for duplicate detection
+      // Check for duplicate using file_name + size (fast) then confirm with server-side hash
       try {
         const buf = await file.arrayBuffer();
         const hash = await crypto.subtle.digest('SHA-256', buf);
@@ -755,20 +755,24 @@
 
         const { data: { user } } = await window.tsDB.auth.getUser();
         if (user) {
+          // Check by file_name + file_size_bytes as a quick proxy
+          // (server will catch exact hash duplicates anyway)
           const { data: existing } = await window.tsDB
             .from('stamps')
-            .select('proof_id, created_at')
+            .select('proof_id, created_at, file_name')
             .eq('creator_profile_id', user.id)
-            .filter('content_hash', 'eq', selectedFileHash)
+            .eq('file_name', file.name)
+            .eq('file_size_bytes', file.size)
+            .eq('content_type', 'file')
             .maybeSingle();
 
           if (existing) {
             const date = new Date(existing.created_at).toLocaleDateString('en-US',
               { month:'short', day:'numeric', year:'numeric' });
-            showError(`⚠️ You already stamped this exact file on ${date} (Proof #${existing.proof_id}). Stamping again creates a duplicate.`);
+            showError(`⚠️ You already stamped "${file.name}" on ${date} (Proof #${existing.proof_id}). Stamping again creates a duplicate.`);
           }
         }
-      } catch(e) { console.warn('Hash check failed:', e); }
+      } catch(e) { console.warn('Duplicate check failed:', e); }
     }
 
     async function handleFileStamp() {
