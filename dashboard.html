@@ -499,14 +499,16 @@
         text: 'text', file: 'pdf', url: 'text'
       }[stamp.content_type] ?? 'text';
 
-      // Preview text — for hash-only show title if available, otherwise private message
+      // Preview text — for hash-only show title if provided, otherwise private message
       let preview;
       if (stamp.visibility === 'hash_only') {
-        const title = stamp.display_title && stamp.display_title !== 'Private stamp'
-          ? stamp.display_title
-          : null;
-        preview = title
-          ? `🔐 ${title} · private stamp`
+        // Show user-given title if it exists and isn't the generic fallback
+        const hasCustomTitle = stamp.display_title &&
+          stamp.display_title !== 'Private stamp' &&
+          stamp.display_title !== 'Private stamp' &&
+          stamp.display_title.trim() !== '';
+        preview = hasCustomTitle
+          ? `🔐 ${stamp.display_title}`
           : '🔐 Private stamp · content encrypted';
       } else {
         preview = stamp.display_title
