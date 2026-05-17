@@ -625,8 +625,7 @@
           const msg = proofId
             ? `You already stamped this exact content (Proof #${proofId}). <a href="proof.html?id=${proofId}" style="color:var(--brand-primary);">View it →</a>`
             : result.error;
-          document.getElementById('error-msg').innerHTML = msg;
-          document.getElementById('error-msg').style.display = 'block';
+          showError(msg, true);
           if (btn) { btn.disabled = false; btn.classList.remove('btn-spinning'); }
           return;
         }
@@ -850,8 +849,7 @@
           const msg = proofId
             ? `You already stamped this exact content (Proof #${proofId}). <a href="proof.html?id=${proofId}" style="color:var(--brand-primary);">View it →</a>`
             : result.error;
-          document.getElementById('error-msg').innerHTML = msg;
-          document.getElementById('error-msg').style.display = 'block';
+          showError(msg, true);
           if (btn) { btn.disabled = false; btn.classList.remove('btn-spinning'); }
           updateCreditCost('file');
           return;
@@ -930,8 +928,7 @@
           const msg = proofId
             ? `You already stamped this URL (Proof #${proofId}). <a href="proof.html?id=${proofId}" style="color:var(--brand-primary);">View it →</a>`
             : result.error;
-          document.getElementById('error-msg').innerHTML = msg;
-          document.getElementById('error-msg').style.display = 'block';
+          showError(msg, true);
           if (btn) { btn.disabled = false; btn.classList.remove('btn-spinning'); }
           return;
         }
@@ -956,7 +953,7 @@
       }
     }
 
-    function showError(msg) {
+    function showError(msg, isHtml = false) {
       let el = document.getElementById('stamp-error');
       if (!el) {
         el = document.createElement('div');
@@ -965,7 +962,8 @@
         const form = document.querySelector('.stamp-form');
         if (form) form.prepend(el);
       }
-      el.textContent = msg;
+      if (isHtml) { el.innerHTML = msg; }
+      else { el.textContent = msg; }
       el.style.display = 'block';
     }
 
