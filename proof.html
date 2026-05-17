@@ -628,12 +628,53 @@
     if (!el) return;
 
     console.log('[TruthStamp] renderHashOnlyContent - isOwner:', isOwner,
-      'encrypted:', !!stamp.encrypted_content, 'text:', !!stamp.text_content);
+      'encrypted:', !!stamp.encrypted_content, 'text:', !!stamp.text_content,
+      'file:', !!stamp.file_name, 'content_type:', stamp.content_type);
 
     if (!isOwner) return;
 
     let content = null;
+    const contentBlock = document.getElementById('content-block');
+    if (!contentBlock) return;
 
+    // ── File stamp ────────────────────────────────────────────────────────
+    if (stamp.content_type === 'file') {
+      // For file stamps: show file info to owner
+      // The file content is on Arweave — show the link if available
+      const size = stamp.file_size_bytes
+        ? stamp.file_size_bytes > 1024 * 1024
+          ? `${(stamp.file_size_bytes / 1024 / 1024).toFixed(1)} MB`
+          : `${(stamp.file_size_bytes / 1024).toFixed(1)} KB`
+        : '';
+
+      contentBlock.innerHTML = `
+        <div style="padding: var(--space-4);">
+          <div style="display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-3);">
+            <div style="font-size:2rem;">📄</div>
+            <div>
+              <p style="font-weight:600; margin:0 0 2px;">${escapeHtml(stamp.file_name || 'File stamp')}</p>
+              <p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0;">${escapeHtml(stamp.file_mime_type || '')} ${size ? '· ' + size : ''}</p>
+            </div>
+          </div>
+          ${stamp.storage_uri ? `
+            <a href="https://arweave.net/${stamp.storage_uri.replace('ar://', '')}"
+               target="_blank" rel="noopener"
+               class="btn btn-secondary" style="font-size:var(--text-sm);">
+              View file on Arweave →
+            </a>` : `
+            <p style="font-size:var(--text-sm); color:var(--color-text-muted); margin:0;">
+              File stored on Arweave. Hash fingerprint is sealed on MegaETH.
+            </p>`}
+          <div style="margin-top:var(--space-3);">
+            <span style="font-size:11px; background:var(--color-surface-alt); border:1px solid var(--color-border); border-radius:var(--radius-full); padding:3px 8px; color:var(--color-text-muted);">
+              🔐 Visible only to you · private file stamp
+            </span>
+          </div>
+        </div>`;
+      return;
+    }
+
+    // ── Text stamp ────────────────────────────────────────────────────────
     // Try decryption first
     if (stamp.encrypted_content && user?.id) {
       try {
@@ -644,14 +685,11 @@
       }
     }
 
-    // Fallback to plaintext (older stamps)
+    // Fallback to plaintext (older stamps before encryption)
     if (!content && stamp.text_content) {
       content = stamp.text_content;
       console.log('[TruthStamp] Using text_content fallback');
     }
-
-    const contentBlock = document.getElementById('content-block');
-    if (!contentBlock) return;
 
     if (content) {
       contentBlock.innerHTML = `
