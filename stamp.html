@@ -438,6 +438,7 @@
 
       <!-- Stamp CTA -->
       <div class="stamp-cta-section">
+        <div id="stamp-error" style="display:none; padding:12px 14px; border-radius:8px; margin-bottom:12px; font-size:14px; background:#FEE2E2; color:#991B1B; border:1px solid #FCA5A5;"></div>
         <div class="meta-row">
           <span class="text-secondary" id="stamp-cost-label">Estimated cost</span>
           <span style="font-weight: 500;" id="stamp-credit-display">Loading...</span>
@@ -954,22 +955,17 @@
     }
 
     function showError(msg, isHtml = false) {
-      let el = document.getElementById('stamp-error');
-      if (!el) {
-        el = document.createElement('div');
-        el.id = 'stamp-error';
-        el.style.cssText = 'padding:12px 14px;border-radius:8px;margin:12px 0;font-size:14px;background:#FEE2E2;color:#991B1B;border:1px solid #FCA5A5;';
-        const form = document.querySelector('.stamp-form');
-        if (form) form.prepend(el);
-      }
+      const el = document.getElementById('stamp-error');
+      if (!el) { alert(msg); return; } // fallback
       if (isHtml) { el.innerHTML = msg; }
       else { el.textContent = msg; }
       el.style.display = 'block';
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function hideError() {
       const el = document.getElementById('stamp-error');
-      if (el) el.style.display = 'none';
+      if (el) { el.style.display = 'none'; el.innerHTML = ''; }
     }
 
     // Auth guard + load real credit balance + update nav avatar
