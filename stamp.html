@@ -338,8 +338,8 @@
         <div style="font-size: 2rem; margin-bottom: var(--space-3);">📄</div>
         <h3 style="font-size: var(--text-lg); font-weight: 600; margin: 0 0 var(--space-2);">Stamp any file</h3>
         <p style="font-size: var(--text-sm); color: var(--color-text-muted); margin: 0 0 var(--space-4);">
-          PDF, image, audio, video — up to 100 MB. Costs 3 credits.<br>
-          File hash stored on MegaETH. Content stored on Arweave permanently.
+          PDF, image, audio, video. Costs 3 credits.<br>
+          <span id="file-size-info">Free tier: up to 2MB · Paid credits: up to 10MB · Power (100+ credits): up to 20MB</span>
         </p>
         <label for="file-input" class="btn btn-secondary" style="cursor: pointer; display: inline-block;">
           Choose file
@@ -651,14 +651,36 @@
     // ── File selection handler ───────────────────────────────────────────────
     let selectedFile = null;
     let selectedFileHash = null;
-    const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+    const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB hard limit (Edge Function memory)
 
     async function handleFileSelect(input) {
       const file = input.files[0];
       if (!file) return;
 
+      // Get credit balance to determine tier limit
+      let tierLimitMB = 2; // default: free tier
+      let tierLimitBytes = 2 * 1024 * 1024;
+      try {
+        const profile = window._cachedProfile || await window.tsAuth.getProfile();
+        const credits = profile?.credits_balance ?? 0;
+        if (credits > 100) { tierLimitMB = 20; tierLimitBytes = 20 * 1024 * 1024; }
+        else if (credits > 10) { tierLimitMB = 10; tierLimitBytes = 10 * 1024 * 1024; }
+      } catch(e) { /* use defaults */ }
+
       if (file.size > MAX_FILE_SIZE) {
-        showError(`File too large: ${(file.size / 1024 / 1024).toFixed(1)} MB. Maximum is 100 MB.`);
+        showError(`File too large: ${(file.size/1024/1024).toFixed(1)}MB. Maximum is 20MB.`);
+        input.value = ''; selectedFile = null; selectedFileHash = null;
+        document.getElementById('file-selected').style.display = 'none';
+        return;
+      }
+
+      if (file.size > tierLimitBytes) {
+        const credits = window._cachedProfile?.credits_balance ?? 0;
+        if (credits <= 10) {
+          showError(`File too large for free credits: ${(file.size/1024/1024).toFixed(1)}MB. Free tier allows up to 2MB. Buy credits to upload up to 10MB.`);
+        } else {
+          showError(`File too large for your plan: ${(file.size/1024/1024).toFixed(1)}MB. Your plan allows up to ${tierLimitMB}MB. Buy more credits for up to 20MB.`);
+        }
         input.value = ''; selectedFile = null; selectedFileHash = null;
         document.getElementById('file-selected').style.display = 'none';
         return;
