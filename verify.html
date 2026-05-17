@@ -320,104 +320,109 @@
       await lookupHashOnChain(hash, null, 'hash');
     }
 
-    // ── Core blockchain lookup via getStamp(proofId) ─────────────────────────
-    // Contract has getStamp(uint256 proofId) — NOT verifyStamp(bytes32)
-    // For hash lookup, we use Supabase DB to find the proofId, then verify on chain
-    async function getStampOnChain(proofId) {
-      // getStamp(uint256) selector = keccak256("getStamp(uint256)")[0:4]
-      // = 0x78bd7935
-      const selector = '78bd7935';
-      const padded   = proofId.toString(16).padStart(64,'0');
-      const callData = '0x' + selector + padded;
-
-      const res = await fetch(RPC, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0', method: 'eth_call',
-          params: [{ to: CONTRACT, data: callData }, 'latest'],
-          id: 1
-        })
-      });
-      const rpc = await res.json();
-      return rpc.result ?? '';
-    }
-
+    // ── Core blockchain lookup ────────────────────────────────────────────────
+    // v3 contract has verifyByHash(bytes32) — direct hash lookup, no DB needed
     async function lookupHashOnChain(hash, dbStamp, resultId) {
       try {
-        if (!dbStamp && !hash) {
-          showResult(resultId, false, null, null, 'No hash or stamp data provided.');
+        // verifyByHash(bytes32) function selector
+        // keccak256("verifyByHash(bytes32)") = 0x56cfd039...
+        // Pre-computed: 0x56cfd039
+        const selector = '56cfd039';
+        const padded   = hash.replace('0x','').padStart(64,'0');
+        const callData = '0x' + selector + padded;
+
+        const res = await fetch(RPC, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0', method: 'eth_call',
+            params: [{ to: CONTRACT, data: callData }, 'latest'],
+            id: 1
+          })
+        });
+        const rpc    = await res.json();
+        const data   = rpc.result ?? '';
+        const clean  = data.replace('0x','');
+
+        // Returns: (uint256 proofId, uint256 timestamp, string creatorIdentity)
+        // ABI-encoded: proofId (32 bytes), timestamp (32 bytes), then dynamic string
+        const proofId   = parseInt(clean.slice(0,64), 16);
+        const timestamp = parseInt(clean.slice(64,128), 16);
+
+        if (!proofId || proofId === 0) {
+          // Try DB fallback (in case contract is still v2)
+          await lookupViaDB(hash, dbStamp, resultId);
           return;
         }
 
-        // If we have a dbStamp with proofId, verify directly on chain
-        const proofId = dbStamp?.proof_id ?? null;
+        const stampedAt = new Date(timestamp * 1000).toUTCString();
 
-        if (proofId) {
-          const data  = await getStampOnChain(proofId);
-          const clean = (data || '').replace('0x','');
-
-          if (!clean || clean.length < 64) {
-            showResult(resultId, false, dbStamp, hash, 'Proof #' + proofId + ' not found on chain. May still be pending.');
-            return;
-          }
-
-          // First field is bytes32 contentHash (first 64 hex chars)
-          const chainHash = '0x' + clean.slice(0, 64);
-          // createdAt is uint64 at offset 96 (after bytes32 + address)
-          const createdAt = parseInt(clean.slice(96,128), 16);
-
-          // Compare hashes if we have one to compare
-          if (hash && chainHash.toLowerCase() !== hash.toLowerCase()) {
-            showResult(resultId, false, dbStamp, hash,
-              'Hash mismatch — the content on-chain does not match what you provided. ' +
-              'On-chain: ' + chainHash);
-            return;
-          }
-
-          const stampedAt = new Date(createdAt * 1000).toUTCString();
-          // creatorIdentity is a string in the tuple — from DB is easier
-          const creator = dbStamp?.creator_identity ?? 'See proof page';
-          showResult(resultId, true, dbStamp, hash || chainHash, null,
-            { ts: createdAt, stampedAt, creator, proofId });
-
-        } else {
-          // No proofId — try to find via DB by hash
-          if (!hash) {
-            showResult(resultId, false, null, null, 'Please provide a proof ID or content hash.');
-            return;
-          }
-
-          // Look up by hash in Supabase (DB → proofId → chain verify)
-          const hexWithoutPrefix = hash.replace('0x','');
-          const res = await fetch(
-            SUPABASE + '/rest/v1/stamps?content_hash=eq.\\x' + hexWithoutPrefix +
-            '&select=proof_id,content_hash,tx_hash,display_title,creator_identity,block_timestamp&limit=1',
-            { headers: { 'apikey': ANON_KEY, 'Accept': 'application/json' } }
-          );
-          const rows = await res.json();
-          const found = rows?.[0];
-
-          if (!found) {
-            showResult(resultId, false, null, hash,
-              'Hash not found in TruthStamp database. ' +
-              'Note: direct hash-to-chain lookup requires a contract upgrade (coming soon). ' +
-              'Try verifying by Proof ID instead.');
-            return;
-          }
-
-          // Found in DB — now verify on chain
-          const data  = await getStampOnChain(found.proof_id);
-          const clean = (data || '').replace('0x','');
-          const chainHash  = clean.length >= 64 ? '0x' + clean.slice(0,64) : null;
-          const createdAt  = clean.length >= 128 ? parseInt(clean.slice(96,128), 16) : 0;
-          const stampedAt  = createdAt ? new Date(createdAt * 1000).toUTCString() : 'Unknown';
-
-          showResult(resultId, !!createdAt, found, hash, createdAt ? null : 'On-chain verification failed.',
-            createdAt ? { ts: createdAt, stampedAt, creator: found.creator_identity ?? '', proofId: found.proof_id } : null);
+        // Get full stamp details from DB if available (for title/tx hash etc)
+        let stamp = dbStamp;
+        if (!stamp) {
+          try {
+            const r = await fetch(
+              SUPABASE + '/rest/v1/stamps_with_creator?proof_id=eq.' + proofId + '&select=*&limit=1',
+              { headers: { 'apikey': ANON_KEY } }
+            );
+            const rows = await r.json();
+            stamp = rows?.[0] ?? null;
+          } catch { /* optional */ }
         }
+
+        const creator = stamp?.creator_identity ?? 'See proof page';
+        showResult(resultId, true, stamp, hash, null, { ts: timestamp, stampedAt, creator, proofId });
+
       } catch(e) {
         showResult(resultId, false, dbStamp, hash, 'Verification error: ' + e.message);
+      }
+    }
+
+    // Fallback: look up via DB then verify on chain with getStamp(proofId)
+    async function lookupViaDB(hash, dbStamp, resultId) {
+      try {
+        const hexWithoutPrefix = hash.replace('0x','');
+        const res = await fetch(
+          SUPABASE + '/rest/v1/stamps?content_hash=eq.\\x' + hexWithoutPrefix +
+          '&select=proof_id,content_hash,tx_hash,display_title,creator_identity,block_timestamp&limit=1',
+          { headers: { 'apikey': ANON_KEY, 'Accept': 'application/json' } }
+        );
+        const rows = await res.json();
+        const found = rows?.[0];
+
+        if (!found) {
+          showResult(resultId, false, null, hash,
+            'Not found on-chain or in database. This content has not been stamped, or the hash does not match exactly.');
+          return;
+        }
+
+        // Verify on chain using getStamp(proofId)
+        const selector = '78bd7935'; // getStamp(uint256)
+        const padded   = found.proof_id.toString(16).padStart(64,'0');
+        const r2 = await fetch(RPC, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0', method: 'eth_call',
+            params: [{ to: CONTRACT, data: '0x' + selector + padded }, 'latest'],
+            id: 2
+          })
+        });
+        const rpc2  = await r2.json();
+        const clean = (rpc2.result ?? '').replace('0x','');
+        const ts    = clean.length >= 128 ? parseInt(clean.slice(96,128), 16) : 0;
+
+        if (!ts) {
+          showResult(resultId, false, found, hash, 'On-chain verification failed. Proof may be pending.');
+          return;
+        }
+
+        showResult(resultId, true, found, hash, null, {
+          ts, stampedAt: new Date(ts*1000).toUTCString(),
+          creator: found.creator_identity ?? '', proofId: found.proof_id
+        });
+      } catch(e) {
+        showResult(resultId, false, dbStamp, hash, 'DB lookup failed: ' + e.message);
       }
     }
 
