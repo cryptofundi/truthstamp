@@ -650,16 +650,16 @@
 
     // ── File selection handler ───────────────────────────────────────────────
     let selectedFile = null;
+    let selectedFileHash = null;
     const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 
-    function handleFileSelect(input) {
+    async function handleFileSelect(input) {
       const file = input.files[0];
       if (!file) return;
 
       if (file.size > MAX_FILE_SIZE) {
         showError(`File too large: ${(file.size / 1024 / 1024).toFixed(1)} MB. Maximum is 100 MB.`);
-        input.value = '';
-        selectedFile = null;
+        input.value = ''; selectedFile = null; selectedFileHash = null;
         document.getElementById('file-selected').style.display = 'none';
         return;
       }
@@ -667,20 +667,42 @@
       selectedFile = file;
       document.getElementById('file-name-display').textContent = file.name;
       document.getElementById('file-size-display').textContent =
-        `(${(file.size / 1024).toFixed(1)} KB)`;
+        `(${file.size > 1048576
+          ? (file.size/1048576).toFixed(1)+' MB'
+          : (file.size/1024).toFixed(1)+' KB'})`;
       document.getElementById('file-selected').style.display = 'block';
       hideError();
+
+      // SHA-256 hash for duplicate detection
+      try {
+        const buf = await file.arrayBuffer();
+        const hash = await crypto.subtle.digest('SHA-256', buf);
+        selectedFileHash = '0x' + Array.from(new Uint8Array(hash))
+          .map(b => b.toString(16).padStart(2,'0')).join('');
+
+        const { data: { user } } = await window.tsDB.auth.getUser();
+        if (user) {
+          const { data: existing } = await window.tsDB
+            .from('stamps')
+            .select('proof_id, created_at')
+            .eq('creator_profile_id', user.id)
+            .eq('content_hash', selectedFileHash.replace('0x','\\x'))
+            .maybeSingle();
+
+          if (existing) {
+            const date = new Date(existing.created_at).toLocaleDateString('en-US',
+              { month:'short', day:'numeric', year:'numeric' });
+            showError(`⚠️ You already stamped this exact file on ${date} (Proof #${existing.proof_id}). Stamping again creates a duplicate.`);
+          }
+        }
+      } catch(e) { console.warn('Hash check failed:', e); }
     }
 
     async function handleFileStamp() {
-      if (!selectedFile) {
-        showError('Please choose a file to stamp.');
-        return;
-      }
+      if (!selectedFile) { showError('Please choose a file to stamp.'); return; }
 
       const btn = document.querySelector('.btn-stamp-action');
-      const originalText = btn?.textContent ?? 'Stamp it';
-      if (btn) { btn.disabled = true; btn.textContent = 'Stamping file...'; }
+      if (btn) { btn.disabled = true; btn.classList.add('btn-spinning'); }
       hideError();
 
       try {
@@ -688,10 +710,9 @@
         const token = session?.data?.session?.access_token;
         if (!token) { window.location.href = 'auth.html'; return; }
 
-        // Read file as base64
         const fileData = await new Promise((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = e => resolve(e.target.result); // data:mime;base64,xxx
+          reader.onload = e => resolve(e.target.result);
           reader.onerror = reject;
           reader.readAsDataURL(selectedFile);
         });
@@ -699,13 +720,21 @@
         const visibility = document.querySelector('.visibility-card.selected')?.id?.replace('vis-', '') ?? 'public';
         const mappedVisibility = visibility === 'none' ? 'hash_only' : visibility;
 
+        let sealedUntil = null;
+        if (mappedVisibility === 'sealed') {
+          const sealDate = document.getElementById('seal-date')?.value;
+          if (!sealDate) {
+            showError('Please select a reveal date for sealed stamps.');
+            if (btn) { btn.disabled = false; btn.classList.remove('btn-spinning'); }
+            return;
+          }
+          sealedUntil = new Date(sealDate).getTime() / 1000;
+        }
+
         const supabaseUrl = window.TRUTHSTAMP_CONFIG.SUPABASE_URL;
         const response = await fetch(`${supabaseUrl}/functions/v1/stamp-create`, {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             content_type: 'file',
             visibility: mappedVisibility,
@@ -713,17 +742,16 @@
             file_mime_type: selectedFile.type,
             file_data: fileData,
             display_title: selectedFile.name,
+            sealed_until: sealedUntil || undefined,
           }),
         });
 
         const result = await response.json();
-        if (!response.ok || !result.success) {
-          throw new Error(result.error ?? `Server error (${response.status})`);
-        }
+        if (!response.ok || !result.success) throw new Error(result.error ?? `Server error (${response.status})`);
         window.location.href = `proof.html?id=${result.proof_id}`;
       } catch (err) {
         showError(err instanceof Error ? err.message : 'File stamping failed. Please try again.');
-        if (btn) { btn.disabled = false; btn.textContent = originalText; }
+        if (btn) { btn.disabled = false; btn.classList.remove('btn-spinning'); }
       }
     }
 
