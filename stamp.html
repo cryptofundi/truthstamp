@@ -329,6 +329,17 @@
           <button class="tag-pill" type="button">+ #alpha</button>
           <button class="tag-pill add" type="button">+ Add tag</button>
         </div>
+
+        <!-- Title field (optional, shows in dashboard) -->
+        <div style="margin-top: var(--space-4);">
+          <label class="label" for="stamp-title" style="font-size:var(--text-xs);">
+            Title <span style="color:var(--color-text-muted); font-weight:400;">(optional · shown in dashboard)</span>
+          </label>
+          <input type="text" id="stamp-title" class="input"
+            placeholder="e.g. My crypto prediction May 2026"
+            maxlength="80"
+            style="margin-top:var(--space-1);">
+        </div>
       </div>
     </div>
 
@@ -339,7 +350,7 @@
         <h3 style="font-size: var(--text-lg); font-weight: 600; margin: 0 0 var(--space-2);">Stamp any file</h3>
         <p style="font-size: var(--text-sm); color: var(--color-text-muted); margin: 0 0 var(--space-4);">
           PDF, image, audio, video. Costs 3 credits.<br>
-          <span id="file-size-info">Free tier: up to 2MB · Paid credits: up to 10MB · Power (100+ credits): up to 20MB</span>
+          <span id="file-size-info">Loading your plan...</span>
         </p>
         <label for="file-input" class="btn btn-secondary" style="cursor: pointer; display: inline-block;">
           Choose file
@@ -348,6 +359,17 @@
         <div id="file-selected" style="display:none; margin-top: var(--space-4); padding: var(--space-3); background: var(--color-surface-alt); border-radius: var(--radius-md); font-size: var(--text-sm);">
           <span id="file-name-display"></span>
           <span id="file-size-display" style="color: var(--color-text-muted); margin-left: 8px;"></span>
+        </div>
+
+        <!-- Title field for file stamps -->
+        <div style="margin-top: var(--space-4); text-align: left;">
+          <label class="label" for="file-stamp-title" style="font-size:var(--text-xs);">
+            Title <span style="color:var(--color-text-muted); font-weight:400;">(optional · shown in dashboard)</span>
+          </label>
+          <input type="text" id="file-stamp-title" class="input"
+            placeholder="e.g. Project design mockup v3"
+            maxlength="80"
+            style="margin-top:var(--space-1);">
         </div>
       </div>
     </div>
@@ -557,6 +579,8 @@
           }
         }
 
+        const title = document.getElementById('stamp-title')?.value?.trim() || undefined;
+
         // Call Edge Function
         const supabaseUrl = window.TRUTHSTAMP_CONFIG.SUPABASE_URL;
         const response = await fetch(
@@ -574,7 +598,7 @@
               sealed_until: sealedUntil || undefined,
               tags: tags,
               // Don't send display_title for hash-only — server sets 'Private stamp'
-              display_title: visibility === 'hash_only' ? undefined : text.slice(0, 60),
+              display_title: visibility === 'hash_only' ? undefined : (title || text.slice(0, 60)),
               encrypted_content: encryptedContent,
             }),
           }
@@ -657,15 +681,12 @@
       const file = input.files[0];
       if (!file) return;
 
-      // Get credit balance to determine tier limit
-      let tierLimitMB = 2; // default: free tier
+      // Get credit balance from cached profile (always loaded by auth guard)
+      let tierLimitMB = 2;
       let tierLimitBytes = 2 * 1024 * 1024;
-      try {
-        const profile = window._cachedProfile || await window.tsAuth.getProfile();
-        const credits = profile?.credits_balance ?? 0;
-        if (credits > 100) { tierLimitMB = 20; tierLimitBytes = 20 * 1024 * 1024; }
-        else if (credits > 10) { tierLimitMB = 10; tierLimitBytes = 10 * 1024 * 1024; }
-      } catch(e) { /* use defaults */ }
+      const credits = window._cachedProfile?.credits_balance ?? 0;
+      if (credits > 100) { tierLimitMB = 20; tierLimitBytes = 20 * 1024 * 1024; }
+      else if (credits > 10) { tierLimitMB = 10; tierLimitBytes = 10 * 1024 * 1024; }
 
       if (file.size > MAX_FILE_SIZE) {
         showError(`File too large: ${(file.size/1024/1024).toFixed(1)}MB. Maximum is 20MB.`);
@@ -763,7 +784,7 @@
             file_name: selectedFile.name,
             file_mime_type: selectedFile.type,
             file_data: fileData,
-            display_title: selectedFile.name,
+            display_title: document.getElementById('file-stamp-title')?.value?.trim() || selectedFile.name,
             sealed_until: sealedUntil || undefined,
           }),
         });
@@ -825,6 +846,19 @@
             const initials = name.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase() || '??';
             const avatarEl = document.getElementById('nav-user-avatar');
             if (avatarEl) avatarEl.textContent = initials;
+
+            // Update file size info based on credit tier
+            const credits = profile.credits_balance ?? 0;
+            let tierLimitMB = 2;
+            if (credits > 100) tierLimitMB = 20;
+            else if (credits > 10) tierLimitMB = 10;
+
+            const fileSizeInfo = document.getElementById('file-size-info');
+            if (fileSizeInfo) {
+              fileSizeInfo.innerHTML =
+                `Free tier: up to 2MB &nbsp;·&nbsp; Paid: up to 10MB &nbsp;·&nbsp; 100+ credits: up to 20MB<br>` +
+                `<strong style="color:var(--brand-primary);">Your eligibility: up to ${tierLimitMB}MB</strong> (${credits} credits)`;
+            }
           }
         } catch (err) {
           console.error('Could not load profile:', err);
