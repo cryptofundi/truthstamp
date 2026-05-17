@@ -323,11 +323,15 @@
         </div>
 
         <!-- Tags -->
-        <div class="tag-row">
-          <button class="tag-pill" type="button">+ #prediction</button>
-          <button class="tag-pill" type="button">+ #crypto</button>
-          <button class="tag-pill" type="button">+ #alpha</button>
-          <button class="tag-pill add" type="button">+ Add tag</button>
+        <div class="tag-row" id="tag-row">
+          <div id="tag-chips"></div>
+          <button class="tag-pill add" type="button" onclick="promptAddTag()" id="add-tag-btn">+ Add tag</button>
+          <input type="text" id="tag-input"
+            placeholder="type tag, press Enter"
+            maxlength="24"
+            style="display:none; border:1px solid var(--color-border); border-radius:var(--radius-full); padding:4px 10px; font-size:var(--text-sm); background:var(--color-surface); color:var(--color-text); outline:none; width:140px;"
+            onkeydown="handleTagInput(event)"
+            onblur="cancelTagInput()">
         </div>
 
         <!-- Title field (optional, shows in dashboard) -->
@@ -591,6 +595,7 @@
         }
 
         const title = document.getElementById('stamp-title')?.value?.trim() || undefined;
+        const tags = getStampTags();
 
         // Call Edge Function
         const supabaseUrl = window.TRUTHSTAMP_CONFIG.SUPABASE_URL;
@@ -607,7 +612,7 @@
               content_type: 'text',
               visibility: visibility,
               sealed_until: sealedUntil || undefined,
-              tags: tags,
+              tags: tags.length > 0 ? tags : undefined,
               // Don't send display_title for hash-only — server sets 'Private stamp'
               // For hash-only: send user title if provided, never send content as title
               display_title: visibility === 'hash_only'
@@ -941,6 +946,63 @@
         if (btn) { btn.disabled = false; btn.classList.remove('btn-spinning'); }
       }
     }
+
+    // ── Tag management ────────────────────────────────────────────────────────
+    const MAX_TAGS = 5;
+    let stampTags = [];
+
+    function promptAddTag() {
+      if (stampTags.length >= MAX_TAGS) {
+        showError(`Maximum ${MAX_TAGS} tags allowed.`); return;
+      }
+      const btn = document.getElementById('add-tag-btn');
+      const input = document.getElementById('tag-input');
+      btn.style.display = 'none';
+      input.style.display = 'inline-block';
+      input.value = '';
+      input.focus();
+    }
+
+    function handleTagInput(e) {
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        const raw = document.getElementById('tag-input').value.trim()
+          .replace(/^#+/, '').replace(/[^a-zA-Z0-9_\-]/g, '').toLowerCase();
+        if (raw && !stampTags.includes(raw)) {
+          stampTags.push(raw);
+          renderTagChips();
+        }
+        cancelTagInput();
+      } else if (e.key === 'Escape') {
+        cancelTagInput();
+      }
+    }
+
+    function cancelTagInput() {
+      const btn = document.getElementById('add-tag-btn');
+      const input = document.getElementById('tag-input');
+      input.style.display = 'none';
+      btn.style.display = stampTags.length < MAX_TAGS ? 'inline-flex' : 'none';
+    }
+
+    function removeTag(tag) {
+      stampTags = stampTags.filter(t => t !== tag);
+      renderTagChips();
+      const btn = document.getElementById('add-tag-btn');
+      if (stampTags.length < MAX_TAGS) btn.style.display = 'inline-flex';
+    }
+
+    function renderTagChips() {
+      const container = document.getElementById('tag-chips');
+      container.innerHTML = stampTags.map(tag =>
+        `<span class="tag-pill selected" style="display:inline-flex; align-items:center; gap:4px; background:var(--brand-accent-light); color:var(--brand-accent); border-color:var(--brand-accent);">
+          #${tag}
+          <button onclick="removeTag('${tag}')" style="background:none; border:none; cursor:pointer; padding:0; color:inherit; font-size:12px; line-height:1; margin-left:2px;">✕</button>
+        </span>`
+      ).join('');
+    }
+
+    function getStampTags() { return stampTags; }
 
     function updateCreditCost(type) {
       const cost = type === 'text' ? 1 : type === 'url' ? 2 : 3;
