@@ -748,10 +748,15 @@
       if (btn) { btn.disabled = true; btn.classList.add('btn-spinning'); }
       hideError();
 
+      const sizeMB = (selectedFile.size / 1024 / 1024).toFixed(2);
+
       try {
+        alert(`STEP 1: Starting file stamp\nFile: ${selectedFile.name}\nSize: ${sizeMB}MB\nType: ${selectedFile.type}`);
+
         const session = await window.tsDB.auth.getSession();
         const token = session?.data?.session?.access_token;
         if (!token) { window.location.href = 'auth.html'; return; }
+        alert(`STEP 2: Auth OK\nToken: ${token.slice(0,20)}...`);
 
         const fileData = await new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -759,42 +764,51 @@
           reader.onerror = reject;
           reader.readAsDataURL(selectedFile);
         });
+        alert(`STEP 3: File read OK\nBase64 length: ${fileData.length} chars`);
 
         const visibility = document.querySelector('.visibility-card.selected')?.id?.replace('vis-', '') ?? 'public';
         const mappedVisibility = visibility === 'none' ? 'hash_only' : visibility;
-
-        let sealedUntil = null;
-        if (mappedVisibility === 'sealed') {
-          const sealDate = document.getElementById('seal-date')?.value;
-          if (!sealDate) {
-            showError('Please select a reveal date for sealed stamps.');
-            if (btn) { btn.disabled = false; btn.classList.remove('btn-spinning'); }
-            return;
-          }
-          sealedUntil = new Date(sealDate).getTime() / 1000;
-        }
+        alert(`STEP 4: Sending to Edge Function\nVisibility: ${mappedVisibility}\nPayload size: ~${(fileData.length/1024).toFixed(0)}KB`);
 
         const supabaseUrl = window.TRUTHSTAMP_CONFIG.SUPABASE_URL;
-        const response = await fetch(`${supabaseUrl}/functions/v1/stamp-create`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            content_type: 'file',
-            visibility: mappedVisibility,
-            file_name: selectedFile.name,
-            file_mime_type: selectedFile.type,
-            file_data: fileData,
-            display_title: document.getElementById('file-stamp-title')?.value?.trim() || selectedFile.name,
-            sealed_until: sealedUntil || undefined,
-          }),
-        });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 90000);
 
+        let response;
+        try {
+          response = await fetch(`${supabaseUrl}/functions/v1/stamp-create`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              content_type: 'file',
+              visibility: mappedVisibility,
+              file_name: selectedFile.name,
+              file_mime_type: selectedFile.type,
+              file_data: fileData,
+              display_title: document.getElementById('file-stamp-title')?.value?.trim() || selectedFile.name,
+            }),
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+        } catch (fetchErr) {
+          clearTimeout(timeoutId);
+          if (fetchErr.name === 'AbortError') {
+            throw new Error('Request timed out after 90 seconds. File may be too large for the server.');
+          }
+          throw fetchErr;
+        }
+
+        alert(`STEP 5: Edge Function responded\nStatus: ${response.status}`);
         const result = await response.json();
+        alert(`STEP 6: Result\n${JSON.stringify(result, null, 2).slice(0, 300)}`);
+
         if (!response.ok || !result.success) throw new Error(result.error ?? `Server error (${response.status})`);
         window.location.href = `proof.html?id=${result.proof_id}`;
       } catch (err) {
+        alert(`ERROR: ${err.message}`);
         showError(err instanceof Error ? err.message : 'File stamping failed. Please try again.');
         if (btn) { btn.disabled = false; btn.classList.remove('btn-spinning'); }
+        updateCreditCost('file');
       }
     }
 
