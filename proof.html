@@ -584,6 +584,7 @@
           arweaveLink.style.display = 'inline-flex';
         }
       }
+    } // end public/sealed content block
 
     // Stats
     document.getElementById('stat-block').textContent =
@@ -691,30 +692,21 @@
           : `${(stamp.file_size_bytes / 1024).toFixed(1)} KB`
         : '';
 
-      contentBlock.innerHTML = `
-        <div style="padding: var(--space-4);">
-          <div style="display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-3);">
-            <div style="font-size:2rem;">📄</div>
-            <div>
-              <p style="font-weight:600; margin:0 0 2px;">${escapeHtml(stamp.file_name || 'File stamp')}</p>
-              <p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0;">${escapeHtml(stamp.file_mime_type || '')} ${size ? '· ' + size : ''}</p>
-            </div>
-          </div>
-          ${stamp.storage_uri ? `
-            <a href="https://arweave.net/${stamp.storage_uri.replace('ar://', '')}"
-               target="_blank" rel="noopener"
-               class="btn btn-secondary" style="font-size:var(--text-sm);">
-              View file on Arweave →
-            </a>` : `
-            <p style="font-size:var(--text-sm); color:var(--color-text-muted); margin:0;">
-              🔐 File fingerprint sealed on MegaETH. Content stays private — not uploaded to Arweave.
-            </p>`}
-          <div style="margin-top:var(--space-3);">
-            <span style="font-size:11px; background:var(--color-surface-alt); border:1px solid var(--color-border); border-radius:var(--radius-full); padding:3px 8px; color:var(--color-text-muted);">
-              🔐 Visible only to you · private file stamp
-            </span>
-          </div>
-        </div>`;
+      const arweaveBtn = stamp.storage_uri
+        ? '<a href="https://arweave.net/' + stamp.storage_uri.replace('ar://', '') + '" target="_blank" rel="noopener" class="btn btn-secondary" style="font-size:var(--text-sm);">View file on Arweave →</a>'
+        : '<p style="font-size:var(--text-sm); color:var(--color-text-muted); margin:0;">🔐 File fingerprint sealed on MegaETH. Content stays private — not uploaded to Arweave.</p>';
+
+      contentBlock.innerHTML = '<div style="padding: var(--space-4);">'
+        + '<div style="display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-3);">'
+        + '<div style="font-size:2rem;">📄</div>'
+        + '<div>'
+        + '<p style="font-weight:600; margin:0 0 2px;">' + escapeHtml(stamp.file_name || 'File stamp') + '</p>'
+        + '<p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0;">' + escapeHtml(stamp.file_mime_type || '') + (size ? ' · ' + size : '') + '</p>'
+        + '</div></div>'
+        + arweaveBtn
+        + '<div style="margin-top:var(--space-3);">'
+        + '<span style="font-size:11px; background:var(--color-surface-alt); border:1px solid var(--color-border); border-radius:var(--radius-full); padding:3px 8px; color:var(--color-text-muted);">🔐 Visible only to you · private file stamp</span>'
+        + '</div></div>';
       return;
     }
 
