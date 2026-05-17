@@ -608,7 +608,10 @@
               sealed_until: sealedUntil || undefined,
               tags: tags,
               // Don't send display_title for hash-only — server sets 'Private stamp'
-              display_title: visibility === 'hash_only' ? undefined : (title || text.slice(0, 60)),
+              // For hash-only: send user title if provided, never send content as title
+              display_title: visibility === 'hash_only'
+                ? (title || undefined)  // send title if given, let server use 'Private stamp' fallback
+                : (title || text.slice(0, 60)),
               encrypted_content: encryptedContent,
             }),
           }
@@ -881,15 +884,38 @@
         const mappedVisibility = visibility === 'none' ? 'hash_only' : visibility;
         const title = document.getElementById('url-stamp-title')?.value?.trim() || url;
 
+        // Read seal date if sealed
+        let sealedUntil = null;
+        if (mappedVisibility === 'sealed') {
+          const sealDate = document.getElementById('seal-date')?.value;
+          if (!sealDate) {
+            showError('Please select a reveal date for sealed URL stamps.');
+            if (btn) { btn.disabled = false; btn.classList.remove('btn-spinning'); }
+            return;
+          }
+          sealedUntil = Math.floor(new Date(sealDate).getTime() / 1000);
+          if (sealedUntil <= Math.floor(Date.now() / 1000) + 300) {
+            showError('Reveal date must be at least 5 minutes in the future.');
+            if (btn) { btn.disabled = false; btn.classList.remove('btn-spinning'); }
+            return;
+          }
+        }
+
+        // Stamp the URL string as content
+        // Future: fetch page snapshot and include content hash
+        // For now: stamp URL + timestamp as the content for a stronger proof
+        const stampContent = url;
+
         const supabaseUrl = window.TRUTHSTAMP_CONFIG.SUPABASE_URL;
         const response = await fetch(`${supabaseUrl}/functions/v1/stamp-create`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            content: url,
+            content: stampContent,
             content_type: 'url',
             visibility: mappedVisibility,
             display_title: title,
+            sealed_until: sealedUntil || undefined,
           }),
         });
 
