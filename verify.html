@@ -3,340 +3,393 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verify a Stamp — TruthStamp</title>
-  <link rel="stylesheet" href="css/design-tokens.css">
+  <title>Verify a stamp — TruthStamp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/components.css">
+  <script src="js/analytics.js"></script>
   <script src="js/config.js"></script>
   <style>
-    body { background: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); margin: 0; }
-    .page { max-width: 680px; margin: 0 auto; padding: var(--space-8) var(--space-4); }
-    .hero { text-align: center; margin-bottom: var(--space-8); }
-    .hero h1 { font-size: var(--text-2xl); font-weight: 700; margin: 0 0 var(--space-2); }
-    .hero p { color: var(--color-text-muted); font-size: var(--text-base); margin: 0; }
-    .tabs { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); border-bottom: 1px solid var(--color-border); padding-bottom: 0; }
-    .tab { background: none; border: none; padding: var(--space-2) var(--space-4); cursor: pointer; font-size: var(--text-sm); color: var(--color-text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
-    .tab.active { color: var(--brand-primary); border-bottom-color: var(--brand-primary); font-weight: 600; }
-    .mode { display: none; }
-    .mode.active { display: block; }
-    .card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: var(--space-6); margin-bottom: var(--space-4); }
-    .label { font-size: var(--text-sm); font-weight: 600; margin: 0 0 var(--space-2); display: block; }
-    .input { width: 100%; box-sizing: border-box; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg); color: var(--color-text); font-size: var(--text-sm); }
-    .textarea { width: 100%; box-sizing: border-box; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg); color: var(--color-text); font-size: var(--text-sm); min-height: 120px; resize: vertical; font-family: var(--font-sans); }
-    .result { display: none; margin-top: var(--space-4); }
-    .result.show { display: block; }
-    .result-valid { background: #ECFDF5; border: 1px solid #6EE7B7; border-radius: var(--radius-lg); padding: var(--space-4); }
-    .result-invalid { background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: var(--radius-lg); padding: var(--space-4); }
+    .verify-shell { max-width: 720px; margin: 0 auto; padding: var(--space-10) var(--space-6); }
+    .verify-hero { text-align: center; margin-bottom: var(--space-8); }
+    .verify-eyebrow {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px; background: var(--color-success-bg); color: var(--color-success);
+      border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: 500;
+      margin-bottom: var(--space-4);
+    }
+    .verify-title { font-size: var(--text-2xl); font-weight: 600; letter-spacing: -0.01em; margin: 0 0 var(--space-3); }
+    .verify-subtitle { font-size: var(--text-base); color: var(--color-text-secondary); max-width: 540px; margin: 0 auto; line-height: 1.6; }
+    .verify-tabs-row { display: flex; justify-content: center; margin-bottom: var(--space-5); }
+    .verify-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-6); }
+    .file-drop {
+      border: 1.5px dashed var(--color-border-strong); border-radius: var(--radius-md);
+      padding: var(--space-8) var(--space-4); text-align: center;
+      background: var(--color-surface-alt); cursor: pointer; transition: all var(--transition-fast);
+    }
+    .file-drop:hover { border-color: var(--brand-primary); background: var(--brand-primary-light); }
+    .file-drop-icon {
+      width: 40px; height: 40px; border-radius: var(--radius-md);
+      background: var(--color-surface); color: var(--brand-primary);
+      display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-3);
+    }
+    .independent-section {
+      margin-top: var(--space-10); padding: var(--space-6);
+      background: var(--brand-primary-light); border-radius: var(--radius-lg);
+    }
+    .independent-title {
+      font-size: var(--text-lg); font-weight: 600; color: var(--brand-primary-dark);
+      margin: 0 0 var(--space-3); display: flex; align-items: center; gap: var(--space-2);
+    }
+    .independent-desc { font-size: var(--text-sm); color: var(--color-text); margin: 0 0 var(--space-4); line-height: 1.6; }
+    .independent-steps { counter-reset: step; list-style: none; padding: 0; margin: 0; }
+    .independent-steps li {
+      counter-increment: step; padding: var(--space-3) 0 var(--space-3) var(--space-8);
+      position: relative; font-size: var(--text-sm); line-height: 1.6; color: var(--color-text);
+    }
+    .independent-steps li::before {
+      content: counter(step); position: absolute; left: 0; top: var(--space-3);
+      width: 24px; height: 24px; background: var(--brand-primary); color: white;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: var(--text-xs); font-weight: 600;
+    }
+    .independent-steps code {
+      font-family: var(--font-mono); font-size: var(--text-xs);
+      background: var(--color-surface); padding: 2px 6px;
+      border-radius: 4px; border: 1px solid var(--color-border);
+    }
+    .independent-steps a { color: var(--brand-primary); text-decoration: underline; }
+
+    /* Result styles */
+    .result-box { display: none; margin-top: var(--space-4); padding: var(--space-4); border-radius: var(--radius-md); }
+    .result-box.show { display: block; }
+    .result-valid { background: var(--color-success-bg); border: 1px solid var(--color-success); }
+    .result-invalid { background: #FEF2F2; border: 1px solid #FCA5A5; }
     .result-title { font-weight: 700; font-size: var(--text-base); margin: 0 0 var(--space-3); display: flex; align-items: center; gap: var(--space-2); }
-    .result-row { display: flex; justify-content: space-between; align-items: flex-start; padding: var(--space-2) 0; border-top: 1px solid rgba(0,0,0,0.06); font-size: var(--text-sm); gap: var(--space-4); }
-    .result-key { color: var(--color-text-muted); flex-shrink: 0; }
+    .result-row {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding: var(--space-2) 0; border-top: 1px solid rgba(0,0,0,0.06);
+      font-size: var(--text-sm); gap: var(--space-4);
+    }
+    .result-key { color: var(--color-text-secondary); flex-shrink: 0; font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
     .result-val { font-family: var(--font-mono); font-size: var(--text-xs); word-break: break-all; text-align: right; }
-    .steps { background: var(--color-surface-alt); border-radius: var(--radius-lg); padding: var(--space-4); margin-top: var(--space-4); }
-    .step { display: flex; gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--color-border); }
-    .step:first-child { border-top: none; padding-top: 0; }
-    .step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--brand-primary); color: white; display: flex; align-items: center; justify-content: center; font-size: var(--text-xs); font-weight: 700; flex-shrink: 0; }
-    .step-content h4 { margin: 0 0 4px; font-size: var(--text-sm); font-weight: 600; }
-    .step-content p { margin: 0; font-size: var(--text-xs); color: var(--color-text-muted); line-height: 1.5; }
-    .code { font-family: var(--font-mono); font-size: var(--text-xs); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-3); margin-top: var(--space-2); word-break: break-all; }
-    .spinner { display: none; margin: var(--space-4) auto; width: 32px; height: 32px; border: 3px solid var(--color-border); border-top-color: var(--brand-primary); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    .spinner {
+      display: none; margin: var(--space-4) auto;
+      width: 28px; height: 28px;
+      border: 3px solid var(--color-border); border-top-color: var(--brand-primary);
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
-    nav { display: flex; justify-content: space-between; align-items: center; padding: var(--space-4); border-bottom: 1px solid var(--color-border); margin-bottom: var(--space-4); }
-    nav a { text-decoration: none; color: var(--color-text-muted); font-size: var(--text-sm); }
-    nav .logo { font-weight: 700; color: var(--color-text); font-size: var(--text-base); }
+    .mt-4 { margin-top: var(--space-4); }
+    .file-selected-info { margin-top: var(--space-3); font-size: var(--text-sm); color: var(--color-text-secondary); }
   </style>
 </head>
 <body>
 
-<nav>
-  <a href="index.html" class="logo">TruthStamp</a>
-  <div style="display:flex; gap:var(--space-4);">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="stamp.html">New stamp</a>
-  </div>
-</nav>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <span class="nav-logo">T</span><span>TruthStamp</span>
+      </a>
+      <div class="nav-links">
+        <a href="dashboard.html">My stamps</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="trust.html">Trust</a>
+        <a href="auth.html" class="btn btn-primary btn-sm">Stamp something</a>
+      </div>
+    </div>
+  </nav>
 
-<div class="page">
-  <div class="hero">
-    <h1>🔍 Verify a Stamp</h1>
-    <p>Verify any stamp trustlessly — directly against the MegaETH blockchain.<br>No account needed. Works even if TruthStamp is offline.</p>
-  </div>
+  <main class="verify-shell">
 
-  <div class="card">
-    <div class="tabs">
-      <button class="tab active" data-mode="text" onclick="switchMode('text')">Verify text</button>
-      <button class="tab" data-mode="file" onclick="switchMode('file')">Verify file</button>
-      <button class="tab" data-mode="proof" onclick="switchMode('proof')">Lookup by proof ID</button>
-      <button class="tab" data-mode="hash" onclick="switchMode('hash')">Lookup by hash</button>
+    <div class="verify-hero">
+      <div class="verify-eyebrow">
+        <span class="badge-dot"></span>
+        Works without an account
+      </div>
+      <h1 class="verify-title">Verify any stamp.</h1>
+      <p class="verify-subtitle">
+        Check if any file or text was sealed on MegaETH. Runs entirely in your browser — we never see your data, and it works even if TruthStamp goes away.
+      </p>
+    </div>
+
+    <!-- Method tabs -->
+    <div class="verify-tabs-row">
+      <div class="tabs">
+        <button class="tab active" data-mode="text" onclick="switchMode('text')">Verify text</button>
+        <button class="tab" data-mode="file" onclick="switchMode('file')">Verify file</button>
+        <button class="tab" data-mode="proof" onclick="switchMode('proof')">By proof ID</button>
+        <button class="tab" data-mode="hash" onclick="switchMode('hash')">By hash</button>
+      </div>
     </div>
 
     <!-- Text mode -->
-    <div id="mode-text" class="mode active">
-      <label class="label">Paste the original text</label>
-      <textarea class="textarea" id="verify-text" placeholder="Paste the exact text that was stamped..."></textarea>
-      <button class="btn btn-primary btn-block mt-4" onclick="verifyText()" style="margin-top:var(--space-4);">Verify this text</button>
+    <div class="verify-card" id="mode-text">
+      <label class="label" for="verify-text">Paste the exact text you want to verify</label>
+      <textarea class="textarea" id="verify-text" placeholder="The text must match character-for-character. Even one extra space will produce a different hash."></textarea>
+      <button class="btn btn-primary btn-block btn-lg mt-4" onclick="verifyText()">Verify this text</button>
+      <p class="text-muted mt-4 text-center" style="font-size: var(--text-xs);">Hashing happens locally in your browser. The text never leaves your device.</p>
+      <div class="spinner" id="spinner-text"></div>
+      <div class="result-box" id="result-text"></div>
     </div>
 
     <!-- File mode -->
-    <div id="mode-file" class="mode">
-      <label class="label">Select the original file</label>
-      <p style="font-size:var(--text-sm); color:var(--color-text-muted); margin:0 0 var(--space-3);">The file never leaves your device — we hash it locally and check the hash on-chain.</p>
-      <label class="btn btn-secondary" style="cursor:pointer; display:inline-block;">
-        Choose file
-        <input type="file" id="verify-file" style="display:none" onchange="handleVerifyFile(this)">
+    <div class="verify-card" id="mode-file" style="display: none;">
+      <label class="file-drop" for="verify-file-input">
+        <div class="file-drop-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0-12l-4 4m4-4l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+        </div>
+        <p style="font-size: var(--text-base); font-weight: 500; margin: 0 0 4px;">Drop a file or click to upload</p>
+        <p class="text-muted" style="font-size: var(--text-xs); margin: 0;">PDF, image, video, audio, or text — up to 100 MB</p>
+        <input type="file" id="verify-file-input" style="display:none" onchange="handleVerifyFile(this)">
       </label>
-      <span id="verify-file-name" style="font-size:var(--text-sm); color:var(--color-text-muted); margin-left:var(--space-3);"></span>
-      <button class="btn btn-primary btn-block" onclick="verifyFile()" style="margin-top:var(--space-4);" id="verify-file-btn" disabled>Verify this file</button>
+      <div id="file-selected-info" class="file-selected-info" style="display:none;"></div>
+      <button class="btn btn-primary btn-block btn-lg mt-4" id="verify-file-btn" onclick="verifyFile()" disabled>Verify this file</button>
+      <p class="text-muted mt-4 text-center" style="font-size: var(--text-xs);">Your file is hashed locally in your browser. It is never uploaded or stored.</p>
+      <div class="spinner" id="spinner-file"></div>
+      <div class="result-box" id="result-file"></div>
     </div>
 
     <!-- Proof ID mode -->
-    <div id="mode-proof" class="mode">
-      <label class="label">Proof ID</label>
-      <input class="input" id="verify-proof-id" type="number" placeholder="e.g. 42" min="1">
-      <button class="btn btn-primary btn-block" onclick="verifyByProofId()" style="margin-top:var(--space-4);">Look up proof</button>
+    <div class="verify-card" id="mode-proof" style="display: none;">
+      <label class="label" for="verify-proof-id">Proof ID</label>
+      <input type="number" class="input" id="verify-proof-id" placeholder="e.g. 42" min="1" style="margin-bottom:0;">
+      <button class="btn btn-primary btn-block btn-lg mt-4" onclick="verifyByProofId()">Look up this proof</button>
+      <div class="spinner" id="spinner-proof"></div>
+      <div class="result-box" id="result-proof"></div>
     </div>
 
     <!-- Hash mode -->
-    <div id="mode-hash" class="mode">
-      <label class="label">Content hash (SHA-256)</label>
-      <input class="input" id="verify-hash" type="text" placeholder="0x1234abcd..." style="font-family:var(--font-mono); font-size:var(--text-sm);">
-      <button class="btn btn-primary btn-block" onclick="verifyByHash()" style="margin-top:var(--space-4);">Look up on blockchain</button>
+    <div class="verify-card" id="mode-hash" style="display: none;">
+      <label class="label" for="verify-hash">Content hash (SHA-256) or transaction hash</label>
+      <input type="text" class="input" id="verify-hash" placeholder="0x1a2b3c..." style="font-family: var(--font-mono); font-size: var(--text-sm); margin-bottom:0;">
+      <button class="btn btn-primary btn-block btn-lg mt-4" onclick="verifyByHash()">Look up on MegaETH</button>
+      <div class="spinner" id="spinner-hash"></div>
+      <div class="result-box" id="result-hash"></div>
     </div>
 
-    <div class="spinner" id="spinner"></div>
-    <div id="verify-result" class="result"></div>
-  </div>
+    <!-- Independent verification section -->
+    <div class="independent-section">
+      <h2 class="independent-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M12 2L2 7v10l10 5 10-5V7l-10-5z"/></svg>
+        Verify without us, anytime, forever
+      </h2>
+      <p class="independent-desc">
+        Every TruthStamp proof can be verified without TruthStamp existing. Even if our website disappears tomorrow, your proof is still valid. Here's how anyone can verify it directly on MegaETH:
+      </p>
+      <ol class="independent-steps">
+        <li>
+          Calculate the SHA-256 hash of your file or text. On Mac/Linux: <code>shasum -a 256 yourfile.pdf</code>. For text and files online: <a href="https://emn178.github.io/online-tools/sha256_checksum.html" target="_blank" rel="noopener">emn178.github.io SHA-256 tool</a>.
+        </li>
+        <li>
+          Prefix the hash with <code>0x</code> if not already present. This is your content fingerprint.
+        </li>
+        <li>
+          Call <code>verifyStamp(bytes32)</code> on the TruthStamp contract using any Ethereum tool, MegaETH explorer, or the RPC: <code>https://carrot.megaeth.com/rpc</code>.<br>
+          Contract address: <code id="self-contract-addr">loading...</code>
+        </li>
+        <li>
+          The contract returns <code>{ timestamp, creatorIdentity, proofId }</code>. A non-zero timestamp proves the content existed at that moment — immutably, forever.
+        </li>
+      </ol>
+      <p style="margin-top: var(--space-4); font-size: var(--text-sm);">
+        <a href="trust.html" style="color: var(--brand-primary-dark); font-weight: 500; text-decoration: underline;">Read our full permanence promise →</a>
+      </p>
+    </div>
 
-  <!-- Self-verify instructions -->
-  <div class="card">
-    <h3 style="margin:0 0 var(--space-4); font-size:var(--text-base); font-weight:700;">🛡️ Verify without TruthStamp</h3>
-    <p style="font-size:var(--text-sm); color:var(--color-text-muted); margin:0 0 var(--space-3);">Even if TruthStamp disappears, you can verify any stamp using only public tools:</p>
+  </main>
 
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-content">
-          <h4>Hash your content</h4>
-          <p>Use any SHA-256 tool. For text: <a href="https://emn178.github.io/online-tools/sha256.html" target="_blank">emn178.github.io/online-tools/sha256</a><br>
-          For files: <a href="https://emn178.github.io/online-tools/sha256_checksum.html" target="_blank">sha256_checksum tool</a> or run <code>sha256sum yourfile.pdf</code> in terminal.</p>
-        </div>
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="flex gap-2" style="align-items: center;">
+        <span class="nav-logo">T</span>
+        <span style="font-weight: 500; color: var(--color-text);">TruthStamp</span>
       </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-content">
-          <h4>Convert to bytes32</h4>
-          <p>Prefix the hash with <code>0x</code> if not already present. The result is your content fingerprint.</p>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-content">
-          <h4>Call the smart contract</h4>
-          <p>Open MegaETH explorer and call <code>verifyStamp(bytes32 hash)</code> on the contract:</p>
-          <div class="code" id="contract-addr">Loading contract address...</div>
-          <p style="margin-top:var(--space-2);">Or use any Ethereum-compatible tool (ethers.js, cast, Remix) to call the contract directly with the RPC: <code>https://carrot.megaeth.com/rpc</code></p>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">4</div>
-        <div class="step-content">
-          <h4>Read the result</h4>
-          <p>The contract returns: <code>{ timestamp, creatorIdentity, proofId }</code><br>
-          A non-zero timestamp proves the content existed at that moment, recorded immutably on-chain.</p>
-        </div>
+      <div class="footer-links">
+        <a href="trust.html">Trust</a>
+        <a href="pricing.html">Pricing</a>
       </div>
     </div>
-  </div>
-</div>
+  </footer>
 
-<script src="js/supabase-client.js"></script>
-<script>
-  // Fill contract address
-  const cfg = window.TRUTHSTAMP_CONFIG;
-  if (cfg?.CONTRACT_ADDRESS) {
-    document.getElementById('contract-addr').textContent = cfg.CONTRACT_ADDRESS;
-  }
+  <script src="js/common.js"></script>
+  <script>
+    // ── Config ──────────────────────────────────────────────────────────────
+    const cfg        = window.TRUTHSTAMP_CONFIG ?? {};
+    const RPC        = cfg.CONTRACT_RPC_URL  ?? 'https://carrot.megaeth.com/rpc';
+    const CONTRACT   = cfg.CONTRACT_ADDRESS  ?? '';
+    const SUPABASE   = cfg.SUPABASE_URL      ?? '';
+    const ANON_KEY   = cfg.SUPABASE_ANON_KEY ?? '';
+    const EXPLORER   = cfg.CONTRACT_EXPLORER ?? 'https://megaeth-testnet-v2.blockscout.com';
 
-  const MEGAETH_RPC = cfg?.CONTRACT_RPC_URL ?? 'https://carrot.megaeth.com/rpc';
-  const CONTRACT   = cfg?.CONTRACT_ADDRESS ?? '';
-  const SUPABASE   = cfg?.SUPABASE_URL ?? '';
+    // Fill contract address in self-verify section
+    document.getElementById('self-contract-addr').textContent = CONTRACT || 'see config.js';
 
-  // ── Tab switching ─────────────────────────────────────────────────────────
-  function switchMode(mode) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
-    ['text','file','proof','hash'].forEach(m => {
-      const el = document.getElementById(`mode-${m}`);
-      if (el) el.classList.toggle('active', m === mode);
-    });
-    clearResult();
-  }
+    // ── Tab switching ────────────────────────────────────────────────────────
+    function switchMode(mode) {
+      document.querySelectorAll('[data-mode]').forEach(t => t.classList.remove('active'));
+      document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+      ['text','file','proof','hash'].forEach(m => {
+        const el = document.getElementById('mode-' + m);
+        if (el) el.style.display = (m === mode) ? 'block' : 'none';
+      });
+    }
 
-  function clearResult() {
-    const r = document.getElementById('verify-result');
-    r.className = 'result';
-    r.innerHTML = '';
-  }
+    // ── SHA-256 helper ───────────────────────────────────────────────────────
+    async function sha256Hex(data) {
+      const buf = await crypto.subtle.digest('SHA-256', data instanceof Uint8Array ? data : new Uint8Array(data));
+      return '0x' + Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+    }
 
-  function showSpinner(on) {
-    document.getElementById('spinner').style.display = on ? 'block' : 'none';
-  }
+    // ── Spinner helpers ──────────────────────────────────────────────────────
+    function spin(id, on) { document.getElementById('spinner-' + id).style.display = on ? 'block' : 'none'; }
+    function clearResult(id) {
+      const el = document.getElementById('result-' + id);
+      el.className = 'result-box';
+      el.innerHTML = '';
+    }
 
-  // ── Hash helpers ──────────────────────────────────────────────────────────
-  async function sha256Hex(data) {
-    const buf = await crypto.subtle.digest('SHA-256', data);
-    return '0x' + Array.from(new Uint8Array(buf))
-      .map(b => b.toString(16).padStart(2,'0')).join('');
-  }
+    // ── Verify text ──────────────────────────────────────────────────────────
+    async function verifyText() {
+      const text = document.getElementById('verify-text').value;
+      if (!text.trim()) { alert('Please paste the text to verify.'); return; }
+      clearResult('text'); spin('text', true);
+      const hash = await sha256Hex(new TextEncoder().encode(text));
+      await lookupHashOnChain(hash, null, 'text');
+    }
 
-  // ── Verify text ───────────────────────────────────────────────────────────
-  async function verifyText() {
-    const text = document.getElementById('verify-text').value.trim();
-    if (!text) { alert('Please paste the text to verify.'); return; }
-    showSpinner(true); clearResult();
-    const hash = await sha256Hex(new TextEncoder().encode(text));
-    await lookupHashOnChain(hash);
-  }
+    // ── Verify file ──────────────────────────────────────────────────────────
+    let verifyFileBuffer = null;
 
-  // ── Verify file ───────────────────────────────────────────────────────────
-  let verifyFileData = null;
+    function handleVerifyFile(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        verifyFileBuffer = e.target.result;
+        const info = document.getElementById('file-selected-info');
+        info.style.display = 'block';
+        info.textContent = '📄 ' + file.name + ' (' + (file.size/1024).toFixed(1) + ' KB) — ready to verify';
+        document.getElementById('verify-file-btn').disabled = false;
+      };
+      reader.readAsArrayBuffer(file);
+    }
 
-  function handleVerifyFile(input) {
-    const file = input.files[0];
-    if (!file) return;
-    document.getElementById('verify-file-name').textContent = file.name + ' (' + (file.size/1024).toFixed(1) + ' KB)';
-    const reader = new FileReader();
-    reader.onload = e => {
-      verifyFileData = e.target.result;
-      document.getElementById('verify-file-btn').disabled = false;
-    };
-    reader.readAsArrayBuffer(file);
-  }
+    async function verifyFile() {
+      if (!verifyFileBuffer) { alert('Please select a file first.'); return; }
+      clearResult('file'); spin('file', true);
+      const hash = await sha256Hex(verifyFileBuffer);
+      await lookupHashOnChain(hash, null, 'file');
+    }
 
-  async function verifyFile() {
-    if (!verifyFileData) { alert('Please select a file first.'); return; }
-    showSpinner(true); clearResult();
-    const hash = await sha256Hex(new Uint8Array(verifyFileData));
-    await lookupHashOnChain(hash);
-  }
+    // ── Verify by proof ID ───────────────────────────────────────────────────
+    async function verifyByProofId() {
+      const id = document.getElementById('verify-proof-id').value.trim();
+      if (!id || isNaN(Number(id))) { alert('Please enter a valid proof ID number.'); return; }
+      clearResult('proof'); spin('proof', true);
 
-  // ── Verify by proof ID ────────────────────────────────────────────────────
-  async function verifyByProofId() {
-    const id = document.getElementById('verify-proof-id').value.trim();
-    if (!id || isNaN(Number(id))) { alert('Please enter a valid proof ID.'); return; }
-    showSpinner(true); clearResult();
-
-    // Fetch from DB first to get the hash, then verify on chain
-    try {
-      const res = await fetch(`${SUPABASE}/rest/v1/stamps_with_creator?proof_id=eq.${id}&select=proof_id,content_hash,tx_hash,block_number,block_timestamp,visibility,content_type,display_title,creator_identity`, {
-        headers: {
-          'apikey': cfg?.SUPABASE_ANON_KEY ?? '',
-          'Accept': 'application/json',
+      try {
+        const res = await fetch(
+          SUPABASE + '/rest/v1/stamps_with_creator?proof_id=eq.' + id +
+          '&select=proof_id,content_hash,tx_hash,block_number,block_timestamp,visibility,content_type,display_title,creator_identity',
+          { headers: { 'apikey': ANON_KEY, 'Accept': 'application/json' } }
+        );
+        const rows = await res.json();
+        const stamp = rows?.[0];
+        if (!stamp) {
+          showResult('proof', false, null, null, 'Proof #' + id + ' not found.');
+          return;
         }
-      });
-      const rows = await res.json();
-      const stamp = rows?.[0];
-      if (!stamp) { showResult(false, null, null, 'Proof #' + id + ' not found in database.'); return; }
-
-      // Convert bytea hash to hex
-      const rawHash = stamp.content_hash;
-      const hexHash = rawHash ? '0x' + rawHash.replace(/^\\x/,'').replace(/^0x/,'') : null;
-
-      if (hexHash) {
-        await lookupHashOnChain(hexHash, stamp);
-      } else {
-        showResult(false, stamp, null, 'No content hash found for this proof.');
+        const raw = stamp.content_hash ?? '';
+        const hex = raw ? '0x' + raw.replace(/^\\x/,'').replace(/^0x/,'') : null;
+        if (!hex) { showResult('proof', false, stamp, null, 'No content hash for this proof.'); return; }
+        await lookupHashOnChain(hex, stamp, 'proof');
+      } catch(e) {
+        showResult('proof', false, null, null, 'Lookup failed: ' + e.message);
       }
-    } catch (e) {
-      showResult(false, null, null, 'Lookup failed: ' + e.message);
     }
-  }
 
-  // ── Verify by hash ────────────────────────────────────────────────────────
-  async function verifyByHash() {
-    const h = document.getElementById('verify-hash').value.trim();
-    if (!h) { alert('Please enter a hash.'); return; }
-    showSpinner(true); clearResult();
-    const hash = h.startsWith('0x') ? h : '0x' + h;
-    await lookupHashOnChain(hash);
-  }
+    // ── Verify by hash ───────────────────────────────────────────────────────
+    async function verifyByHash() {
+      const h = document.getElementById('verify-hash').value.trim();
+      if (!h) { alert('Please enter a hash.'); return; }
+      clearResult('hash'); spin('hash', true);
+      const hash = h.startsWith('0x') ? h : '0x' + h;
+      await lookupHashOnChain(hash, null, 'hash');
+    }
 
-  // ── Core: look up hash on MegaETH blockchain ──────────────────────────────
-  async function lookupHashOnChain(hash, dbStamp = null) {
-    try {
-      // Encode eth_call to verifyStamp(bytes32)
-      // Function selector: keccak256("verifyStamp(bytes32)")[0:4]
-      // = 0x9c7e1839 (pre-computed)
-      const selector = '9c7e1839';
-      const hashPadded = hash.replace('0x','').padStart(64,'0');
-      const callData = '0x' + selector + hashPadded;
+    // ── Core blockchain lookup ───────────────────────────────────────────────
+    async function lookupHashOnChain(hash, dbStamp, resultId) {
+      try {
+        // verifyStamp(bytes32) selector = keccak256 first 4 bytes
+        // pre-computed: 0x9c7e1839
+        const selector  = '9c7e1839';
+        const padded    = hash.replace('0x','').padStart(64,'0');
+        const callData  = '0x' + selector + padded;
 
-      const rpcRes = await fetch(MEGAETH_RPC, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          jsonrpc: '2.0', method: 'eth_call',
-          params: [{ to: CONTRACT, data: callData }, 'latest'],
-          id: 1,
-        }),
-      });
+        const res = await fetch(RPC, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0', method: 'eth_call',
+            params: [{ to: CONTRACT, data: callData }, 'latest'],
+            id: 1
+          })
+        });
+        const rpc  = await res.json();
+        const data = rpc.result ?? '';
 
-      const rpcData = await rpcRes.json();
-      const result = rpcData.result;
+        // Decoded return: (uint256 timestamp, bytes32 creatorIdentity, uint256 proofId)
+        const clean = data.replace('0x','');
+        const ts    = parseInt(clean.slice(0,64), 16);
+        const creator = '0x' + clean.slice(64,128);
+        const proofId = parseInt(clean.slice(128,192), 16);
 
-      if (!result || result === '0x' || result === '0x' + '0'.repeat(192)) {
-        showResult(false, dbStamp, hash, 'Hash not found on MegaETH blockchain. This content was never stamped, or the stamp is on a different network.');
+        if (!ts || ts === 0) {
+          showResult(resultId, false, dbStamp, hash,
+            'This content has not been stamped on MegaETH, or the hash does not match exactly.');
+          return;
+        }
+
+        const stampedAt = new Date(ts * 1000).toUTCString();
+        showResult(resultId, true, dbStamp, hash, null, { ts, stampedAt, creator, proofId });
+
+      } catch(e) {
+        showResult(resultId, false, dbStamp, hash, 'Blockchain call failed: ' + e.message);
+      }
+    }
+
+    // ── Render result ────────────────────────────────────────────────────────
+    function showResult(resultId, valid, dbStamp, hash, errorMsg, chain) {
+      spin(resultId, false);
+      const el = document.getElementById('result-' + resultId);
+      el.className = 'result-box show ' + (valid ? 'result-valid' : 'result-invalid');
+
+      if (!valid) {
+        el.innerHTML =
+          '<p class="result-title" style="color:#991B1B;">❌ Not verified</p>' +
+          '<p style="font-size:var(--text-sm); color:#7f1d1d; margin:0;">' + (errorMsg || 'Not found.') + '</p>';
         return;
       }
 
-      // Decode result: (uint256 timestamp, bytes32 creatorIdentity, uint256 proofId)
-      const hex = result.replace('0x','');
-      const timestamp = parseInt(hex.slice(0,64), 16);
-      const creatorIdentity = '0x' + hex.slice(64,128);
-      const proofId = parseInt(hex.slice(128,192), 16);
+      const proofUrl = window.location.origin + '/proof.html?id=' + chain.proofId;
+      const title    = dbStamp?.display_title ?? '';
 
-      if (timestamp === 0) {
-        showResult(false, dbStamp, hash, 'Hash not found on blockchain. Content was not stamped.');
-        return;
-      }
-
-      const stampedAt = new Date(timestamp * 1000).toUTCString();
-      showResult(true, dbStamp, hash, null, { timestamp, stampedAt, creatorIdentity, proofId });
-
-    } catch (e) {
-      showResult(false, dbStamp, hash, 'Blockchain call failed: ' + e.message + '. Check your connection.');
-    } finally {
-      showSpinner(false);
-    }
-  }
-
-  // ── Show result ───────────────────────────────────────────────────────────
-  function showResult(valid, dbStamp, hash, errorMsg, chainData = null) {
-    showSpinner(false);
-    const el = document.getElementById('verify-result');
-    el.className = 'result show';
-
-    if (!valid) {
-      el.innerHTML = '<div class="result-invalid">'
-        + '<p class="result-title">❌ Not verified</p>'
-        + '<p style="font-size:var(--text-sm); color:#991B1B; margin:0;">' + (errorMsg || 'Stamp not found.') + '</p>'
-        + '</div>';
-      return;
+      el.innerHTML =
+        '<p class="result-title" style="color: var(--color-success);">✅ Verified on MegaETH</p>' +
+        (title ? '<p style="font-size:var(--text-sm); font-weight:600; color:var(--color-text); margin:0 0 var(--space-3);">' + escHtml(title) + '</p>' : '') +
+        '<div class="result-row"><span class="result-key">Stamped at</span><span class="result-val" style="font-family:var(--font-sans);">' + chain.stampedAt + '</span></div>' +
+        '<div class="result-row"><span class="result-key">Proof ID</span><span class="result-val"><a href="' + proofUrl + '" target="_blank" style="color:var(--brand-primary);">#' + chain.proofId + ' →</a></span></div>' +
+        (hash ? '<div class="result-row"><span class="result-key">Content hash</span><span class="result-val">' + escHtml(hash) + '</span></div>' : '') +
+        '<div class="result-row"><span class="result-key">Creator identity</span><span class="result-val">' + escHtml(chain.creator) + '</span></div>' +
+        '<div class="result-row" style="border-top:none; margin-top:var(--space-2);"><a href="' + proofUrl + '" target="_blank" class="btn btn-secondary" style="font-size:var(--text-sm);">View full proof page →</a><a href="' + EXPLORER + '/tx/' + (dbStamp?.tx_hash ?? '') + '" target="_blank" class="btn btn-ghost" style="font-size:var(--text-sm);">View on explorer →</a></div>';
     }
 
-    const proofUrl = `${window.location.origin}/proof.html?id=${chainData.proofId}`;
-
-    el.innerHTML = '<div class="result-valid">'
-      + '<p class="result-title">✅ Verified on MegaETH blockchain</p>'
-      + '<p style="font-size:var(--text-sm); color:#065F46; margin:0 0 var(--space-3);">This content was stamped and cannot be backdated or altered.</p>'
-
-      + '<div class="result-row"><span class="result-key">Stamped at</span><span class="result-val" style="font-family:var(--font-sans);">' + chainData.stampedAt + '</span></div>'
-      + '<div class="result-row"><span class="result-key">Proof ID</span><span class="result-val" style="font-family:var(--font-sans);">'
-        + '<a href="' + proofUrl + '" target="_blank" style="color:var(--brand-primary);">#' + chainData.proofId + ' →</a>'
-        + '</span></div>'
-      + (hash ? '<div class="result-row"><span class="result-key">Content hash</span><span class="result-val">' + hash + '</span></div>' : '')
-      + '<div class="result-row"><span class="result-key">Creator identity</span><span class="result-val">' + chainData.creatorIdentity + '</span></div>'
-      + (dbStamp?.display_title ? '<div class="result-row"><span class="result-key">Title</span><span class="result-val" style="font-family:var(--font-sans);">' + dbStamp.display_title + '</span></div>' : '')
-      + '</div>';
-  }
-</script>
+    function escHtml(s) {
+      return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+  </script>
 </body>
 </html>
