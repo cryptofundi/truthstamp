@@ -499,10 +499,15 @@
         text: 'text', file: 'pdf', url: 'text'
       }[stamp.content_type] ?? 'text';
 
-      // Preview text — never show actual content for hash-only stamps
+      // Preview text — for hash-only show title if available, otherwise private message
       let preview;
       if (stamp.visibility === 'hash_only') {
-        preview = '🔐 Private stamp · content encrypted';
+        const title = stamp.display_title && stamp.display_title !== 'Private stamp'
+          ? stamp.display_title
+          : null;
+        preview = title
+          ? `🔐 ${title} · private stamp`
+          : '🔐 Private stamp · content encrypted';
       } else {
         preview = stamp.display_title
           || stamp.text_content?.slice(0, 80)
