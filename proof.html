@@ -313,9 +313,11 @@
         </div>
 
         <!-- Actions -->
-        <div class="action-row">
+        <div class="action-row" style="flex-wrap:wrap; gap:var(--space-2);">
           <button class="btn btn-secondary" onclick="shareToX()">Share on X</button>
-          <button class="btn btn-secondary" onclick="copyLink()">Copy proof link</button>
+          <button class="btn btn-secondary" onclick="copyLink()">Copy link</button>
+          <button class="btn btn-secondary" onclick="shareWhatsApp()">WhatsApp</button>
+          <button class="btn btn-secondary" onclick="downloadCertificate()">⬇ Certificate</button>
           <a id="explorer-link" href="#" target="_blank" class="btn btn-ghost">View on explorer →</a>
         </div>
       </article>
@@ -773,6 +775,12 @@
     if (window.trackEvent) window.trackEvent('proof_shared', { channel: 'x' });
   }
 
+  function shareWhatsApp() {
+    const text = encodeURIComponent(`TruthStamp proof: ${document.title.replace(' — TruthStamp','')}\n${window.location.href}`);
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+    if (window.trackEvent) window.trackEvent('proof_shared', { channel: 'whatsapp' });
+  }
+
   function copyLink() {
     navigator.clipboard.writeText(window.location.href).then(() => {
       const btn = event.target;
@@ -781,6 +789,68 @@
       setTimeout(() => { btn.textContent = orig; }, 2000);
     });
     if (window.trackEvent) window.trackEvent('proof_link_copied');
+  }
+
+  function downloadCertificate() {
+    const proofId   = document.getElementById('tech-proof-id')?.textContent ?? '';
+    const hash      = document.getElementById('tech-hash')?.textContent ?? '';
+    const txEl      = document.getElementById('tech-tx');
+    const tx        = txEl?.textContent ?? txEl?.querySelector('a')?.textContent ?? '';
+    const title     = document.querySelector('.proof-title')?.textContent
+                   ?? document.title.replace(' — TruthStamp','');
+    const stampedEl = document.getElementById('creator-meta');
+    const stampedAt = stampedEl?.textContent ?? '';
+    const proofUrl  = window.location.href;
+    const cfg       = window.TRUTHSTAMP_CONFIG;
+    const explorer  = cfg?.CONTRACT_EXPLORER ?? 'https://megaeth-testnet-v2.blockscout.com';
+
+    const safe = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    const cert = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>TruthStamp Certificate ${proofId}</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: Arial, sans-serif; background:#fff; color:#111; padding:50px; max-width:760px; margin:0 auto; }
+  .border { border:3px double #1a1a2e; padding:40px; border-radius:8px; }
+  .header { text-align:center; margin-bottom:28px; border-bottom:1px solid #e5e7eb; padding-bottom:20px; }
+  .logo { font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#6366f1; margin-bottom:8px; }
+  h1 { font-size:26px; font-weight:700; margin-bottom:6px; }
+  .subtitle { color:#6b7280; font-size:13px; }
+  .badge { display:inline-block; background:#ecfdf5; color:#065f46; border:1px solid #6ee7b7; border-radius:20px; padding:4px 14px; font-size:12px; font-weight:700; margin:16px 0; }
+  .title-box { background:#f8f9fb; border:1px solid #e5e7eb; border-radius:6px; padding:14px 20px; margin:20px 0; text-align:center; font-size:15px; font-weight:600; }
+  .row { display:flex; justify-content:space-between; align-items:flex-start; padding:9px 0; border-bottom:1px solid #f3f4f6; font-size:12px; gap:16px; }
+  .key { color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; font-size:10px; flex-shrink:0; padding-top:1px; }
+  .val { font-family:monospace; font-size:10px; word-break:break-all; text-align:right; }
+  .footer { text-align:center; margin-top:28px; padding-top:20px; border-top:1px solid #e5e7eb; }
+  .footer p { font-size:11px; color:#9ca3af; margin-bottom:4px; }
+  .footer .url { font-size:10px; color:#6366f1; }
+  @media print { body { padding:20px; } }
+</style></head>
+<body onload="window.print()">
+<div class="border">
+  <div class="header">
+    <div class="logo">✦ TruthStamp</div>
+    <h1>Certificate of Proof</h1>
+    <p class="subtitle">Immutable blockchain proof of existence</p>
+    <div class="badge">✅ Verified on MegaETH Blockchain</div>
+  </div>
+  <div class="title-box">${safe(title)}</div>
+  <div class="row"><span class="key">Proof ID</span><span class="val">${safe(proofId)}</span></div>
+  <div class="row"><span class="key">Stamped</span><span class="val" style="font-family:Arial;">${safe(stampedAt)}</span></div>
+  <div class="row"><span class="key">Content Hash (SHA-256)</span><span class="val">${safe(hash)}</span></div>
+  <div class="row"><span class="key">Blockchain Transaction</span><span class="val">${safe(tx)}</span></div>
+  <div class="row"><span class="key">Proof URL</span><span class="val" style="font-family:Arial;">${safe(proofUrl)}</span></div>
+  <div class="footer">
+    <p>This proof is permanently recorded on the MegaETH blockchain and cannot be altered or deleted.</p>
+    <p>Verify independently at any time — even without TruthStamp — using the hash and contract address.</p>
+    <p class="url">Contract: ${safe(cfg?.CONTRACT_ADDRESS ?? '')} · Network: MegaETH Testnet</p>
+  </div>
+</div>
+</body></html>`;
+
+    const win = window.open('', '_blank');
+    if (win) { win.document.write(cert); win.document.close(); }
+    if (window.trackEvent) window.trackEvent('certificate_downloaded', {});
   }
   </script>
 </body>
