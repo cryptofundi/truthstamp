@@ -17,7 +17,7 @@ window.TRUTHSTAMP_CONFIG = {
   SUPABASE_ANON_KEY: 'sb_publishable_oH-0vSs8t4ghRuRJ-LcCaA_sHikte9b',
 
   // TruthStamp smart contract — deployed on MegaETH testnet
-  CONTRACT_ADDRESS: '0x86b369D0a49dBD3D233F07f8e3f08Fb6C73C83F4',
+  CONTRACT_ADDRESS: '0x8FEB092b7303c9419d8525C99a3113E7c299C584',
   CONTRACT_NETWORK: 'megaeth_testnet',
   CONTRACT_CHAIN_ID: 6343,
   CONTRACT_RPC_URL: 'https://carrot.megaeth.com/rpc',
