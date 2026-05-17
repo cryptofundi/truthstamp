@@ -686,7 +686,7 @@
             .from('stamps')
             .select('proof_id, created_at')
             .eq('creator_profile_id', user.id)
-            .eq('content_hash', selectedFileHash.replace('0x','\\x'))
+            .filter('content_hash', 'eq', selectedFileHash)
             .maybeSingle();
 
           if (existing) {
