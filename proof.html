@@ -523,23 +523,57 @@
     } else {
       // Public or revealed sealed — show content
       const text = stamp.text_content || stamp.display_title || '';
-      if (text) {
-        contentText.textContent = text;
-      } else if (stamp.file_name) {
-        contentText.textContent = `📄 ${stamp.file_name}`;
-      } else {
-        contentText.textContent = '(Content not available in cache — view on Arweave)';
-      }
 
-      // Arweave link
-      if (stamp.storage_uri) {
-        const arweaveLink = document.getElementById('arweave-link');
-        const txId = stamp.storage_uri.replace('ar://', '');
-        // Try Turbo's gateway first (fastest propagation), fallback to arweave.net
-        arweaveLink.href = `https://arweave.net/${txId}`;
-        arweaveLink.style.display = 'inline-flex';
+      // URL stamp — show URL prominently with snapshot info
+      if (stamp.content_type === 'url' && text) {
+        const isUrl = text.startsWith('http');
+        const displayUrl = isUrl ? text : (text.startsWith('{') ? JSON.parse(text).url : text);
+        let pageHash = '';
+        try {
+          const parsed = JSON.parse(text);
+          pageHash = parsed.content_hash ?? '';
+        } catch { /* plain URL */ }
+
+        contentBlock.innerHTML = `
+          <div style="padding: var(--space-4);">
+            <p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0 0 4px; text-transform:uppercase; letter-spacing:0.04em;">Stamped URL</p>
+            <a href="${escapeHtml(displayUrl)}" target="_blank" rel="noopener"
+               style="font-size:var(--text-base); font-weight:600; color:var(--brand-primary); word-break:break-all;">
+              ${escapeHtml(displayUrl)}
+            </a>
+            ${pageHash ? `
+              <div style="margin-top:var(--space-3); padding:var(--space-3); background:var(--color-surface-alt); border-radius:var(--radius-md);">
+                <p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0 0 4px; text-transform:uppercase; letter-spacing:0.04em;">Page content fingerprint (SHA-256)</p>
+                <p style="font-family:var(--font-mono); font-size:var(--text-xs); color:var(--color-text-secondary); margin:0; word-break:break-all;">${escapeHtml(pageHash)}</p>
+                <p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:4px 0 0;">Content was captured and hashed at stamp time. Hash proves what the page contained.</p>
+              </div>` : `
+              <p style="font-size:var(--text-xs); color:var(--color-text-muted); margin-top:var(--space-2);">
+                ⚠️ Page snapshot unavailable — URL was inaccessible at stamp time. URL itself is still proven.
+              </p>`}
+            ${stamp.storage_uri ? `
+              <a class="arweave-link" href="https://arweave.net/${stamp.storage_uri.replace('ar://', '')}"
+                 target="_blank" rel="noopener" style="margin-top:var(--space-3); display:inline-flex; align-items:center; gap:6px; font-size:var(--text-xs); color:var(--brand-primary); text-decoration:none;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                View page snapshot on Arweave (permanent archive)
+              </a>` : ''}
+          </div>`;
+      } else {
+        // Text or other content
+        if (text) {
+          contentText.textContent = text;
+        } else if (stamp.file_name) {
+          contentText.textContent = `📄 ${stamp.file_name}`;
+        } else {
+          contentText.textContent = '(Content not available in cache — view on Arweave)';
+        }
+
+        if (stamp.storage_uri) {
+          const arweaveLink = document.getElementById('arweave-link');
+          const txId = stamp.storage_uri.replace('ar://', '');
+          arweaveLink.href = `https://arweave.net/${txId}`;
+          arweaveLink.style.display = 'inline-flex';
+        }
       }
-    }
 
     // Stats
     document.getElementById('stat-block').textContent =
