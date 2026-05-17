@@ -304,7 +304,7 @@
       <div class="tabs">
         <button class="tab active" data-tab="text" onclick="switchTab('text')">Text</button>
         <button class="tab" data-tab="file" onclick="switchTab('file')">File</button>
-        <button class="tab tab-locked" data-tab="url" onclick="switchTab('url')">URL</button>
+        <button class="tab" data-tab="url" onclick="switchTab('url')">URL</button>
       </div>
     </div>
 
@@ -374,18 +374,26 @@
       </div>
     </div>
 
-    <!-- URL coming soon -->
-    <div class="premium-prompt" id="premium-prompt">
-      <div class="premium-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-      </div>
-      <h3 class="premium-title" id="premium-title">URL stamping — coming soon</h3>
-      <p class="premium-desc" id="premium-desc">
-        Capture and seal a webpage exactly as it exists today.<br>
-        Will cost 2 credits per stamp. Coming in the next update.
-      </p>
-      <div class="flex gap-3" style="justify-content: center; flex-wrap: wrap;">
-        <button class="btn btn-ghost" type="button" onclick="switchTab('text')">Back to text</button>
+    <!-- URL stamp area -->
+    <div class="premium-prompt" id="premium-prompt" style="display:none;">
+      <div style="padding: var(--space-5);">
+        <div style="font-size: 2rem; margin-bottom: var(--space-3); text-align:center;">🔗</div>
+        <h3 style="font-size: var(--text-lg); font-weight: 600; margin: 0 0 var(--space-2); text-align:center;">Stamp a URL</h3>
+        <p style="font-size: var(--text-sm); color: var(--color-text-muted); margin: 0 0 var(--space-4); text-align:center;">
+          Seal a webpage URL on-chain. Costs 2 credits.<br>
+          Proves you knew about this URL at this exact time.
+        </p>
+        <label class="label" for="stamp-url">URL to stamp</label>
+        <input type="url" id="stamp-url" class="input"
+          placeholder="https://example.com/article"
+          style="margin-top: var(--space-1); margin-bottom: var(--space-3);">
+        <label class="label" for="url-stamp-title" style="font-size:var(--text-xs);">
+          Title <span style="color:var(--color-text-muted); font-weight:400;">(optional)</span>
+        </label>
+        <input type="text" id="url-stamp-title" class="input"
+          placeholder="e.g. Bitcoin price prediction article"
+          maxlength="80"
+          style="margin-top: var(--space-1);">
       </div>
     </div>
 
@@ -450,13 +458,11 @@
       const fileArea     = document.getElementById('file-upload-area');
       const premium      = document.getElementById('premium-prompt');
       const stampBottom  = document.getElementById('stamp-bottom');
-      const premiumTitle = document.getElementById('premium-title');
-      const premiumDesc  = document.getElementById('premium-desc');
 
       // Reset all
       textContent.classList.add('hide');
       fileArea.style.display    = 'none';
-      premium.classList.remove('show');
+      premium.style.display     = 'none';
       stampBottom.style.display = 'block';
 
       if (tab === 'text') {
@@ -466,9 +472,8 @@
         fileArea.style.display = 'block';
         updateCreditCost('file');
       } else if (tab === 'url') {
-        premium.classList.add('show');
-        stampBottom.style.display = 'none'; // hide stamp button for URL (coming soon)
-        if (window.trackEvent) window.trackEvent('premium_prompt_view', { source: tab });
+        premium.style.display = 'block';
+        updateCreditCost('url');
       }
     }
 
@@ -509,7 +514,6 @@
 
     // Real stamp creation — calls Edge Function
     async function handleStamp() {
-      // Detect active tab
       const activeTab = document.querySelector('.tab.active')?.dataset?.tab ?? 'text';
 
       if (activeTab === 'file') {
@@ -517,6 +521,12 @@
         return;
       }
 
+      if (activeTab === 'url') {
+        await handleUrlStamp();
+        return;
+      }
+
+      // Text stamp
       const text = document.getElementById('stamp-text').value.trim();
       if (!text) {
         showError('Please write something to stamp.');
@@ -606,6 +616,18 @@
 
         const result = await response.json();
 
+        // Friendly duplicate error with link
+        if (!response.ok && result.error?.includes('already stamped')) {
+          const proofId = result.error.match(/proof #(\d+)/)?.[1];
+          const msg = proofId
+            ? `You already stamped this exact content (Proof #${proofId}). <a href="proof.html?id=${proofId}" style="color:var(--brand-primary);">View it →</a>`
+            : result.error;
+          document.getElementById('error-msg').innerHTML = msg;
+          document.getElementById('error-msg').style.display = 'block';
+          if (btn) { btn.disabled = false; btn.classList.remove('btn-spinning'); }
+          return;
+        }
+
         if (!response.ok || !result.success) {
           throw new Error(result.error ?? `Server error (${response.status})`);
         }
@@ -616,7 +638,6 @@
           });
         }
 
-        // Success — redirect to proof page
         window.location.href = `proof.html?id=${result.proof_id}`;
 
       } catch (err) {
@@ -675,7 +696,7 @@
     // ── File selection handler ───────────────────────────────────────────────
     let selectedFile = null;
     let selectedFileHash = null;
-    const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB hard limit (Edge Function memory)
+    const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB hard limit
 
     async function handleFileSelect(input) {
       const file = input.files[0];
@@ -685,8 +706,14 @@
       let tierLimitMB = 2;
       let tierLimitBytes = 2 * 1024 * 1024;
       const credits = window._cachedProfile?.credits_balance ?? 0;
-      if (credits > 100) { tierLimitMB = 20; tierLimitBytes = 20 * 1024 * 1024; }
-      else if (credits > 10) { tierLimitMB = 10; tierLimitBytes = 10 * 1024 * 1024; }
+      // Tiers based on pack purchased:
+      // Free (<=10): 1MB, Starter (11-49): 2MB, Standard (50-124): 5MB
+      // Pro (125-299): 10MB, Power (300+): 20MB
+      if (credits >= 300) { tierLimitMB = 20; tierLimitBytes = 20 * 1024 * 1024; }
+      else if (credits >= 125) { tierLimitMB = 10; tierLimitBytes = 10 * 1024 * 1024; }
+      else if (credits >= 50) { tierLimitMB = 5; tierLimitBytes = 5 * 1024 * 1024; }
+      else if (credits >= 11) { tierLimitMB = 2; tierLimitBytes = 2 * 1024 * 1024; }
+      else { tierLimitMB = 1; tierLimitBytes = 1 * 1024 * 1024; }
 
       if (file.size > MAX_FILE_SIZE) {
         showError(`File too large: ${(file.size/1024/1024).toFixed(1)}MB. Maximum is 20MB.`);
@@ -748,15 +775,16 @@
       if (btn) { btn.disabled = true; btn.classList.add('btn-spinning'); }
       hideError();
 
-      const sizeMB = (selectedFile.size / 1024 / 1024).toFixed(2);
+      const sizeMB = (selectedFile.size / 1024 / 1024).toFixed(1);
+      if (selectedFile.size > 500 * 1024) {
+        const creditDisplay = document.getElementById('stamp-credit-display');
+        if (creditDisplay) creditDisplay.textContent = `Uploading ${sizeMB}MB to Arweave... (may take 30-60s)`;
+      }
 
       try {
-        alert(`STEP 1: Starting file stamp\nFile: ${selectedFile.name}\nSize: ${sizeMB}MB\nType: ${selectedFile.type}`);
-
         const session = await window.tsDB.auth.getSession();
         const token = session?.data?.session?.access_token;
         if (!token) { window.location.href = 'auth.html'; return; }
-        alert(`STEP 2: Auth OK\nToken: ${token.slice(0,20)}...`);
 
         const fileData = await new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -764,11 +792,20 @@
           reader.onerror = reject;
           reader.readAsDataURL(selectedFile);
         });
-        alert(`STEP 3: File read OK\nBase64 length: ${fileData.length} chars`);
 
         const visibility = document.querySelector('.visibility-card.selected')?.id?.replace('vis-', '') ?? 'public';
         const mappedVisibility = visibility === 'none' ? 'hash_only' : visibility;
-        alert(`STEP 4: Sending to Edge Function\nVisibility: ${mappedVisibility}\nPayload size: ~${(fileData.length/1024).toFixed(0)}KB`);
+
+        let sealedUntil = null;
+        if (mappedVisibility === 'sealed') {
+          const sealDate = document.getElementById('seal-date')?.value;
+          if (!sealDate) {
+            showError('Please select a reveal date for sealed stamps.');
+            if (btn) { btn.disabled = false; btn.classList.remove('btn-spinning'); }
+            return;
+          }
+          sealedUntil = new Date(sealDate).getTime() / 1000;
+        }
 
         const supabaseUrl = window.TRUTHSTAMP_CONFIG.SUPABASE_URL;
         const controller = new AbortController();
@@ -786,6 +823,7 @@
               file_mime_type: selectedFile.type,
               file_data: fileData,
               display_title: document.getElementById('file-stamp-title')?.value?.trim() || selectedFile.name,
+              sealed_until: sealedUntil || undefined,
             }),
             signal: controller.signal,
           });
@@ -793,22 +831,86 @@
         } catch (fetchErr) {
           clearTimeout(timeoutId);
           if (fetchErr.name === 'AbortError') {
-            throw new Error('Request timed out after 90 seconds. File may be too large for the server.');
+            throw new Error('Upload timed out after 90 seconds. Try a smaller file or check your connection.');
           }
           throw fetchErr;
         }
 
-        alert(`STEP 5: Edge Function responded\nStatus: ${response.status}`);
         const result = await response.json();
-        alert(`STEP 6: Result\n${JSON.stringify(result, null, 2).slice(0, 300)}`);
+
+        if (!response.ok && result.error?.includes('already stamped')) {
+          const proofId = result.error.match(/proof #(\d+)/)?.[1];
+          const msg = proofId
+            ? `You already stamped this exact content (Proof #${proofId}). <a href="proof.html?id=${proofId}" style="color:var(--brand-primary);">View it →</a>`
+            : result.error;
+          document.getElementById('error-msg').innerHTML = msg;
+          document.getElementById('error-msg').style.display = 'block';
+          if (btn) { btn.disabled = false; btn.classList.remove('btn-spinning'); }
+          updateCreditCost('file');
+          return;
+        }
 
         if (!response.ok || !result.success) throw new Error(result.error ?? `Server error (${response.status})`);
         window.location.href = `proof.html?id=${result.proof_id}`;
       } catch (err) {
-        alert(`ERROR: ${err.message}`);
         showError(err instanceof Error ? err.message : 'File stamping failed. Please try again.');
         if (btn) { btn.disabled = false; btn.classList.remove('btn-spinning'); }
         updateCreditCost('file');
+      }
+    }
+
+
+    async function handleUrlStamp() {
+      const url = document.getElementById('stamp-url')?.value?.trim();
+      if (!url) { showError('Please enter a URL to stamp.'); return; }
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        showError('Please enter a valid URL starting with https://');
+        return;
+      }
+
+      const btn = document.querySelector('.btn-stamp-action');
+      if (btn) { btn.disabled = true; btn.classList.add('btn-spinning'); }
+      hideError();
+
+      try {
+        const session = await window.tsDB.auth.getSession();
+        const token = session?.data?.session?.access_token;
+        if (!token) { window.location.href = 'auth.html'; return; }
+
+        const visibility = document.querySelector('.visibility-card.selected')?.id?.replace('vis-', '') ?? 'public';
+        const mappedVisibility = visibility === 'none' ? 'hash_only' : visibility;
+        const title = document.getElementById('url-stamp-title')?.value?.trim() || url;
+
+        const supabaseUrl = window.TRUTHSTAMP_CONFIG.SUPABASE_URL;
+        const response = await fetch(`${supabaseUrl}/functions/v1/stamp-create`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: url,
+            content_type: 'url',
+            visibility: mappedVisibility,
+            display_title: title,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok && result.error?.includes('already stamped')) {
+          const proofId = result.error.match(/proof #(\d+)/)?.[1];
+          const msg = proofId
+            ? `You already stamped this URL (Proof #${proofId}). <a href="proof.html?id=${proofId}" style="color:var(--brand-primary);">View it →</a>`
+            : result.error;
+          document.getElementById('error-msg').innerHTML = msg;
+          document.getElementById('error-msg').style.display = 'block';
+          if (btn) { btn.disabled = false; btn.classList.remove('btn-spinning'); }
+          return;
+        }
+
+        if (!response.ok || !result.success) throw new Error(result.error ?? `Server error (${response.status})`);
+        window.location.href = `proof.html?id=${result.proof_id}`;
+      } catch (err) {
+        showError(err instanceof Error ? err.message : 'URL stamping failed. Please try again.');
+        if (btn) { btn.disabled = false; btn.classList.remove('btn-spinning'); }
       }
     }
 
@@ -867,11 +969,17 @@
             if (credits > 100) tierLimitMB = 20;
             else if (credits > 10) tierLimitMB = 10;
 
+            let tierLimitMBInfo = 1;
+            if (credits >= 300) tierLimitMBInfo = 20;
+            else if (credits >= 125) tierLimitMBInfo = 10;
+            else if (credits >= 50) tierLimitMBInfo = 5;
+            else if (credits >= 11) tierLimitMBInfo = 2;
+
             const fileSizeInfo = document.getElementById('file-size-info');
             if (fileSizeInfo) {
               fileSizeInfo.innerHTML =
-                `Free tier: up to 2MB &nbsp;·&nbsp; Paid: up to 10MB &nbsp;·&nbsp; 100+ credits: up to 20MB<br>` +
-                `<strong style="color:var(--brand-primary);">Your eligibility: up to ${tierLimitMB}MB</strong> (${credits} credits)`;
+                `Free(≤10cr): 1MB · Starter: 2MB · Standard: 5MB · Pro: 10MB · Power: 20MB<br>` +
+                `<strong style="color:var(--brand-primary);">Your eligibility: up to ${tierLimitMBInfo}MB</strong> (${credits} credits)`;
             }
           }
         } catch (err) {
