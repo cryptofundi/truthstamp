@@ -230,7 +230,11 @@
 
     <div class="status-banner info" id="status-banner">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <span>This index only shows stamps that were uploaded to Arweave (Public and URL stamps). Hash-only stamps and sealed stamps (before reveal) are not stored on Arweave by design — their content is private.</span>
+      <span>
+        This index shows <strong>Public stamps only</strong> (Text, File, URL).
+        Sealed stamps store nothing on Arweave until revealed — their content stays private until the reveal date.
+        Hash-only stamps store no content anywhere by design.
+      </span>
     </div>
 
     <!-- Search Card -->
@@ -384,7 +388,6 @@
             chainId:         tags['TruthStamp-ChainId']         ?? '',
             schemaVersion:   tags['TruthStamp-SchemaVersion']   ?? '1',
             proofId:         tags['TruthStamp-ProofId']         ?? null,
-            sealedUntil:     tags['TruthStamp-SealedUntil']     ?? null,
             timestamp:       node.block?.timestamp              ?? null,
             blockHeight:     node.block?.height                 ?? null,
           });
@@ -397,10 +400,6 @@
 
       // Sort newest first by block timestamp
       stamps.sort((a,b) => (b.timestamp ?? 0) - (a.timestamp ?? 0));
-
-      // Enrich sealed stamps with sealedUntil from contract if missing
-      await enrichSealedStamps(stamps);
-
       return stamps;
     }
 
@@ -427,49 +426,6 @@
       }`;
     }
 
-    // For sealed stamps without sealedUntil tag, fetch from contract via getStamp
-    async function enrichSealedStamps(stamps) {
-      const RPC      = 'https://carrot.megaeth.com/rpc';
-      const CONTRACT = window.TRUTHSTAMP_CONFIG?.CONTRACT_ADDRESS ?? '0x8FEB092b7303c9419d8525C99a3113E7c299C584';
-      const sealed   = stamps.filter(s => s.visibility === 'sealed' && !s.sealedUntil && s.proofId);
-      if (!sealed.length) return;
-
-      setProgress(true, 90, `Fetching seal dates for ${sealed.length} sealed stamp(s)...`);
-
-      await Promise.all(sealed.map(async (s) => {
-        try {
-          // getStamp(uint256) selector = 0xd2064e2f
-          const padded = BigInt(s.proofId).toString(16).padStart(64, '0');
-          const res = await fetch(RPC, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              jsonrpc: '2.0', id: 20, method: 'eth_call',
-              params: [{ to: CONTRACT, data: '0xd2064e2f' + padded }, 'latest']
-            })
-          });
-          const rpc   = await res.json();
-          const data  = (rpc.result ?? '').replace('0x','');
-          if (data.length < 192) return;
-
-          // Stamp struct layout (slot offsets):
-          // slot 0: contentHash (bytes32)
-          // slot 1: creator(20) + createdAt(8) + schemaVersion(1) + contentType(1) + visibility(1) + revealed(1)
-          // slot 2: sealedUntil (uint64, first 8 bytes of slot)
-          const sealedUntilHex = data.slice(128, 128 + 16); // slot 2, first 8 bytes (uint64)
-          const sealedUntil    = parseInt(sealedUntilHex, 16);
-          if (sealedUntil > 0) s.sealedUntil = sealedUntil.toString();
-
-          // Also check revealed flag (slot 1, byte 31)
-          const slot1 = data.slice(64, 128);
-          s.revealed = slot1.slice(62, 64) !== '00'; // last byte of slot 1
-
-        } catch(e) {
-          console.warn('[arweave-index] enrichSealedStamps failed for', s.proofId, e.message);
-        }
-      }));
-    }
-
     function renderResults(stamps) {
       const area = document.getElementById('results-area');
 
@@ -483,8 +439,9 @@
           '<div class="empty-state">' +
           '<div class="empty-icon">🔍</div>' +
           '<p class="empty-title">No stamps found on Arweave</p>' +
-          '<p class="empty-desc">No Arweave uploads found for this identity.<br>' +
-          'Hash-only and sealed stamps are not stored on Arweave by design.<br>' +
+          '<p class="empty-desc">No public stamp uploads found for this identity on Arweave.<br>' +
+          'Only public Text, File, and URL stamps are stored on Arweave.<br>' +
+          'Sealed and hash-only stamps do not appear here by design.<br>' +
           'Make sure you are using the exact creator identity string from your proof page.</p>' +
           '</div>';
         return;
@@ -518,15 +475,13 @@
     function stampCard(s) {
       const date = s.timestamp
         ? new Date(s.timestamp * 1000).toLocaleDateString('en-US',
-            { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', timeZone:'UTC', timeZoneName:'short' })
+            { year:'numeric', month:'short', day:'numeric',
+              hour:'2-digit', minute:'2-digit', timeZone:'UTC', timeZoneName:'short' })
         : 'Unknown date';
 
       const ctBadge  = s.contentType === 'text' ? 'badge-text'
                      : s.contentType === 'file' ? 'badge-file'
                      : s.contentType === 'url'  ? 'badge-url' : 'badge-text';
-      const visBadge = s.visibility === 'public'   ? 'badge-public'
-                     : s.visibility === 'sealed'   ? 'badge-sealed'
-                     : 'badge-hashonly';
 
       const hashShort = s.contentHash
         ? s.contentHash.slice(0,10) + '...' + s.contentHash.slice(-6) : '—';
@@ -535,84 +490,9 @@
         ? `<a class="chip-link" href="${PROOF_BASE}${s.proofId}" target="_blank">#${s.proofId} Proof page ↗</a>`
         : '';
 
-      // ── Sealed stamp — locked display ──────────────────────────────────────
-      if (s.visibility === 'sealed') {
-        const nowSec       = Math.floor(Date.now() / 1000);
-        const sealedUntil  = s.sealedUntil ? parseInt(s.sealedUntil) : 0;
-        const isRevealed   = s.revealed || (sealedUntil > 0 && nowSec >= sealedUntil);
-        const revealDate   = sealedUntil > 0
-          ? new Date(sealedUntil * 1000).toLocaleDateString('en-US',
-              { year:'numeric', month:'long', day:'numeric',
-                hour:'2-digit', minute:'2-digit', timeZone:'UTC', timeZoneName:'short' })
-          : null;
-
-        // Countdown
-        let countdown = '';
-        if (!isRevealed && sealedUntil > 0) {
-          const diff    = sealedUntil - nowSec;
-          const days    = Math.floor(diff / 86400);
-          const hours   = Math.floor((diff % 86400) / 3600);
-          const minutes = Math.floor((diff % 3600) / 60);
-          countdown = days > 0   ? `${days}d ${hours}h remaining`
-                    : hours > 0  ? `${hours}h ${minutes}m remaining`
-                    : minutes > 0 ? `${minutes}m remaining`
-                    : 'Reveal imminent';
-        }
-
-        const sealedBody = isRevealed
-          ? `<div style="font-size:var(--text-xs); color:var(--color-success); padding: var(--space-3); background:#F0FDF4; border-radius:var(--radius-sm); margin-bottom:var(--space-3);">
-               ✅ Revealed — content now accessible
-             </div>`
-          : `<div style="padding: var(--space-3); background: var(--brand-accent-light);
-                          border-radius: var(--radius-sm); border: 1px dashed rgba(83,74,183,0.3);
-                          margin-bottom: var(--space-3);">
-               <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-                 <span style="font-size:1rem;">🔒</span>
-                 <span style="font-size:var(--text-xs); font-weight:600; color:var(--brand-accent);">Content sealed</span>
-                 ${countdown ? `<span style="font-size:10px; color:var(--color-text-muted); margin-left:auto;">${countdown}</span>` : ''}
-               </div>
-               ${revealDate
-                 ? `<p style="font-size:var(--text-xs); color:var(--color-text-secondary); margin:0;">
-                      Will reveal on <strong>${revealDate}</strong>
-                    </p>`
-                 : `<p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0;">Reveal date loading...</p>`
-               }
-             </div>`;
-
-        return `
-          <div class="stamp-card" style="border-color: rgba(83,74,183,0.25); background: linear-gradient(135deg, var(--color-surface) 0%, var(--brand-accent-light) 100%);">
-            <div class="stamp-card-top">
-              <p class="stamp-card-title" style="font-family:var(--font-mono); font-size:var(--text-xs); color:var(--color-text-muted);">${escHtml(s.txId)}</p>
-              <div style="display:flex; gap:4px; flex-shrink:0;">
-                <span class="stamp-badge ${ctBadge}">${s.contentType}</span>
-                <span class="stamp-badge ${visBadge}">🔒 sealed</span>
-              </div>
-            </div>
-            <div class="stamp-card-meta">
-              <span>📅 Stamped ${date}</span>
-              ${s.blockHeight ? `<span>Block #${s.blockHeight.toLocaleString()}</span>` : ''}
-              ${s.contentHash ? `<span style="font-family:var(--font-mono);">🔑 ${hashShort}</span>` : ''}
-            </div>
-            ${sealedBody}
-            <div class="stamp-card-links">
-              ${proofLink}
-              ${isRevealed
-                ? `<a class="chip-link arweave" href="${ARWEAVE_GATEWAY}${s.txId}" target="_blank" rel="noopener">Arweave payload ↗</a>`
-                : `<span class="chip-link" style="opacity:0.4; cursor:not-allowed;" title="Available after reveal">Arweave — locked 🔒</span>`
-              }
-              ${s.contentHash && isRevealed
-                ? `<a class="chip-link chain" href="verify.html" onclick="prefillVerify('${s.contentHash}')">Verify on-chain ↗</a>`
-                : ''
-              }
-            </div>
-          </div>`;
-      }
-
-      // ── Normal stamp card ───────────────────────────────────────────────────
       const arweaveLink =
-        `<a class="chip-link arweave" href="${ARWEAVE_GATEWAY}${s.txId}" target="_blank" rel="noopener">
-           Arweave payload ↗
-         </a>`;
+        `<a class="chip-link arweave" href="${ARWEAVE_GATEWAY}${s.txId}" target="_blank" rel="noopener">Arweave payload ↗</a>`;
+
       const hashLink = s.contentHash
         ? `<a class="chip-link chain" href="verify.html" onclick="prefillVerify('${s.contentHash}')">Verify on-chain ↗</a>`
         : '';
@@ -623,7 +503,7 @@
             <p class="stamp-card-title" style="font-family:var(--font-mono); font-size:var(--text-xs);">${escHtml(s.txId)}</p>
             <div style="display:flex; gap:4px; flex-shrink:0;">
               <span class="stamp-badge ${ctBadge}">${s.contentType}</span>
-              <span class="stamp-badge ${visBadge}">${s.visibility}</span>
+              <span class="stamp-badge badge-public">public</span>
             </div>
           </div>
           <div class="stamp-card-meta">
