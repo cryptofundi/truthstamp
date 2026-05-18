@@ -131,6 +131,9 @@
       <textarea class="textarea" id="verify-text" placeholder="The text must match character-for-character. Even one extra space will produce a different hash."></textarea>
       <button class="btn btn-primary btn-block btn-lg mt-4" onclick="verifyText()">Verify this text</button>
       <p class="text-muted mt-4 text-center" style="font-size: var(--text-xs);">Hashing happens locally in your browser. The text never leaves your device.</p>
+      <div style="margin-top: var(--space-3); padding: var(--space-3); background: var(--color-surface-alt); border-radius: var(--radius-md); font-size: var(--text-xs); color: var(--color-text-secondary); line-height: 1.6;">
+        ⚠️ <strong>Must be character-perfect.</strong> The text is hashed exactly as you stamped it — including all spaces, line breaks, and punctuation. If you stamped text longer than 280 characters, paste the full original text here.
+      </div>
       <div class="spinner" id="spinner-text"></div>
       <div class="result-box" id="result-text"></div>
     </div>
@@ -182,9 +185,12 @@
 
     <!-- Hash mode -->
     <div class="verify-card" id="mode-hash" style="display: none;">
-      <label class="label" for="verify-hash">Content hash (SHA-256) or transaction hash</label>
+      <label class="label" for="verify-hash">Content hash (SHA-256)</label>
       <input type="text" class="input" id="verify-hash" placeholder="0x1a2b3c..." style="font-family: var(--font-mono); font-size: var(--text-sm); margin-bottom:0;">
       <button class="btn btn-primary btn-block btn-lg mt-4" onclick="verifyByHash()">Look up on MegaETH</button>
+      <p style="margin-top: var(--space-3); font-size: var(--text-xs); color: var(--color-text-muted); line-height: 1.6;">
+        💡 Find the hash on any proof page under <strong>Technical Details → Content hash</strong>. It starts with <code>0x</code> and is 66 characters long. Only stamps made on the current contract can be looked up by hash directly on-chain.
+      </p>
       <div class="spinner" id="spinner-hash"></div>
       <div class="result-box" id="result-hash"></div>
     </div>
