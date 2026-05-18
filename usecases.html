@@ -1,0 +1,569 @@
+# usecases.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TruthStamp Use Cases — Real-world proof infrastructure</title>
+  <meta name="description" content="Explore real-world use cases for TruthStamp across education, AI, agriculture, creator economy, legal agreements, RWAs, and more.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/components.css">
+  <script src="js/analytics.js"></script>
+
+  <style>
+    .usecase-shell {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: var(--space-10) var(--space-6) var(--space-12);
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      background: var(--brand-primary-light);
+      color: var(--brand-primary-dark);
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      font-weight: 500;
+      margin-bottom: var(--space-5);
+    }
+
+    .usecase-shell h1 {
+      font-size: var(--text-3xl);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      margin: 0 0 var(--space-4);
+    }
+
+    .hero-lead {
+      font-size: var(--text-lg);
+      color: var(--color-text-secondary);
+      line-height: 1.7;
+      margin-bottom: var(--space-10);
+    }
+
+    .category-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-7);
+      margin-bottom: var(--space-6);
+    }
+
+    .category-card h2 {
+      font-size: var(--text-2xl);
+      margin: 0 0 var(--space-3);
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .category-intro {
+      font-size: var(--text-base);
+      color: var(--color-text-secondary);
+      line-height: 1.7;
+      margin-bottom: var(--space-5);
+    }
+
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: var(--space-3);
+      margin-bottom: var(--space-5);
+    }
+
+    .problem-item {
+      background: var(--color-surface-alt);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      border: 1px solid var(--color-border);
+    }
+
+    .problem-item strong {
+      display: block;
+      margin-bottom: var(--space-1);
+      font-size: var(--text-sm);
+    }
+
+    .problem-item span {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+
+    .scenario-block {
+      background: var(--color-surface-alt);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      margin-bottom: var(--space-4);
+    }
+
+    .scenario-block:last-child {
+      margin-bottom: 0;
+    }
+
+    .scenario-title {
+      font-weight: 600;
+      margin-bottom: var(--space-2);
+      font-size: var(--text-base);
+    }
+
+    .scenario-block p {
+      color: var(--color-text-secondary);
+      line-height: 1.7;
+      margin: 0;
+      font-size: var(--text-sm);
+    }
+
+    .cta-block {
+      text-align: center;
+      padding: var(--space-8);
+      background: var(--color-surface-alt);
+      border-radius: var(--radius-xl);
+      margin-top: var(--space-10);
+    }
+
+    @media (max-width: 600px) {
+      .category-card {
+        padding: var(--space-5);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <span class="nav-logo">T</span><span>TruthStamp</span>
+      </a>
+      <div class="nav-links">
+        <a href="how-it-works.html">How it works</a>
+        <a href="usecases.html" style="color: var(--color-text); font-weight: 500;">Use cases</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="auth.html" class="btn btn-primary btn-sm">Start stamping</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="usecase-shell">
+
+    <div class="hero-eyebrow">
+      <span class="badge-dot" style="background: var(--brand-primary);"></span>
+      Real-world proof infrastructure
+    </div>
+
+    <h1>What can TruthStamp actually be used for?</h1>
+
+    <p class="hero-lead">
+      TruthStamp is more than a timestamping tool. It’s a universal proof layer for ideas, documents, predictions, agreements, research, AI content, logistics, and digital history. Below are real-world scenarios where verifiable proof and tamper-proof timestamps become incredibly valuable.
+    </p>
+
+    <!-- Education -->
+    <section class="category-card">
+      <h2>🎓 Education & Research</h2>
+      <p class="category-intro">
+        Schools, universities, researchers, and students constantly face plagiarism disputes, originality concerns, and proof-of-work problems.
+      </p>
+
+      <div class="problem-grid">
+        <div class="problem-item">
+          <strong>Plagiarism disputes</strong>
+          <span>Prove who created work first.</span>
+        </div>
+        <div class="problem-item">
+          <strong>Research integrity</strong>
+          <span>Timestamp thesis drafts and findings.</span>
+        </div>
+        <div class="problem-item">
+          <strong>Certificate authenticity</strong>
+          <span>Verify educational credentials.</span>
+        </div>
+      </div>
+
+      <div class="scenario-block">
+        <div class="scenario-title">Example scenario — Student project originality</div>
+        <p>
+          A university student stamps their final-year AI project draft before submitting it to professors. Months later, if someone claims the idea was copied, the student can prove the exact version existed at a specific timestamp before the dispute began.
+        </p>
+      </div>
+
+      <div class="scenario-block">
+        <div class="scenario-title">Example scenario — Research paper precedence</div>
+        <p>
+          A researcher stamps an unpublished paper in hash-only mode before sharing it with collaborators or journals. If authorship disputes arise later, the original timestamped proof establishes prior existence without revealing the confidential content.
+        </p>
+      </div>
+    </section>
+
+    <!-- Agriculture -->
+    <section class="category-card">
+      <h2>🌾 Agriculture & Supply Chain</h2>
+      <p class="category-intro">
+        Agriculture supply chains often suffer from provenance issues, shipment disputes, quality verification problems, and record tampering.
+      </p>
+
+      <div class="problem-grid">
+        <div class="problem-item">
+          <strong>Origin verification</strong>
+          <span>Prove where produce came from.</span>
+        </div>
+        <div class="problem-item">
+          <strong>Inspection records</strong>
+          <span>Timestamp quality reports.</span>
+        </div>
+        <div class="problem-item">
+          <strong>Shipment disputes</strong>
+          <span>Track logistics events transparently.</span>
+        </div>
+      </div>
+
+      <div class="scenario-block">
+        <div class="scenario-title">Example scenario — Export quality proof</div>
+        <p>
+          A mango exporter stamps inspection certificates and shipment photos before export. If buyers later claim poor quality or damaged goods, the exporter has timestamped evidence showing the original condition before shipping.
+        </p>
+      </div>
+
+      <div class="scenario-block">
+        <div class="scenario-title">Example scenario — Organic produce verification</div>
+        <p>
+          A farming cooperative stamps harvest records, farm certifications, and batch inspection reports to prove authenticity and origin for premium organic produce buyers.
+        </p>
+      </div>
+    </section>
+
+    <!-- Creator Economy -->
+    <section class="category-card">
+      <h2>🎨 Creator Economy</h2>
+      <p class="category-intro">
+        Writers, designers, musicians, filmmakers, meme creators, and digital artists need proof that their work existed before it was copied or reposted.
+      </p>
+
+      <div class="problem-grid">
+        <div class="problem-item">
+          <strong>Content theft</strong>
+          <span>Prove original creation dates.</span>
+        </div>
+        <div class="problem-item">
+          <strong>Draft history</strong>
+          <span>Maintain immutable revision timelines.</span>
+        </div>
+        <div class="problem-item">
+          <strong>Creative ownership</strong>
+          <span>Build public proof of authorship.</span>
+        </div>
+      </div>
+
+      <div class="scenario-block">
+        <div class="scenario-title">Example scenario — Script writer protection</div>
+        <p>
+          A YouTube creator stamps a video script before sending it to editors and collaborators. If the concept later appears elsewhere, they can prove the original draft existed first.
+        </p>
+      </div>
+
+      <div class="scenario-block">
+        <div class="scenario-title">Example scenario — Music production proof</div>
+        <p>
+          An independent musician stamps unreleased lyrics and demo versions in sealed mode. After official release, the timestamps prove the songs existed months before publication.
+        </p>
+      </div>
+    </section>
+
+    <!-- MSME -->
+    <section class="category-card">
+      <h2>🏢 MSME & Invoice Verification</h2>
+      <p class="category-intro">
+        Small businesses often face disputes around quotations, invoices, approvals, deliveries, and payment timelines.
+      </p>
+
+      <div class="problem-grid">
+        <div class="problem-item">
+          <strong>Invoice disputes</strong>
+          <span>Timestamp issued invoices and revisions.</span>
+        </div>
+        <div class="problem-item">
+          <strong>Quotation history</strong>
+          <span>Prove pricing and terms at specific dates.</span>
+        </div>
+        <div class="problem-item">
+          <strong>Vendor approvals</strong>
+          <span>Create immutable approval records.</span>
+        </div>
+      </div>
+
+      <div class="scenario-block">
+        <div class="scenario-title">Example scenario — Vendor quotation proof</div>
+        <p>
+          An MSME sends a project quotation to a client and stamps the PDF hash before delivery. If pricing or scope disputes happen later, the original proposal can be independently verified.
+        </p>
+      </div>
+
+      <div class="scenario-block">
+        <div class="scenario-title">Example scenario — Invoice authenticity</div>
+        <p>
+          A logistics company stamps every invoice and delivery confirmation before sending them to partners. This creates a tamper-proof audit trail for accounting and dispute resolution.
+        </p>
+      </div>
+    </section>
+
+    <!-- Public Predictions -->
+    <section class="category-card">
+      <h2>📈 Public Predictions & Forecasting</h2>
+      <p class="category-intro">
+        Analysts, researchers, traders, and creators can publicly timestamp predictions before events occur.
+      </p>
+
+      <div class="problem-grid">
+        <div class="problem-item">
+          <strong>Prediction integrity</strong>
+          <span>Prove predictions existed before outcomes.</span>
+        </div>
+        <div class="problem-item">
+          <strong>No editing</strong>
+          <span>Prevent silent post-event changes.</span>
+        </div>
+        <div class="problem-item">
+          <strong>Public accountability</strong>
+          <span>Build transparent track records.</span>
+        </div>
+      </div>
+
+      <div class="scenario-block">
+        <div class="scenario-title">Example scenario — Market prediction</div>
+        <p>
+          A crypto analyst publishes a sealed prediction about Bitcoin price movements with a 6-month reveal date. Once revealed, the public can verify the prediction was written before the market event occurred.
+        </p>
+      </div>
+
+      <div class="scenario-block">
+        <div class="scenario-title">Example scenario — Election forecast</div>
+        <p>
+          A political researcher stamps constituency-level election predictions before results day. The immutable timestamps prevent accusations of editing predictions afterward.
+        </p>
+      </div>
+    </section>
+
+    <!-- Idea Protection -->
+    <section class="category-card">
+      <h2>💡 Startup Ideas & Concept Protection</h2>
+      <p class="category-intro">
+        Founders and builders often worry about sharing ideas, product concepts, whitepapers, and roadmaps too early.
+      </p>
+
+      <div class="problem-grid">
+        <div class="problem-item">
+          <strong>Pitch protection</strong>
+          <span>Prove startup concepts existed first.</span>
+        </div>
+        <div class="problem-item">
+          <strong>Roadmap integrity</strong>
+          <span>Timestamp product plans and drafts.</span>
+        </div>
+        <div class="problem-item">
+          <strong>Founder evidence</strong>
+          <span>Create immutable innovation timelines.</span>
+        </div>
+      </div>
+
+      <div class="scenario-block">
+        <div class="scenario-title">Example scenario — Startup pitch deck</div>
+        <p>
+          A founder stamps a pitch deck in hash-only mode before presenting it to investors. Months later, if similar ideas appear elsewhere, they can prove the deck existed before the meetings.
+        </p>
+      </div>
+
+      <div class="scenario-block">
+        <div class="scenario-title">Example scenario — Whitepaper release</div>
+        <p>
+          A Web3 project timestamps its tokenomics draft before public launch to establish historical authorship and roadmap integrity.
+        </p>
+      </div>
+    </section>
+
+    <!-- Legal Agreements -->
+    <section class="category-card">
+      <h2>⚖️ Legal Agreements & Confidential Documents</h2>
+      <p class="category-intro">
+        TruthStamp’s hash-only mode is ideal for confidential agreements where privacy matters but proof-of-existence is critical.
+      </p>
+
+      <div class="problem-grid">
+        <div class="problem-item">
+          <strong>Confidentiality</strong>
+          <span>Content never leaves your device.</span>
+        </div>
+        <div class="problem-item">
+          <strong>Immutable proof</strong>
+          <span>Prove agreements existed at a timestamp.</span>
+        </div>
+        <div class="problem-item">
+          <strong>Independent verification</strong>
+          <span>Verify documents without exposing them.</span>
+        </div>
+      </div>
+
+      <div class="scenario-block">
+        <div class="scenario-title">Example scenario — NDA verification</div>
+        <p>
+          A startup hashes and stamps a signed NDA before sharing confidential business information. The original document remains private while the proof stays permanently verifiable.
+        </p>
+      </div>
+
+      <div class="scenario-block">
+        <div class="scenario-title">Example scenario — Contract negotiation history</div>
+        <p>
+          A consulting firm stamps every contract revision during negotiations. This creates an immutable timeline showing exactly which versions existed at each stage.
+        </p>
+      </div>
+    </section>
+
+    <!-- AI Authenticity -->
+    <section class="category-card">
+      <h2>🤖 AI Content Authenticity</h2>
+      <p class="category-intro">
+        In the AI era, proving originality, workflow history, and content authenticity is becoming increasingly important.
+      </p>
+
+      <div class="problem-grid">
+        <div class="problem-item">
+          <strong>Prompt ownership</strong>
+          <span>Timestamp prompts and workflows.</span>
+        </div>
+        <div class="problem-item">
+          <strong>Generated media proof</strong>
+          <span>Verify when AI assets were created.</span>
+        </div>
+        <div class="problem-item">
+          <strong>AI transparency</strong>
+          <span>Create verifiable generation histories.</span>
+        </div>
+      </div>
+
+      <div class="scenario-block">
+        <div class="scenario-title">Example scenario — AI image creator</div>
+        <p>
+          An AI artist stamps prompts, seed values, and generated artwork before posting publicly. This establishes a verifiable creation timeline for originality claims.
+        </p>
+      </div>
+
+      <div class="scenario-block">
+        <div class="scenario-title">Example scenario — AI research workflow</div>
+        <p>
+          A company timestamps AI-generated reports and model outputs before publishing them internally, creating an immutable audit trail for compliance and governance.
+        </p>
+      </div>
+    </section>
+
+    <!-- RWA -->
+    <section class="category-card">
+      <h2>🏛️ Proof Layer for RWAs</h2>
+      <p class="category-intro">
+        Real-world assets require trusted records, provenance, valuation integrity, and timestamped audit trails.
+      </p>
+
+      <div class="problem-grid">
+        <div class="problem-item">
+          <strong>Valuation proof</strong>
+          <span>Timestamp asset valuations and audits.</span>
+        </div>
+        <div class="problem-item">
+          <strong>Asset provenance</strong>
+          <span>Track ownership and inspection history.</span>
+        </div>
+        <div class="problem-item">
+          <strong>Compliance records</strong>
+          <span>Create tamper-evident audit trails.</span>
+        </div>
+      </div>
+
+      <div class="scenario-block">
+        <div class="scenario-title">Example scenario — Real estate valuation</div>
+        <p>
+          A property valuation company timestamps appraisal reports and inspection documents before sharing them with investors or banks, ensuring records cannot be silently altered later.
+        </p>
+      </div>
+
+      <div class="scenario-block">
+        <div class="scenario-title">Example scenario — Gold reserve verification</div>
+        <p>
+          A tokenized gold issuer stamps reserve audits and inventory snapshots to create public proof that reserves existed at a specific point in time.
+        </p>
+      </div>
+    </section>
+
+    <!-- Final CTA -->
+    <div class="cta-block">
+      <h2 style="font-size: var(--text-xl); font-weight: 600; margin: 0 0 var(--space-3);">
+        Start building verifiable history.
+      </h2>
+
+      <p style="color: var(--color-text-secondary); font-size: var(--text-base); margin: 0 0 var(--space-5);">
+        Whether you're protecting ideas, verifying agreements, preserving research, or proving authenticity — TruthStamp helps create tamper-proof digital receipts that survive independently.
+      </p>
+
+      <a href="auth.html" class="btn btn-primary btn-lg">Create your first proof</a>
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">
+            <span class="nav-logo">T</span>
+            <span>TruthStamp</span>
+          </div>
+          <p class="footer-tagline">Proof infrastructure for the internet age.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="how-it-works.html">How it works</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+            <li><a href="trust.html">Trust & permanence</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="usecases.html">Use cases</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="terms.html">Terms</a></li>
+            <li><a href="privacy.html">Privacy</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>© 2026 TruthStamp · All rights reserved</span>
+        <span>Built for creators, researchers, founders, and builders.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+</body>
+</html>
+```
+
+Based on the styling and structure from your uploaded `how-it-works.html` page. fileciteturn16file0
