@@ -468,12 +468,12 @@
     }
 
     // ── Fetch StampCreated event log to get Arweave URI ──────────────────────
-    // StampCreated topic: keccak256("StampCreated(uint256,address,bytes32,...)")
-    // = 0x42238752c6462d1388ed694ac7c03dd761a5e3c9b1b95c4ac0b827d5e53b7624
+    // StampCreated topic0 = 0x42238752c6462d1388ed694ac7c03dd761a5e3c9b1b95c4ac0b827d5e53b7624
+    // Indexed: topic[1]=proofId, topic[2]=creator, topic[3]=contentHash
     async function fetchEventArweaveUri(proofId, contentHash) {
       try {
+        // Filter by event sig + proofId only (proofId is unique, no need for contentHash)
         const proofIdPadded = BigInt(proofId).toString(16).padStart(64, '0');
-        const hashPadded    = contentHash.replace('0x','').padStart(64,'0');
 
         const res = await fetch(RPC, {
           method: 'POST',
@@ -481,65 +481,72 @@
           body: JSON.stringify({
             jsonrpc: '2.0', id: 10, method: 'eth_getLogs',
             params: [{
-              fromBlock: '0x0',
+              fromBlock: '0x1',
               toBlock:   'latest',
               address:   CONTRACT,
               topics: [
                 '0x42238752c6462d1388ed694ac7c03dd761a5e3c9b1b95c4ac0b827d5e53b7624',
-                '0x' + proofIdPadded,   // topic[1] = proofId (indexed)
-                null,                    // topic[2] = creator (any)
-                '0x' + hashPadded        // topic[3] = contentHash (indexed)
+                '0x' + proofIdPadded  // topic[1] = proofId (indexed)
+                // no other topic filters — simpler and more compatible
               ]
             }]
           })
         });
         const rpc  = await res.json();
+        console.log('[verify] eth_getLogs result:', rpc);
+
         const logs = rpc.result ?? [];
-        if (!logs.length) return null;
-
-        // Decode event data:
-        // data = ABI encode of (uint8, uint8, uint64, string, string, string, uint64, string)
-        //                       ct    vis  sealed  algo    uri     identity  ts    shortText
-        const data  = logs[0].data.replace('0x','');
-        // First 3 slots are uint8/uint64 (padded to 32 bytes each) = 96 bytes = 192 hex chars
-        // Slot 0: contentType  (32 bytes)
-        // Slot 1: visibility   (32 bytes)
-        // Slot 2: sealedUntil  (32 bytes)
-        // Slot 3: offset to hashAlgo string
-        // Slot 4: offset to storageUri string  ← we want this
-        // Slot 5: offset to creatorIdentity string
-        // Slot 6: createdAt (uint64)
-        // Slot 7: offset to shortText string
-
-        function readSlot(n) { return data.slice(n*64, (n+1)*64); }
-        function readUint(n)  { return parseInt(readSlot(n), 16); }
-        function readStr(offsetSlot) {
-          const byteOffset = readUint(offsetSlot); // offset in bytes from start of data
-          const hexOffset  = byteOffset * 2;
-          const length     = parseInt(data.slice(hexOffset, hexOffset + 64), 16);
-          const strHex     = data.slice(hexOffset + 64, hexOffset + 64 + length * 2);
-          return strHex ? Buffer.from(strHex, 'hex').toString?.() ?? hexToStr(strHex) : '';
+        if (!logs.length) {
+          console.log('[verify] No logs found for proofId', proofId);
+          return null;
         }
 
-        // Pure JS hex to string (no Buffer in browser)
-        function hexToStr(hex) {
-          let str = '';
-          for (let i = 0; i < hex.length; i += 2) {
-            str += String.fromCharCode(parseInt(hex.slice(i, i+2), 16));
-          }
-          return str;
+        // Decode event data ABI encoding:
+        // (uint8 contentType, uint8 visibility, uint64 sealedUntil,
+        //  string hashAlgo, string storageUri, string creatorIdentity,
+        //  uint64 createdAt, string shortText)
+        //
+        // ABI layout (each slot = 32 bytes = 64 hex chars):
+        //   slot 0: contentType  (static uint8)
+        //   slot 1: visibility   (static uint8)
+        //   slot 2: sealedUntil  (static uint64)
+        //   slot 3: offset → hashAlgo
+        //   slot 4: offset → storageUri   ← we want this
+        //   slot 5: offset → creatorIdentity
+        //   slot 6: createdAt    (static uint64)
+        //   slot 7: offset → shortText
+
+        const data = logs[0].data.replace('0x','');
+
+        function slot(n)     { return data.slice(n*64, (n+1)*64); }
+        function slotUint(n) { return parseInt(slot(n), 16); }
+
+        // Read a dynamic string given its offset-slot index
+        // Offset is in BYTES from start of data
+        function readStr(offsetSlotIndex) {
+          const byteOffset = slotUint(offsetSlotIndex);
+          const hexStart   = byteOffset * 2;
+          const length     = parseInt(data.slice(hexStart, hexStart + 64), 16);
+          if (!length) return '';
+          const strHex = data.slice(hexStart + 64, hexStart + 64 + length * 2);
+          // Pure browser hex→UTF-8 string (no Buffer.from needed)
+          return decodeURIComponent(
+            strHex.replace(/../g, '%$&')
+          );
         }
 
-        // storageUri is at slot 4 (offset pointer)
         const storageUri = readStr(4);
         const shortText  = readStr(7);
-        const createdAt  = readUint(6);
+        const createdAt  = slotUint(6);
+        const txHash     = logs[0].transactionHash;
 
-        console.log('[verify] Event decoded — storageUri:', storageUri, 'shortText:', shortText);
-        return { storageUri, shortText, createdAt, txHash: logs[0].transactionHash };
+        console.log('[verify] Decoded — storageUri:', storageUri,
+                    'shortText:', shortText, 'createdAt:', createdAt);
+
+        return { storageUri, shortText, createdAt, txHash };
 
       } catch(e) {
-        console.warn('[verify] fetchEventArweaveUri failed:', e.message);
+        console.warn('[verify] fetchEventArweaveUri error:', e.message);
         return null;
       }
     }
