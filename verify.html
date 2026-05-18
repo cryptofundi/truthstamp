@@ -148,6 +148,25 @@
       <div id="file-selected-info" class="file-selected-info" style="display:none;"></div>
       <button class="btn btn-primary btn-block btn-lg mt-4" id="verify-file-btn" onclick="verifyFile()" disabled>Verify this file</button>
       <p class="text-muted mt-4 text-center" style="font-size: var(--text-xs);">Your file is hashed locally in your browser. It is never uploaded or stored.</p>
+
+      <!-- How file verify works -->
+      <div style="margin-top: var(--space-4); padding: var(--space-4); background: var(--color-surface-alt); border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+        <div style="display: flex; gap: var(--space-3); align-items: flex-start;">
+          <div style="flex-shrink: 0; margin-top: 2px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div>
+            <p style="font-size: var(--text-sm); font-weight: 600; margin: 0 0 var(--space-1); color: var(--color-text);">How file verification works</p>
+            <p style="font-size: var(--text-xs); color: var(--color-text-secondary); margin: 0; line-height: 1.6;">
+              Drop any file here and TruthStamp computes its SHA-256 fingerprint entirely in your browser — the file never leaves your device. That fingerprint is then looked up directly on the MegaETH blockchain.
+            </p>
+            <p style="font-size: var(--text-xs); color: var(--color-text-secondary); margin: var(--space-2) 0 0; line-height: 1.6;">
+              <strong style="color: var(--color-text);">Practical use:</strong> If someone claims they stamped a document before a certain date, drag their file here. If the stamp exists, you'll see exactly when it was recorded on-chain — without needing the proof ID or hash. Perfect for third-party verification of contracts, research, or creative work.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div class="spinner" id="spinner-file"></div>
       <div class="result-box" id="result-file"></div>
     </div>
@@ -293,6 +312,7 @@
       try {
         const res = await fetch(
           SUPABASE + '/rest/v1/stamps_with_creator?proof_id=eq.' + id +
+          '&contract_address=eq.' + CONTRACT +
           '&select=proof_id,content_hash,tx_hash,block_number,block_timestamp,visibility,content_type,display_title,creator_identity',
           { headers: { 'apikey': ANON_KEY, 'Accept': 'application/json' } }
         );
@@ -324,10 +344,8 @@
     // v3 contract has verifyByHash(bytes32) — direct hash lookup, no DB needed
     async function lookupHashOnChain(hash, dbStamp, resultId) {
       try {
-        // verifyByHash(bytes32) function selector
-        // keccak256("verifyByHash(bytes32)") = 0x56cfd039...
-        // Pre-computed: 0x56cfd039
-        const selector = '56cfd039';
+        // verifyByHash(bytes32) — selector from compilation JSON functionHashes
+        const selector = '5d4dd1be';
         const padded   = hash.replace('0x','').padStart(64,'0');
         const callData = '0x' + selector + padded;
 
@@ -384,6 +402,7 @@
         const hexWithoutPrefix = hash.replace('0x','');
         const res = await fetch(
           SUPABASE + '/rest/v1/stamps?content_hash=eq.\\x' + hexWithoutPrefix +
+          '&contract_address=eq.' + CONTRACT +
           '&select=proof_id,content_hash,tx_hash,display_title,creator_identity,block_timestamp&limit=1',
           { headers: { 'apikey': ANON_KEY, 'Accept': 'application/json' } }
         );
@@ -396,8 +415,8 @@
           return;
         }
 
-        // Verify on chain using getStamp(proofId)
-        const selector = '78bd7935'; // getStamp(uint256)
+        // getStamp(uint256) — selector from compilation JSON functionHashes
+        const selector = 'd2064e2f';
         const padded   = found.proof_id.toString(16).padStart(64,'0');
         const r2 = await fetch(RPC, {
           method: 'POST',
