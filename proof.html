@@ -586,12 +586,10 @@
             ` : ''}
           </div>`;
       } else {
-        // Seal date has passed — show content to EVERYONE
-        // Content may be in text_content (old stamps) or encrypted_content (new stamps)
-
+        // ── Reveal date has passed — show content to EVERYONE ─────────────
         let text = stamp.text_content || '';
 
-        // If text_content is empty, try to decrypt from encrypted_content
+        // Try decrypt from encrypted_content (owner only — has the key)
         const decryptUserId = currentUser?.id ?? null;
         if (!text && stamp.encrypted_content && decryptUserId) {
           try {
@@ -600,9 +598,7 @@
               const parsed = JSON.parse(decrypted);
               text = parsed.content ?? decrypted;
             } catch { text = decrypted; }
-
-            // Auto-cache decrypted content to DB so non-owners can see it too
-            // Runs once when owner first visits after seal date
+            // Auto-cache to DB so non-owners can see on next load
             if (text && !stamp.text_content) {
               try {
                 await window.tsDB.from('stamps').update({
@@ -611,11 +607,28 @@
                 })
                 .eq('proof_id', stamp.proof_id)
                 .eq('contract_address', window.TRUTHSTAMP_CONFIG?.CONTRACT_ADDRESS ?? '');
-                console.log('[TruthStamp] Seal expired — auto-cached content to DB for public visibility');
-              } catch(e) { console.warn('[TruthStamp] Auto-cache failed (non-fatal):', e); }
+              } catch(e) { console.warn('[TruthStamp] Auto-cache failed:', e); }
             }
           } catch(e) {
             console.warn('[TruthStamp] sealed decrypt failed:', e);
+          }
+        }
+
+        // If still no text (non-owner, content not yet cached) — ask server to decrypt
+        if (!text) {
+          try {
+            const supabaseUrl = window.TRUTHSTAMP_CONFIG?.SUPABASE_URL;
+            const resp = await fetch(`${supabaseUrl}/functions/v1/decrypt-sealed`, {
+              method:  'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body:    JSON.stringify({ proof_id: stamp.proof_id }),
+            });
+            const result = await resp.json();
+            if (result.success && result.content) {
+              text = result.content;
+            }
+          } catch(e) {
+            console.warn('[TruthStamp] Server decrypt failed:', e);
           }
         }
 
