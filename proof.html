@@ -445,13 +445,20 @@
       if (stamp.revealed || isExpired) {
         iconEl.textContent = '🔓';
         const revealDate = sealedUntil
-          ? sealedUntil.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+          ? sealedUntil.toLocaleString('en-US', {
+              month: 'long', day: 'numeric', year: 'numeric',
+              timeZone: 'UTC'
+            }) + ' UTC'
           : 'unknown date';
         labelEl.textContent = `Sealed stamp — revealed on ${revealDate}`;
         bannerEl.className = 'visibility-banner public';
       } else {
         const revealDate = sealedUntil
-          ? sealedUntil.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+          ? sealedUntil.toLocaleString('en-US', {
+              month: 'long', day: 'numeric', year: 'numeric',
+              hour: '2-digit', minute: '2-digit',
+              timeZone: 'UTC', hour12: true
+            }) + ' UTC'
           : 'unknown date';
         labelEl.textContent = `Sealed stamp — auto-reveals on ${revealDate}`;
       }
@@ -500,52 +507,35 @@
       await renderHashOnlyContent(stamp, isOwner, currentUser);
     } else if (stamp.visibility === 'sealed') {
       const sealedUntil = stamp.sealed_until ? new Date(stamp.sealed_until) : null;
-      const isExpired = sealedUntil && sealedUntil <= new Date();
-      const isRevealed = stamp.revealed || isExpired;
+      const isExpired   = sealedUntil && sealedUntil <= new Date();
+      const isRevealed  = stamp.revealed; // only true after revealSealed() on-chain
+      const canReveal   = isExpired && isOwner && !isRevealed;
 
-      if (!isRevealed) {
+      // Credit cost for reveal (mirrors stamp creation cost)
+      const revealCreditCost = stamp.content_type === 'file' ? 3
+                              : stamp.content_type === 'url'  ? 2 : 1;
+
+      if (!isExpired) {
+        // Still sealed — show locked state only
         const revealDate = sealedUntil
-          ? sealedUntil.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })
+          ? sealedUntil.toLocaleString('en-US', {
+              month: 'long', day: 'numeric', year: 'numeric',
+              hour: '2-digit', minute: '2-digit',
+              timeZone: 'UTC', hour12: true
+            }) + ' UTC'
           : 'a future date';
-
-        // Check if seal date has passed AND user is owner — show Reveal Now button
-        const canReveal = isExpired && isOwner;
-
         contentBlock.innerHTML = `
           <div class="proof-content-hash-only">
-            <div style="font-size: 2rem; margin-bottom: 8px;">${canReveal ? '🔓' : '🔒'}</div>
+            <div style="font-size: 2rem; margin-bottom: 8px;">🔒</div>
             <p style="margin: 0 0 var(--space-3); color: var(--color-text-secondary);">
-              ${canReveal
-                ? `The seal date has passed. You can now reveal this stamp — this will upload your content to Arweave for permanent storage and update the on-chain record.`
-                : `Content is sealed until <strong>${revealDate}</strong>.<br>The timestamp is locked in — content will reveal automatically.`
-              }
+              Content is sealed until <strong>${revealDate}</strong>.<br>
+              The timestamp is locked in — content will reveal automatically.
             </p>
-            ${canReveal ? `
-              <div style="position:relative; display:inline-block;">
-                <button
-                  id="reveal-btn"
-                  class="btn btn-primary"
-                  onclick="handleReveal()"
-                  title="Uploads your sealed content to Arweave permanently and calls revealSealed() on the smart contract. This action cannot be undone."
-                  style="display:inline-flex; align-items:center; gap:8px;">
-                  🔓 Reveal Now
-                </button>
-              </div>
-              <p style="margin: var(--space-2) 0 0; font-size: var(--text-xs); color: var(--color-text-muted); display:flex; align-items:center; gap:4px;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                This will permanently store your content on Arweave and update the smart contract. Cannot be undone.
-              </p>
-              <div id="reveal-result" style="margin-top:var(--space-3); display:none;"></div>
-            ` : `
-              <div id="reveal-result" style="margin-top:var(--space-3); display:none;"></div>
-            `}
             ${isOwner ? `
               <div style="margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid rgba(83,74,183,0.15);">
-                <button
-                  class="btn btn-secondary"
-                  onclick="downloadRecoveryPackage()"
+                <button class="btn btn-secondary" onclick="downloadRecoveryPackage()"
                   style="font-size: var(--text-xs); display:inline-flex; align-items:center; gap:6px;"
-                  title="Downloads your encrypted sealed content as a local backup. Even if TruthStamp goes offline, you can decrypt and recover your content independently.">
+                  title="Downloads your encrypted sealed content as a local backup.">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5 5-5-5M12 3v12"/></svg>
                   Download recovery package
                 </button>
@@ -556,18 +546,84 @@
             ` : ''}
           </div>`;
       } else {
-        // Seal date has passed — show content
-        const text = stamp.text_content || stamp.display_title || '';
-        if (text) {
-          contentText.textContent = text;
+        // Seal date has passed — show content from DB
+        // AND show Reveal on-chain button if not yet formally revealed
+        const text = stamp.text_content || '';
+
+        // Render content
+        if (stamp.content_type === 'url' && text) {
+          let displayUrl = text;
+          if (text.startsWith('{')) {
+            try { displayUrl = JSON.parse(text).url ?? text; } catch { /* plain url */ }
+          }
+          contentBlock.innerHTML = '<div style="padding: var(--space-4);">'
+            + '<p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0 0 4px; text-transform:uppercase; letter-spacing:0.04em;">Stamped URL</p>'
+            + '<a href="' + escapeHtml(displayUrl) + '" target="_blank" rel="noopener" '
+            + 'style="font-size:var(--text-sm); font-weight:600; color:var(--brand-primary); word-break:break-all; overflow-wrap:anywhere; display:block;">'
+            + escapeHtml(displayUrl) + '</a></div>';
+        } else if (stamp.content_type === 'file') {
+          contentText.textContent = stamp.file_name ? `📄 ${stamp.file_name}` : '(File stamp)';
         } else {
-          contentText.textContent = '(Content stored on Arweave — view link below)';
+          contentText.textContent = text || '(Content stored on Arweave — view link below)';
         }
+
+        // Show Arweave link if revealed on-chain
         if (stamp.storage_uri) {
           const arweaveLink = document.getElementById('arweave-link');
           const txId = stamp.storage_uri.replace('ar://', '');
           arweaveLink.href = `https://arweave.net/${txId}`;
           arweaveLink.style.display = 'inline-flex';
+        }
+
+        // Reveal on-chain button — shown when date passed but not yet on-chain
+        if (canReveal) {
+          const revealBanner = document.createElement('div');
+          revealBanner.style.cssText = 'margin-top:var(--space-4); padding:var(--space-4); background:#FEF3C7; border:1px solid #F59E0B; border-radius:var(--radius-md);';
+          revealBanner.innerHTML = `
+            <div style="display:flex; align-items:flex-start; gap:var(--space-3);">
+              <span style="font-size:1.2rem; flex-shrink:0;">⚡</span>
+              <div style="flex:1;">
+                <p style="font-size:var(--text-sm); font-weight:600; color:#92400E; margin:0 0 4px;">
+                  Seal date has passed — content visible from database only
+                </p>
+                <p style="font-size:var(--text-xs); color:#92400E; margin:0 0 var(--space-3); line-height:1.5;">
+                  Until you reveal on-chain, this stamp is <strong>temporary</strong> — it exists only in TruthStamp's database.
+                  Revealing uploads your content to Arweave permanently and updates the smart contract,
+                  making it independently verifiable forever.
+                </p>
+                <div style="display:flex; align-items:center; gap:var(--space-3); flex-wrap:wrap;">
+                  <button
+                    id="reveal-btn"
+                    class="btn btn-primary"
+                    onclick="handleReveal()"
+                    title="Uploads your content to Arweave permanently and calls revealSealed() on the MegaETH smart contract. Costs ${revealCreditCost} credit${revealCreditCost > 1 ? 's' : ''}. Cannot be undone."
+                    style="display:inline-flex; align-items:center; gap:8px; background:#D97706; border-color:#D97706;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7v10l10 5 10-5V7l-10-5z"/><path d="M9 12l2 2 4-4"/></svg>
+                    Reveal on-chain · ${revealCreditCost} credit${revealCreditCost > 1 ? 's' : ''}
+                  </button>
+                  ${isOwner ? `
+                    <button class="btn btn-secondary" onclick="downloadRecoveryPackage()"
+                      style="font-size:var(--text-xs); display:inline-flex; align-items:center; gap:6px;">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5 5-5-5M12 3v12"/></svg>
+                      Download recovery package
+                    </button>
+                  ` : ''}
+                </div>
+                <div id="reveal-result" style="margin-top:var(--space-3); display:none;"></div>
+              </div>
+            </div>`;
+          contentBlock.appendChild(revealBanner);
+        } else if (isRevealed && isOwner) {
+          // Already revealed — show download button only
+          const revealedNote = document.createElement('div');
+          revealedNote.style.cssText = 'margin-top:var(--space-3);';
+          revealedNote.innerHTML = `
+            <button class="btn btn-secondary" onclick="downloadRecoveryPackage()"
+              style="font-size:var(--text-xs); display:inline-flex; align-items:center; gap:6px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5 5-5-5M12 3v12"/></svg>
+              Download recovery package
+            </button>`;
+          contentBlock.appendChild(revealedNote);
         }
       }
     } else {
@@ -846,17 +902,22 @@
     const proofId = new URLSearchParams(window.location.search).get('id');
     if (!proofId) return;
 
+    // Get stamp type for credit cost display
+    const contentType = document.getElementById('stat-type')?.textContent?.toLowerCase() ?? 'text';
+    const creditCost  = contentType === 'file' ? 3 : contentType === 'url' ? 2 : 1;
+
     const confirmed = confirm(
-      'Reveal this sealed stamp?\n\n' +
-      '• Your content will be permanently uploaded to Arweave\n' +
-      '• The smart contract will be updated on-chain\n' +
-      '• This cannot be undone\n\n' +
-      'Continue?'
+      `Reveal this sealed stamp on-chain?\n\n` +
+      `• ${creditCost} credit${creditCost > 1 ? 's' : ''} will be deducted\n` +
+      `• Your content will be permanently uploaded to Arweave\n` +
+      `• The smart contract will be updated on MegaETH\n` +
+      `• This cannot be undone\n\n` +
+      `Continue?`
     );
     if (!confirmed) return;
 
     btn.disabled = true;
-    btn.textContent = '⏳ Revealing...';
+    btn.textContent = '⏳ Revealing on-chain...';
     resultEl.style.display = 'none';
 
     try {
@@ -885,7 +946,8 @@
       // Success — reload the page to show revealed content
       resultEl.innerHTML =
         '<div style="background:#D1FAE5; border:1px solid #6EE7B7; border-radius:8px; padding:12px 16px; font-size:var(--text-sm); color:#065F46;">' +
-        '✅ Revealed successfully! Arweave URI: <code style="font-size:11px; word-break:break-all;">' + (result.arweave_uri ?? '') + '</code>' +
+        `✅ Revealed on-chain! ${result.credits_used ?? creditCost} credit${creditCost > 1 ? 's' : ''} used · ${result.credits_remaining ?? '—'} remaining<br>` +
+        '<span style="font-size:11px;">Arweave: <code style="word-break:break-all;">' + (result.arweave_uri ?? '') + '</code></span>' +
         '</div>';
       resultEl.style.display = 'block';
       btn.textContent = '✅ Revealed';
@@ -899,7 +961,7 @@
         '❌ Reveal failed: ' + escapeHtml(err.message) + '</div>';
       resultEl.style.display = 'block';
       btn.disabled = false;
-      btn.innerHTML = '🔓 Reveal Now';
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7v10l10 5 10-5V7l-10-5z"/><path d="M9 12l2 2 4-4"/></svg> Reveal on-chain · ${creditCost} credit${creditCost > 1 ? 's' : ''}`;
     }
   }
 
