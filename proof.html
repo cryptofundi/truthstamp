@@ -368,11 +368,14 @@
     // ── Fetch stamp AND current user in parallel ───────────────────────────
     let stampResult, authResult;
     try {
+      const contractAddress = window.TRUTHSTAMP_CONFIG?.CONTRACT_ADDRESS ?? '';
+      // Try with contract_address filter first (requires migration 012)
+      // Fall back to proof_id only if contract_address column missing from view
+      let query = window.tsDB.from('stamps_with_creator').select('*').eq('proof_id', proofId);
+      if (contractAddress) query = query.eq('contract_address', contractAddress);
+
       [stampResult, authResult] = await Promise.all([
-        window.tsDB.from('stamps_with_creator').select('*')
-          .eq('proof_id', proofId)
-          .eq('contract_address', window.TRUTHSTAMP_CONFIG?.CONTRACT_ADDRESS ?? '')
-          .maybeSingle(),
+        query.maybeSingle(),
         window.tsDB.auth.getUser()
       ]);
     } catch (fetchErr) {
@@ -386,11 +389,40 @@
 
     if (error) {
       console.error('DB error:', error);
-      showError('Failed to load stamp. Please try again.');
+      // If error mentions contract_address column, view needs migration 012
+      if (error.message?.includes('contract_address')) {
+        // Fallback: query without contract_address (migration 012 not yet run)
+        const { data: stampFallback, error: fallbackErr } = await window.tsDB
+          .from('stamps_with_creator').select('*')
+          .eq('proof_id', proofId).maybeSingle();
+        if (!fallbackErr && stampFallback) {
+          await renderProof(stampFallback, currentUser, !!(currentUser?.id && (
+            currentUser.id === stampFallback.creator_profile_id ||
+            currentUser.id === stampFallback.creator_identity
+          )));
+          document.getElementById('state-loading').style.display = 'none';
+          document.getElementById('state-proof').style.display = 'block';
+          return;
+        }
+      }
+      showError(`Failed to load stamp: ${error.message}. Please try again.`);
       return;
     }
 
     if (!stamp) {
+      // Retry without contract_address in case migration 012 not run
+      const { data: stampFallback } = await window.tsDB
+        .from('stamps_with_creator').select('*')
+        .eq('proof_id', proofId).maybeSingle();
+      if (stampFallback) {
+        await renderProof(stampFallback, currentUser, !!(currentUser?.id && (
+          currentUser.id === stampFallback.creator_profile_id ||
+          currentUser.id === stampFallback.creator_identity
+        )));
+        document.getElementById('state-loading').style.display = 'none';
+        document.getElementById('state-proof').style.display = 'block';
+        return;
+      }
       showError(`Stamp #${proofId} was not found. It may not exist yet — the blockchain indexer might still be catching up.`);
       return;
     }
@@ -584,8 +616,6 @@
             }
           } catch(e) {
             console.warn('[TruthStamp] sealed decrypt failed:', e);
-          }
-        }
           }
         }
 
