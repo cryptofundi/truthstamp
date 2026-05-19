@@ -792,12 +792,26 @@
     );
   }
 
-  async function decryptForUser(encryptedB64, userId) {
+  async function decryptForUser(encryptedData, userId) {
     const key = await deriveKey(userId);
-    const combined = Uint8Array.from(atob(encryptedB64), c => c.charCodeAt(0));
-    const iv = combined.slice(0, 12);
+
+    // Try new self-describing JSON envelope format first
+    // { version, enc, kdf, iv, ciphertext, iterations, ... }
+    try {
+      const envelope = JSON.parse(encryptedData);
+      if (envelope.version && envelope.ciphertext && envelope.iv) {
+        const iv         = Uint8Array.from(atob(envelope.iv),         c => c.charCodeAt(0));
+        const ciphertext = Uint8Array.from(atob(envelope.ciphertext), c => c.charCodeAt(0));
+        const decrypted  = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+        return new TextDecoder().decode(decrypted);
+      }
+    } catch { /* not JSON envelope — try legacy */ }
+
+    // Legacy format: raw base64 with IV prepended to ciphertext
+    const combined   = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0));
+    const iv         = combined.slice(0, 12);
     const ciphertext = combined.slice(12);
-    const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+    const decrypted  = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
     return new TextDecoder().decode(decrypted);
   }
 
