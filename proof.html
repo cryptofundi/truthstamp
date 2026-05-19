@@ -369,7 +369,10 @@
     let stampResult, authResult;
     try {
       [stampResult, authResult] = await Promise.all([
-        window.tsDB.from('stamps_with_creator').select('*').eq('proof_id', proofId).maybeSingle(),
+        window.tsDB.from('stamps_with_creator').select('*')
+          .eq('proof_id', proofId)
+          .eq('contract_address', window.TRUTHSTAMP_CONFIG?.CONTRACT_ADDRESS ?? '')
+          .maybeSingle(),
         window.tsDB.auth.getUser()
       ]);
     } catch (fetchErr) {
@@ -392,7 +395,11 @@
       return;
     }
 
-    const isOwner = !!(currentUser?.id && currentUser.id === stamp.creator_identity);
+    // isOwner: check profile_id (reliable) OR creator_identity (wallet users)
+    const isOwner = !!(currentUser?.id && (
+      currentUser.id === stamp.creator_profile_id ||
+      currentUser.id === stamp.creator_identity
+    ));
 
     console.log('[TruthStamp] user:', currentUser?.id ?? 'anon');
     console.log('[TruthStamp] creator_identity:', stamp.creator_identity);
@@ -585,16 +592,31 @@
           contentText.textContent = stamp.file_name ? `📄 ${stamp.file_name}` : '(File stamp)';
         } else if (text) {
           contentText.textContent = text;
+        } else if (stamp.storage_uri) {
+          // Revealed on-chain — content on Arweave, link shown below
+          contentText.textContent = '(Content on Arweave — see link below)';
+        } else if (!isOwner) {
+          // Non-owner, content encrypted, not yet revealed on-chain
+          contentBlock.innerHTML = `
+            <div class="proof-content-hash-only">
+              <div style="font-size: 2rem; margin-bottom: 8px;">🔓</div>
+              <p style="margin: 0; color: var(--color-text-secondary); line-height: 1.6;">
+                Seal date has passed.<br>
+                <span style="font-size:var(--text-xs); color:var(--color-text-muted);">
+                  Content is encrypted until the owner reveals it on-chain.
+                  Once revealed, it will be permanently visible here.
+                </span>
+              </p>
+            </div>`;
         } else {
-          // DB down or very old stamp — show appropriate message
+          // Owner but decrypt failed — show recovery option
           contentBlock.innerHTML = `
             <div class="proof-content-hash-only">
               <div style="font-size: 2rem; margin-bottom: 8px;">⚠️</div>
-              <p style="margin: 0; color: var(--color-text-secondary); line-height: 1.6;">
-                ${stamp.storage_uri
-                  ? 'Content is on Arweave — use the link below to view.'
-                  : 'Content temporarily unavailable. The owner can make it permanently accessible by clicking Reveal on-chain.'
-                }
+              <p style="margin: 0; color: var(--color-text-secondary);">
+                Could not decrypt content. Try the
+                <a href="decrypt.html" style="color:var(--brand-primary);">decrypt tool</a>
+                with your recovery package.
               </p>
             </div>`;
         }
@@ -603,8 +625,10 @@
         if (stamp.storage_uri) {
           const arweaveLink = document.getElementById('arweave-link');
           const txId = stamp.storage_uri.replace('ar://', '');
-          arweaveLink.href = `https://arweave.net/${txId}`;
-          arweaveLink.style.display = 'inline-flex';
+          if (arweaveLink) {
+            arweaveLink.href = `https://arweave.net/${txId}`;
+            arweaveLink.style.display = 'inline-flex';
+          }
         }
 
         // Amber banner — owner only, not yet revealed on-chain
