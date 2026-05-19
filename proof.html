@@ -547,9 +547,25 @@
           </div>`;
       } else {
         // Seal date has passed — show content to EVERYONE
-        // Owner also sees amber banner prompting on-chain reveal if not yet done
+        // Content may be in text_content (old stamps) or encrypted_content (new stamps)
 
-        const text = stamp.text_content || '';
+        let text = stamp.text_content || '';
+
+        // If text_content is empty, try to decrypt from encrypted_content
+        if (!text && stamp.encrypted_content && currentUser?.id) {
+          try {
+            const decrypted = await decryptForUser(stamp.encrypted_content, currentUser.id);
+            // encrypted_content may be full TSP-1 JSON envelope
+            try {
+              const parsed = JSON.parse(decrypted);
+              text = parsed.content ?? decrypted;
+            } catch {
+              text = decrypted;
+            }
+          } catch(e) {
+            console.warn('[TruthStamp] sealed decrypt failed:', e);
+          }
+        }
 
         // Render content based on type
         if (stamp.content_type === 'url' && text) {
@@ -565,8 +581,19 @@
             + escapeHtml(displayUrl) + '</a></div>';
         } else if (stamp.content_type === 'file') {
           contentText.textContent = stamp.file_name ? `📄 ${stamp.file_name}` : '(File stamp)';
+        } else if (text) {
+          contentText.textContent = text;
         } else {
-          contentText.textContent = text || '(Content not available)';
+          // Non-owner and content not yet revealed on-chain
+          contentBlock.innerHTML = `
+            <div class="proof-content-hash-only">
+              <div style="font-size: 2rem; margin-bottom: 8px;">⏳</div>
+              <p style="margin: 0; color: var(--color-text-secondary);">
+                Seal date has passed. The owner needs to click
+                <strong>Reveal on-chain</strong> to make the content permanently
+                visible and independently verifiable.
+              </p>
+            </div>`;
         }
 
         // Show Arweave link if revealed on-chain
