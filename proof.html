@@ -586,14 +586,15 @@
         } else if (text) {
           contentText.textContent = text;
         } else {
-          // Non-owner and content not yet revealed on-chain
+          // DB down or very old stamp — show appropriate message
           contentBlock.innerHTML = `
             <div class="proof-content-hash-only">
-              <div style="font-size: 2rem; margin-bottom: 8px;">⏳</div>
-              <p style="margin: 0; color: var(--color-text-secondary);">
-                Seal date has passed. The owner needs to click
-                <strong>Reveal on-chain</strong> to make the content permanently
-                visible and independently verifiable.
+              <div style="font-size: 2rem; margin-bottom: 8px;">⚠️</div>
+              <p style="margin: 0; color: var(--color-text-secondary); line-height: 1.6;">
+                ${stamp.storage_uri
+                  ? 'Content is on Arweave — use the link below to view.'
+                  : 'Content temporarily unavailable. The owner can make it permanently accessible by clicking Reveal on-chain.'
+                }
               </p>
             </div>`;
         }
@@ -606,7 +607,7 @@
           arweaveLink.style.display = 'inline-flex';
         }
 
-        // Amber banner — owner only, only if not yet revealed on-chain
+        // Amber banner — owner only, not yet revealed on-chain
         if (canReveal) {
           const revealBanner = document.createElement('div');
           revealBanner.id = 'reveal-banner';
@@ -616,20 +617,16 @@
               <span style="font-size:1.2rem; flex-shrink:0;">⚡</span>
               <div style="flex:1;">
                 <p style="font-size:var(--text-sm); font-weight:600; color:#92400E; margin:0 0 4px;">
-                  Seal date has passed — not yet permanent
+                  Make this stamp permanent on-chain
                 </p>
-                <p style="font-size:var(--text-xs); color:#92400E; margin:0 0 var(--space-3); line-height:1.5;">
-                  Content is visible above but <strong>not yet permanent</strong>.
-                  Until you reveal on-chain, it exists only in TruthStamp's database.
-                  Revealing uploads to Arweave and updates the smart contract — making it
-                  independently verifiable forever.
+                <p style="font-size:var(--text-xs); color:#92400E; margin:0 0 var(--space-3); line-height:1.6;">
+                  Content is visible above from the database. To make it <strong>independently
+                  verifiable forever</strong> — even if TruthStamp's database goes offline —
+                  reveal on-chain. This uploads to Arweave and updates the smart contract permanently.
                 </p>
                 <div style="display:flex; align-items:center; gap:var(--space-3); flex-wrap:wrap;">
-                  <button
-                    id="reveal-btn"
-                    class="btn btn-primary"
-                    onclick="handleReveal()"
-                    title="Uploads your content to Arweave permanently and calls revealSealed() on MegaETH. Costs ${revealCreditCost} credit${revealCreditCost > 1 ? 's' : ''}. Cannot be undone."
+                  <button id="reveal-btn" class="btn btn-primary" onclick="handleReveal()"
+                    title="Uploads content to Arweave permanently and calls revealSealed() on MegaETH. Costs ${revealCreditCost} credit${revealCreditCost > 1 ? 's' : ''}. Cannot be undone."
                     style="display:inline-flex; align-items:center; gap:8px; background:#D97706; border-color:#D97706;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7v10l10 5 10-5V7l-10-5z"/><path d="M9 12l2 2 4-4"/></svg>
                     Reveal on-chain · ${revealCreditCost} credit${revealCreditCost > 1 ? 's' : ''}
@@ -645,8 +642,20 @@
             </div>`;
           contentBlock.appendChild(revealBanner);
 
+        // Non-owner info note — shown until owner reveals on-chain
+        } else if (!isOwner && !isRevealed) {
+          const infoNote = document.createElement('div');
+          infoNote.style.cssText = 'margin-top:var(--space-3); padding:var(--space-3); background:var(--color-surface-alt); border:1px solid var(--color-border); border-radius:var(--radius-md);';
+          infoNote.innerHTML = `
+            <p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0; line-height:1.6; display:flex; gap:8px; align-items:flex-start;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0; margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Content shown from TruthStamp's database. The owner can make it permanently
+              verifiable on-chain and Arweave — independent of any database.
+            </p>`;
+          contentBlock.appendChild(infoNote);
+
+        // Owner download button after fully revealed
         } else if (isOwner && isRevealed) {
-          // Already revealed — show download button only
           const dl = document.createElement('div');
           dl.style.cssText = 'margin-top:var(--space-3);';
           dl.innerHTML = `
