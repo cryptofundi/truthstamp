@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Decrypt Recovery Package — TruthStamp Tools</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0a0c10;
+      --surface:    #111318;
+      --surface2:   #181c24;
+      --border:     #252932;
+      --border2:    #2e3545;
+      --green:      #00ff88;
+      --green-dim:  rgba(0,255,136,0.08);
+      --green-glow: rgba(0,255,136,0.15);
+      --amber:      #ffb800;
+      --amber-dim:  rgba(255,184,0,0.08);
+      --red:        #ff4444;
+      --red-dim:    rgba(255,68,68,0.08);
+      --text:       #e8eaf0;
+      --text-2:     #8892a4;
+      --text-3:     #4a5568;
+      --mono:       'IBM Plex Mono', monospace;
+      --sans:       'IBM Plex Sans', sans-serif;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      border-bottom: 1px solid var(--border);
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: rgba(10,12,16,0.95);
+      backdrop-filter: blur(12px);
+      z-index: 10;
+    }
+    .header-brand {
+      display: flex; align-items: center; gap: 10px;
+      font-family: var(--mono); font-size: 13px; font-weight: 600;
+      color: var(--text); text-decoration: none;
+    }
+    .brand-logo {
+      width: 28px; height: 28px; border-radius: 6px;
+      background: var(--green); color: #000;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+    }
+    .tools-badge {
+      font-family: var(--mono); font-size: 10px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--green); background: var(--green-dim);
+      border: 1px solid rgba(0,255,136,0.2);
+      padding: 3px 8px; border-radius: 4px;
+    }
+    .header-back {
+      font-family: var(--mono); font-size: 12px; color: var(--text-2);
+      text-decoration: none; display: flex; align-items: center; gap: 6px;
+    }
+    .header-back:hover { color: var(--green); }
+
+    /* ── Shell ── */
+    .shell {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 24px 96px;
+    }
+
+    /* ── Page title ── */
+    .page-eyebrow {
+      font-family: var(--mono); font-size: 11px; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--green); margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .page-eyebrow::before {
+      content: ''; display: block;
+      width: 24px; height: 1px; background: var(--green);
+    }
+    .page-title {
+      font-family: var(--mono); font-size: 28px; font-weight: 600;
+      line-height: 1.2; margin-bottom: 12px;
+      color: var(--text);
+    }
+    .page-title span { color: var(--green); }
+    .page-desc {
+      font-size: 14px; line-height: 1.7;
+      color: var(--text-2); margin-bottom: 40px;
+      max-width: 560px;
+    }
+
+    /* ── Info banner ── */
+    .info-banner {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 16px 20px;
+      background: var(--amber-dim);
+      border: 1px solid rgba(255,184,0,0.2);
+      border-radius: 8px;
+      margin-bottom: 32px;
+    }
+    .info-banner svg { flex-shrink: 0; margin-top: 1px; color: var(--amber); }
+    .info-banner p { font-size: 13px; color: #c8a84b; line-height: 1.6; }
+    .info-banner strong { color: var(--amber); }
+
+    /* ── Step cards ── */
+    .steps { display: flex; flex-direction: column; gap: 2px; margin-bottom: 32px; }
+    .step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      position: relative;
+    }
+    .step.active { border-color: var(--border2); }
+    .step.done   { border-color: rgba(0,255,136,0.25); background: var(--green-dim); }
+    .step.error  { border-color: rgba(255,68,68,0.3); background: var(--red-dim); }
+
+    .step-num {
+      font-family: var(--mono); font-size: 10px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-3); margin-bottom: 8px;
+    }
+    .step.done .step-num { color: var(--green); }
+    .step-title {
+      font-family: var(--mono); font-size: 15px; font-weight: 600;
+      margin-bottom: 8px; color: var(--text);
+    }
+    .step.done .step-title { color: var(--green); }
+    .step-desc { font-size: 13px; color: var(--text-2); line-height: 1.6; margin-bottom: 16px; }
+
+    /* ── Drop zone ── */
+    .drop-zone {
+      border: 2px dashed var(--border2);
+      border-radius: 8px;
+      padding: 40px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--surface2);
+      position: relative;
+    }
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+      border-color: var(--green);
+      background: var(--green-dim);
+    }
+    .drop-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+    .drop-icon { font-size: 2rem; margin-bottom: 10px; }
+    .drop-label { font-family: var(--mono); font-size: 13px; color: var(--text-2); }
+    .drop-label span { color: var(--green); }
+    .drop-hint { font-size: 11px; color: var(--text-3); margin-top: 6px; }
+
+    /* ── File loaded state ── */
+    .file-loaded {
+      display: none;
+      align-items: center; gap: 12px;
+      padding: 14px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+    }
+    .file-loaded.show { display: flex; }
+    .file-icon { font-size: 1.4rem; }
+    .file-info { flex: 1; min-width: 0; }
+    .file-name { font-family: var(--mono); font-size: 12px; color: var(--green); word-break: break-all; }
+    .file-size { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .file-clear {
+      background: none; border: 1px solid var(--border2); border-radius: 4px;
+      color: var(--text-3); font-size: 11px; padding: 4px 8px; cursor: pointer;
+      font-family: var(--mono);
+    }
+    .file-clear:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── Identity input ── */
+    .id-field label {
+      font-family: var(--mono); font-size: 11px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text-3); display: block; margin-bottom: 8px;
+    }
+    .id-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-family: var(--mono); font-size: 13px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .id-input:focus { border-color: var(--green); }
+    .id-input::placeholder { color: var(--text-3); }
+    .id-hint {
+      font-size: 11px; color: var(--text-3); margin-top: 8px; line-height: 1.5;
+    }
+
+    /* ── Decrypt button ── */
+    .decrypt-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--green);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-family: var(--mono); font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .decrypt-btn:hover:not(:disabled) {
+      background: #00cc6a;
+      transform: translateY(-1px);
+    }
+    .decrypt-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* Spinner */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(0,0,0,0.3); border-top-color: #000; border-radius: 50%; animation: spin 0.7s linear infinite; }
+
+    /* ── Result ── */
+    .result-panel {
+      display: none;
+      background: var(--surface);
+      border: 1px solid rgba(0,255,136,0.3);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 24px;
+    }
+    .result-panel.show { display: block; }
+    .result-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px;
+      background: var(--green-dim);
+      border-bottom: 1px solid rgba(0,255,136,0.15);
+    }
+    .result-verified {
+      display: flex; align-items: center; gap: 8px;
+      font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--green);
+    }
+    .copy-btn {
+      font-family: var(--mono); font-size: 11px;
+      background: none; border: 1px solid rgba(0,255,136,0.3);
+      color: var(--green); padding: 4px 10px; border-radius: 4px; cursor: pointer;
+    }
+    .copy-btn:hover { background: var(--green-dim); }
+
+    .result-meta {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    }
+    .meta-item {}
+    .meta-key {
+      font-family: var(--mono); font-size: 10px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-3); margin-bottom: 4px;
+    }
+    .meta-val {
+      font-family: var(--mono); font-size: 12px; color: var(--text-2);
+      word-break: break-all;
+    }
+    .meta-val.highlight { color: var(--green); }
+
+    .result-content {
+      padding: 20px;
+    }
+    .content-label {
+      font-family: var(--mono); font-size: 10px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-3); margin-bottom: 12px;
+    }
+    .content-text {
+      font-family: var(--sans); font-size: 15px; line-height: 1.7;
+      color: var(--text);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .sealed-notice {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 14px 16px;
+      background: var(--amber-dim);
+      border: 1px solid rgba(255,184,0,0.2);
+      border-radius: 6px;
+      margin-top: 16px;
+      font-size: 12px; color: #c8a84b; line-height: 1.5;
+    }
+    .sealed-notice svg { flex-shrink: 0; color: var(--amber); }
+
+    /* ── Error panel ── */
+    .error-panel {
+      display: none;
+      padding: 16px 20px;
+      background: var(--red-dim);
+      border: 1px solid rgba(255,68,68,0.3);
+      border-radius: 8px;
+      margin-top: 16px;
+      font-family: var(--mono); font-size: 13px; color: #ff8080;
+    }
+    .error-panel.show { display: block; }
+
+    /* ── JSON raw view ── */
+    .raw-toggle {
+      font-family: var(--mono); font-size: 11px; color: var(--text-3);
+      background: none; border: none; cursor: pointer; padding: 0;
+      margin-top: 12px; display: flex; align-items: center; gap: 4px;
+    }
+    .raw-toggle:hover { color: var(--text-2); }
+    .raw-json {
+      display: none;
+      margin-top: 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      font-family: var(--mono); font-size: 11px;
+      color: var(--text-2); line-height: 1.6;
+      overflow-x: auto; white-space: pre;
+      max-height: 320px; overflow-y: auto;
+    }
+    .raw-json.show { display: block; }
+
+    @media (max-width: 600px) {
+      .shell { padding: 32px 16px 64px; }
+      .result-meta { grid-template-columns: 1fr; }
+      .header { padding: 14px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <a href="index.html" class="header-brand">
+      <div class="brand-logo">T</div>
+      TruthStamp
+      <span class="tools-badge">Tools</span>
+    </a>
+    <a href="javascript:history.back()" class="header-back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      back
+    </a>
+  </header>
+
+  <main class="shell">
+
+    <p class="page-eyebrow">TruthStamp Tools · v1</p>
+    <h1 class="page-title">Decrypt recovery<br><span>package</span></h1>
+    <p class="page-desc">
+      Decrypt your sealed stamp's recovery package entirely in your browser.
+      No data is sent anywhere — decryption runs locally using the Web Crypto API.
+      Works before or after the reveal date.
+    </p>
+
+    <!-- Info banner -->
+    <div class="info-banner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <p>
+        <strong>Sealed stamps can be decrypted anytime by you</strong> — the seal date only prevents
+        the public reveal on-chain. Your recovery package uses AES-256-GCM encryption with a key
+        derived from your user ID. As long as you know your ID, you can decrypt independently —
+        even if TruthStamp no longer exists.
+      </p>
+    </div>
+
+    <!-- Step 1: Upload file -->
+    <div class="steps">
+      <div class="step active" id="step-1">
+        <p class="step-num">Step 01</p>
+        <p class="step-title">Upload recovery package</p>
+        <p class="step-desc">
+          The file is named <code style="color:var(--green); font-size:12px;">truthstamp-recovery-proof-N.json</code>
+          — downloaded from your sealed stamp's proof page.
+        </p>
+
+        <!-- Drop zone -->
+        <div class="drop-zone" id="drop-zone"
+             ondragover="handleDragOver(event)"
+             ondragleave="handleDragLeave(event)"
+             ondrop="handleDrop(event)">
+          <input type="file" accept=".json,application/json" onchange="handleFileSelect(this)">
+          <div class="drop-icon">📦</div>
+          <p class="drop-label">Drop your <span>recovery package</span> here</p>
+          <p class="drop-hint">or click to browse · JSON files only</p>
+        </div>
+
+        <!-- File loaded state -->
+        <div class="file-loaded" id="file-loaded">
+          <span class="file-icon">✅</span>
+          <div class="file-info">
+            <p class="file-name" id="file-name-display">—</p>
+            <p class="file-size" id="file-size-display">—</p>
+          </div>
+          <button class="file-clear" onclick="clearFile()">✕ clear</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Enter user ID -->
+      <div class="step" id="step-2">
+        <p class="step-num">Step 02</p>
+        <p class="step-title">Enter your user ID</p>
+        <p class="step-desc">
+          This is used to derive the decryption key — it never leaves your browser.
+        </p>
+        <div class="id-field">
+          <label for="user-id-input">Your user ID</label>
+          <input type="text" id="user-id-input" class="id-input"
+            placeholder="da45f6e8-3b44-46a5-b372-3a7fb197c0a9 or 0x5b7721..."
+            oninput="onIdInput()">
+          <p class="id-hint">
+            📍 Find your ID on any proof page under <strong style="color:var(--text-2);">Technical Details → Creator identity</strong>.
+            Wallet users: your wallet address. Email users: your UUID.
+            <br><br>
+            <span id="autofill-hint" style="color:var(--green); display:none;">
+              ✓ Auto-filled from your active session — verify it matches your proof page.
+            </span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Step 3: Decrypt -->
+      <div class="step" id="step-3">
+        <p class="step-num">Step 03</p>
+        <p class="step-title">Decrypt</p>
+        <p class="step-desc">
+          Runs entirely in your browser. Your file and ID never leave this page.
+        </p>
+        <button class="decrypt-btn" id="decrypt-btn" onclick="decrypt()" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          Decrypt now
+        </button>
+        <div class="error-panel" id="error-panel"></div>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div class="result-panel" id="result-panel">
+      <div class="result-header">
+        <div class="result-verified">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Decrypted successfully
+        </div>
+        <button class="copy-btn" onclick="copyContent()">Copy content</button>
+      </div>
+
+      <div class="result-meta" id="result-meta"></div>
+
+      <div class="result-content">
+        <p class="content-label">Decrypted content</p>
+        <div class="content-text" id="content-display"></div>
+
+        <div class="sealed-notice" id="sealed-notice" style="display:none;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          <span>This stamp is still sealed on-chain until the reveal date. You can read your content here anytime, but the public reveal requires the seal date to pass and you to click <strong>Reveal Now</strong> on the proof page.</span>
+        </div>
+
+        <button class="raw-toggle" onclick="toggleRaw()">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          <span id="raw-label">Show full decrypted JSON</span>
+        </button>
+        <div class="raw-json" id="raw-json"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script>
+    const PEPPER = 'truthstamp-v1-hash-only';
+
+    let loadedPackage = null;
+    let decryptedPayload = null;
+
+    // ── Auto-fill userId from session ────────────────────────────────────────
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        if (window.tsDB) {
+          const { data: { user } } = await window.tsDB.auth.getUser();
+          if (user) {
+            // Try wallet address first, fall back to UUID
+            let identity = user.id;
+            try {
+              const { data: profile } = await window.tsDB
+                .from('profiles')
+                .select('wallet_address, auth_method')
+                .eq('id', user.id)
+                .maybeSingle();
+              if (profile?.auth_method === 'wallet' && profile?.wallet_address) {
+                identity = profile.wallet_address;
+              }
+            } catch { /* use UUID */ }
+
+            document.getElementById('user-id-input').value = identity;
+            document.getElementById('autofill-hint').style.display = 'block';
+            updateDecryptBtn();
+          }
+        }
+      } catch(e) { /* no session */ }
+    });
+
+    // ── File handling ─────────────────────────────────────────────────────────
+    function handleDragOver(e) {
+      e.preventDefault();
+      document.getElementById('drop-zone').classList.add('drag-over');
+    }
+    function handleDragLeave(e) {
+      document.getElementById('drop-zone').classList.remove('drag-over');
+    }
+    function handleDrop(e) {
+      e.preventDefault();
+      document.getElementById('drop-zone').classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) loadFile(file);
+    }
+    function handleFileSelect(input) {
+      if (input.files[0]) loadFile(input.files[0]);
+    }
+
+    function loadFile(file) {
+      if (!file.name.endsWith('.json')) {
+        showError('Please upload a JSON file.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          loadedPackage = JSON.parse(e.target.result);
+          // Validate it looks like a recovery package
+          if (!loadedPackage.encrypted_payload) {
+            showError('This doesn\'t look like a TruthStamp recovery package.\nMissing encrypted_payload field.');
+            loadedPackage = null;
+            return;
+          }
+          // Show loaded state
+          document.getElementById('drop-zone').style.display = 'none';
+          const fl = document.getElementById('file-loaded');
+          fl.classList.add('show');
+          document.getElementById('file-name-display').textContent = file.name;
+          document.getElementById('file-size-display').textContent =
+            `${(file.size / 1024).toFixed(1)} KB · Proof #${loadedPackage.proof_id ?? '?'}`;
+          document.getElementById('step-1').classList.add('done');
+          clearError();
+          updateDecryptBtn();
+        } catch(err) {
+          showError('Failed to parse JSON file: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function clearFile() {
+      loadedPackage = null;
+      document.getElementById('drop-zone').style.display = 'block';
+      document.getElementById('file-loaded').classList.remove('show');
+      document.getElementById('step-1').classList.remove('done');
+      document.getElementById('result-panel').classList.remove('show');
+      clearError();
+      updateDecryptBtn();
+    }
+
+    function onIdInput() { updateDecryptBtn(); }
+
+    function updateDecryptBtn() {
+      const hasFile = !!loadedPackage;
+      const hasId   = document.getElementById('user-id-input').value.trim().length > 0;
+      document.getElementById('decrypt-btn').disabled = !(hasFile && hasId);
+      if (hasId) document.getElementById('step-2').classList.add('done');
+      else document.getElementById('step-2').classList.remove('done');
+    }
+
+    // ── Core decryption ───────────────────────────────────────────────────────
+    async function decrypt() {
+      const userId   = document.getElementById('user-id-input').value.trim();
+      const envelope = loadedPackage?.encrypted_payload;
+
+      if (!envelope || !userId) return;
+
+      const btn = document.getElementById('decrypt-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spin"></span> Decrypting...';
+      clearError();
+      document.getElementById('result-panel').classList.remove('show');
+
+      try {
+        // Derive key — PBKDF2-SHA256, same as stamp.html and proof.html
+        const keyMaterial = await crypto.subtle.importKey(
+          'raw',
+          new TextEncoder().encode(userId + PEPPER),
+          'PBKDF2', false, ['deriveKey']
+        );
+        const key = await crypto.subtle.deriveKey(
+          {
+            name:       'PBKDF2',
+            salt:       new TextEncoder().encode(userId),
+            iterations: envelope.iterations ?? 100000,
+            hash:       envelope.hash ?? 'SHA-256',
+          },
+          keyMaterial,
+          { name: 'AES-GCM', length: 256 },
+          false,
+          ['decrypt']
+        );
+
+        // Decrypt
+        const iv         = Uint8Array.from(atob(envelope.iv),         c => c.charCodeAt(0));
+        const ciphertext = Uint8Array.from(atob(envelope.ciphertext), c => c.charCodeAt(0));
+        const decrypted  = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+        const plaintext  = new TextDecoder().decode(decrypted);
+
+        // Parse inner TSP-1 payload
+        let payload;
+        try { payload = JSON.parse(plaintext); }
+        catch { payload = { content: plaintext }; }
+
+        decryptedPayload = payload;
+        document.getElementById('step-3').classList.add('done');
+        renderResult(payload);
+
+      } catch(e) {
+        document.getElementById('step-3').classList.add('error');
+        showError(
+          'Decryption failed. This usually means the wrong user ID was entered.\n\n' +
+          'Make sure you\'re using the exact Creator identity shown on the proof page.\n\n' +
+          'Error: ' + e.message
+        );
+        btn.disabled = false;
+        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Try again';
+      }
+    }
+
+    function renderResult(payload) {
+      // Meta grid
+      const sealedUntil = payload.sealed_until
+        ? new Date(payload.sealed_until).toUTCString()
+        : (loadedPackage.sealed_until ? new Date(loadedPackage.sealed_until).toUTCString() : '—');
+      const proofId = payload.proof_id ?? loadedPackage.proof_id ?? '—';
+      const isStillSealed = loadedPackage.sealed_until
+        ? new Date(loadedPackage.sealed_until) > new Date()
+        : false;
+
+      document.getElementById('result-meta').innerHTML = `
+        <div class="meta-item">
+          <p class="meta-key">Proof ID</p>
+          <p class="meta-val highlight">#${proofId}</p>
+        </div>
+        <div class="meta-item">
+          <p class="meta-key">Content type</p>
+          <p class="meta-val">${payload.content_type ?? '—'}</p>
+        </div>
+        <div class="meta-item">
+          <p class="meta-key">Sealed until</p>
+          <p class="meta-val">${sealedUntil}</p>
+        </div>
+        <div class="meta-item">
+          <p class="meta-key">Creator identity</p>
+          <p class="meta-val">${esc(payload.creator_identity ?? loadedPackage.creator_identity ?? '—')}</p>
+        </div>
+        <div class="meta-item">
+          <p class="meta-key">Stamped at</p>
+          <p class="meta-val">${payload.stamped_at ? new Date(payload.stamped_at).toUTCString() : '—'}</p>
+        </div>
+        <div class="meta-item">
+          <p class="meta-key">Content hash</p>
+          <p class="meta-val" style="font-size:10px;">${esc(payload.content_hash ?? loadedPackage.content_hash ?? '—')}</p>
+        </div>`;
+
+      // Content
+      const content = payload.content ?? payload.url ?? '(No content field in payload)';
+      document.getElementById('content-display').textContent = content;
+
+      // Sealed notice
+      document.getElementById('sealed-notice').style.display = isStillSealed ? 'flex' : 'none';
+
+      // Raw JSON
+      document.getElementById('raw-json').textContent = JSON.stringify(payload, null, 2);
+
+      // Show result
+      document.getElementById('result-panel').classList.add('show');
+      document.getElementById('result-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      // Reset button
+      const btn = document.getElementById('decrypt-btn');
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Decrypted';
+    }
+
+    function toggleRaw() {
+      const raw   = document.getElementById('raw-json');
+      const label = document.getElementById('raw-label');
+      const shown = raw.classList.toggle('show');
+      label.textContent = shown ? 'Hide full JSON' : 'Show full decrypted JSON';
+    }
+
+    function copyContent() {
+      const content = document.getElementById('content-display').textContent;
+      navigator.clipboard.writeText(content).then(() => {
+        const btn = event.target;
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = orig, 2000);
+      });
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error-panel');
+      el.textContent = msg;
+      el.classList.add('show');
+    }
+    function clearError() {
+      document.getElementById('error-panel').classList.remove('show');
+      document.getElementById('step-3').classList.remove('error');
+    }
+
+    function esc(s) {
+      return (s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+  </script>
+</body>
+</html>
