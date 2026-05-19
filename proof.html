@@ -42,6 +42,7 @@
       margin: 0 auto var(--space-4);
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes ts-spin { to { transform: rotate(360deg); } }
 
     /* URL bar */
     .url-bar {
@@ -552,10 +553,11 @@
         let text = stamp.text_content || '';
 
         // If text_content is empty, try to decrypt from encrypted_content
-        if (!text && stamp.encrypted_content && currentUser?.id) {
+        // Use currentUser.id if available, otherwise won't be able to decrypt
+        const decryptUserId = currentUser?.id ?? null;
+        if (!text && stamp.encrypted_content && decryptUserId) {
           try {
-            const decrypted = await decryptForUser(stamp.encrypted_content, currentUser.id);
-            // encrypted_content may be full TSP-1 JSON envelope
+            const decrypted = await decryptForUser(stamp.encrypted_content, decryptUserId);
             try {
               const parsed = JSON.parse(decrypted);
               text = parsed.content ?? decrypted;
@@ -947,7 +949,18 @@
     if (!confirmed) return;
 
     btn.disabled = true;
-    btn.textContent = '⏳ Revealing on-chain...';
+    btn.style.position = 'relative';
+    btn.style.color = 'transparent';
+    btn.innerHTML = `
+      <span style="
+        position:absolute; top:50%; left:50%;
+        width:16px; height:16px; margin:-8px 0 0 -8px;
+        border:2px solid rgba(255,255,255,0.4);
+        border-top-color:white;
+        border-radius:50%;
+        animation:ts-spin 0.7s linear infinite;
+      "></span>
+      Revealing on-chain...`;
     resultEl.style.display = 'none';
 
     try {
