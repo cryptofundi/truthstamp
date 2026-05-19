@@ -536,6 +536,23 @@
                 This will permanently store your content on Arweave and update the smart contract. Cannot be undone.
               </p>
               <div id="reveal-result" style="margin-top:var(--space-3); display:none;"></div>
+            ` : `
+              <div id="reveal-result" style="margin-top:var(--space-3); display:none;"></div>
+            `}
+            ${isOwner ? `
+              <div style="margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid rgba(83,74,183,0.15);">
+                <button
+                  class="btn btn-secondary"
+                  onclick="downloadRecoveryPackage()"
+                  style="font-size: var(--text-xs); display:inline-flex; align-items:center; gap:6px;"
+                  title="Downloads your encrypted sealed content as a local backup. Even if TruthStamp goes offline, you can decrypt and recover your content independently.">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5 5-5-5M12 3v12"/></svg>
+                  Download recovery package
+                </button>
+                <p style="margin: var(--space-1) 0 0; font-size: 10px; color: var(--color-text-muted);">
+                  Encrypted local backup — only you can decrypt it
+                </p>
+              </div>
             ` : ''}
           </div>`;
       } else {
@@ -772,6 +789,51 @@
             (Stamps from before encryption show content here once re-stamped)
           </span>
         </p>`;
+    }
+  }
+
+  // ── Download recovery package ─────────────────────────────────────────────
+  // Downloads the encrypted_content from DB as a standalone recovery file.
+  // User keeps this locally — can decrypt independently if TruthStamp goes down.
+  async function downloadRecoveryPackage() {
+    const proofId = new URLSearchParams(window.location.search).get('id');
+    try {
+      const { data: stamp } = await window.tsDB
+        .from('stamps')
+        .select('encrypted_content, encrypted_arweave_uri, proof_id, content_hash, sealed_until, creator_identity')
+        .eq('proof_id', proofId)
+        .maybeSingle();
+
+      if (!stamp?.encrypted_content) {
+        alert('No encrypted backup found for this stamp.\nThis may be an older stamp created before encryption was added.');
+        return;
+      }
+
+      const pkg = {
+        _note:                 'TruthStamp encrypted recovery package',
+        _version:              '1.0',
+        _instructions:         'Decrypt ciphertext using AES-256-GCM. Key derived via PBKDF2-SHA256 from (userId + "truthstamp-v1-hash-only"). See enc/kdf/iv/iterations fields.',
+        proof_id:              stamp.proof_id,
+        content_hash:          stamp.content_hash,
+        sealed_until:          stamp.sealed_until,
+        creator_identity:      stamp.creator_identity,
+        encrypted_arweave_uri: stamp.encrypted_arweave_uri ?? null,
+        encrypted_payload:     JSON.parse(stamp.encrypted_content),
+        exported_at:           new Date().toISOString(),
+      };
+
+      const blob = new Blob(
+        [JSON.stringify(pkg, null, 2)],
+        { type: 'application/json' }
+      );
+      const a    = document.createElement('a');
+      a.href     = URL.createObjectURL(blob);
+      a.download = `truthstamp-recovery-proof-${proofId}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+
+    } catch(e) {
+      alert('Failed to download recovery package: ' + e.message);
     }
   }
 
