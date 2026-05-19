@@ -560,7 +560,6 @@
         let text = stamp.text_content || '';
 
         // If text_content is empty, try to decrypt from encrypted_content
-        // Use currentUser.id if available, otherwise won't be able to decrypt
         const decryptUserId = currentUser?.id ?? null;
         if (!text && stamp.encrypted_content && decryptUserId) {
           try {
@@ -568,11 +567,25 @@
             try {
               const parsed = JSON.parse(decrypted);
               text = parsed.content ?? decrypted;
-            } catch {
-              text = decrypted;
+            } catch { text = decrypted; }
+
+            // Auto-cache decrypted content to DB so non-owners can see it too
+            // Runs once when owner first visits after seal date
+            if (text && !stamp.text_content) {
+              try {
+                await window.tsDB.from('stamps').update({
+                  text_content:  text,
+                  display_title: text.slice(0, 60),
+                })
+                .eq('proof_id', stamp.proof_id)
+                .eq('contract_address', window.TRUTHSTAMP_CONFIG?.CONTRACT_ADDRESS ?? '');
+                console.log('[TruthStamp] Seal expired — auto-cached content to DB for public visibility');
+              } catch(e) { console.warn('[TruthStamp] Auto-cache failed (non-fatal):', e); }
             }
           } catch(e) {
             console.warn('[TruthStamp] sealed decrypt failed:', e);
+          }
+        }
           }
         }
 
@@ -592,24 +605,22 @@
           contentText.textContent = stamp.file_name ? `📄 ${stamp.file_name}` : '(File stamp)';
         } else if (text) {
           contentText.textContent = text;
-        } else if (stamp.storage_uri) {
-          // Revealed on-chain — content on Arweave, link shown below
-          contentText.textContent = '(Content on Arweave — see link below)';
         } else if (!isOwner) {
-          // Non-owner, content encrypted, not yet revealed on-chain
+          // Non-owner, seal date passed, content not yet auto-cached
+          // Owner hasn't visited since seal date — content not decrypted to DB yet
           contentBlock.innerHTML = `
             <div class="proof-content-hash-only">
               <div style="font-size: 2rem; margin-bottom: 8px;">🔓</div>
               <p style="margin: 0; color: var(--color-text-secondary); line-height: 1.6;">
                 Seal date has passed.<br>
                 <span style="font-size:var(--text-xs); color:var(--color-text-muted);">
-                  Content is encrypted until the owner reveals it on-chain.
-                  Once revealed, it will be permanently visible here.
+                  Content will appear here once the owner visits this page,
+                  or after they click Reveal on-chain.
                 </span>
               </p>
             </div>`;
         } else {
-          // Owner but decrypt failed — show recovery option
+          // Owner but decrypt failed
           contentBlock.innerHTML = `
             <div class="proof-content-hash-only">
               <div style="font-size: 2rem; margin-bottom: 8px;">⚠️</div>
