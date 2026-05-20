@@ -617,20 +617,17 @@
         // If still no text (non-owner, content not yet cached) — ask server to decrypt
         if (!text) {
           try {
-            const supabaseUrl = window.TRUTHSTAMP_CONFIG?.SUPABASE_URL;
-            // Use Supabase client to call the function — handles auth correctly
             const { data: fnData, error: fnErr } = await window.tsDB.functions.invoke(
               'decrypt-sealed',
               { body: { proof_id: stamp.proof_id } }
             );
-            alert('DEBUG: decrypt-sealed response:\n' + JSON.stringify({ data: fnData, error: fnErr }, null, 2));
             if (!fnErr && fnData?.success && fnData?.content) {
               text = fnData.content;
             } else {
-              alert('DEBUG: decrypt-sealed failed: ' + (fnErr?.message ?? fnData?.error ?? 'unknown'));
+              console.warn('[TruthStamp] decrypt-sealed failed:', fnErr?.message ?? fnData?.error);
             }
           } catch(e) {
-            alert('DEBUG: fetch error: ' + e.message);
+            console.warn('[TruthStamp] decrypt-sealed error:', e.message);
           }
         }
 
