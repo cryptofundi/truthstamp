@@ -617,24 +617,17 @@
         // If still no text (non-owner, content not yet cached) — ask server to decrypt
         if (!text) {
           try {
-            const supabaseUrl  = window.TRUTHSTAMP_CONFIG?.SUPABASE_URL;
-            const supabaseAnon = window.TRUTHSTAMP_CONFIG?.SUPABASE_ANON_KEY;
-            alert('DEBUG: Calling decrypt-sealed for proof #' + stamp.proof_id + '\nURL: ' + supabaseUrl);
-            const resp = await fetch(`${supabaseUrl}/functions/v1/decrypt-sealed`, {
-              method:  'POST',
-              headers: {
-                'Content-Type':  'application/json',
-                'apikey':        supabaseAnon ?? '',
-                'Authorization': `Bearer ${supabaseAnon ?? ''}`,
-              },
-              body: JSON.stringify({ proof_id: stamp.proof_id }),
-            });
-            const result = await resp.json();
-            alert('DEBUG: decrypt-sealed response:\nStatus: ' + resp.status + '\n' + JSON.stringify(result, null, 2));
-            if (result.success && result.content) {
-              text = result.content;
+            const supabaseUrl = window.TRUTHSTAMP_CONFIG?.SUPABASE_URL;
+            // Use Supabase client to call the function — handles auth correctly
+            const { data: fnData, error: fnErr } = await window.tsDB.functions.invoke(
+              'decrypt-sealed',
+              { body: { proof_id: stamp.proof_id } }
+            );
+            alert('DEBUG: decrypt-sealed response:\n' + JSON.stringify({ data: fnData, error: fnErr }, null, 2));
+            if (!fnErr && fnData?.success && fnData?.content) {
+              text = fnData.content;
             } else {
-              alert('DEBUG: decrypt-sealed failed: ' + result.error);
+              alert('DEBUG: decrypt-sealed failed: ' + (fnErr?.message ?? fnData?.error ?? 'unknown'));
             }
           } catch(e) {
             alert('DEBUG: fetch error: ' + e.message);
