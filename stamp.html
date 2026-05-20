@@ -16,6 +16,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/supabase-client.js"></script>
+  <script src="js/nav.js"></script>
 
   <style>
     /* Page-specific styles */
@@ -419,7 +420,8 @@
               <p class="visibility-card-title">Sealed</p>
               <svg class="visibility-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
             </div>
-            <p class="visibility-card-desc">Hidden until a date you choose. Auto-reveals.</p>
+            <p class="visibility-card-desc">Hidden until a date you choose. Auto-reveals on that date.</p>
+            <p id="sealed-type-hint" style="display:none; font-size:10px; color:var(--brand-accent); margin:4px 0 0; line-height:1.4;"></p>
           </button>
         </div>
         <button type="button" class="visibility-card" id="vis-none" onclick="selectVisibility('none')" style="margin-top: var(--space-3);">
@@ -428,6 +430,7 @@
             <svg class="visibility-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10 10 0 0112 20c-7 0-10-8-10-8a18.5 18.5 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 10 8 10 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M2 2l20 20"/></svg>
           </div>
           <p class="visibility-card-desc">Only your fingerprint goes on-chain. Content stays with you.</p>
+          <p style="font-size:10px; color:var(--color-text-muted); margin:4px 0 0;">Even TruthStamp cannot read it.</p>
         </button>
         <div class="seal-options" id="seal-options">
           <p class="seal-label">Auto-reveal on</p>
@@ -482,13 +485,30 @@
       if (tab === 'text') {
         textContent.classList.remove('hide');
         updateCreditCost('text');
+        setSealedHint('text');
       } else if (tab === 'file') {
         fileArea.style.display = 'block';
         updateCreditCost('file');
+        setSealedHint('file');
       } else if (tab === 'url') {
         premium.style.display = 'block';
         updateCreditCost('url');
+        setSealedHint('url');
       }
+    }
+
+    function setSealedHint(type) {
+      const hint = document.getElementById('sealed-type-hint');
+      if (!hint) return;
+      const hints = {
+        text: '📝 Your text stays encrypted until the reveal date. Perfect for predictions, drafts, or time-locked messages.',
+        file: '📄 Your file hash is sealed on-chain. Reveal date unlocks the permanent Arweave link. Great for contracts or research.',
+        url:  '🔗 The URL is sealed until the reveal date. Proves you knew about this link before anyone else.',
+      };
+      hint.textContent = hints[type] ?? '';
+      // Only show hint when Sealed visibility is selected
+      const isSealedSelected = document.getElementById('vis-sealed')?.classList.contains('selected');
+      hint.style.display = (hints[type] && isSealedSelected) ? 'block' : 'none';
     }
 
     // Visibility selection
@@ -505,8 +525,14 @@
         if (!document.getElementById('seal-date').value) {
           setSealDate(1);
         }
+        // Show type hint
+        const activeTab = document.querySelector('.tab.active')?.dataset?.tab ?? 'text';
+        setSealedHint(activeTab);
       } else {
         sealOpts.classList.remove('show');
+        // Hide hint
+        const hint = document.getElementById('sealed-type-hint');
+        if (hint) hint.style.display = 'none';
       }
     }
 
