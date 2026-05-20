@@ -220,16 +220,23 @@
         <div style="position: relative; display: inline-block;">
           <button id="user-avatar"
             onclick="toggleAccountMenu()"
-            style="width: 28px; height: 28px; border-radius: 50%; background: var(--brand-accent-light); color: var(--brand-accent); border: none; cursor: pointer; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center;">··</button>
-          <div id="account-menu" style="display:none; position:absolute; right:0; top:36px; background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); box-shadow:0 4px 16px rgba(0,0,0,0.1); min-width:200px; z-index:100; padding:var(--space-2) 0;">
-            <div id="account-menu-header" style="padding:var(--space-3) var(--space-4); border-bottom:1px solid var(--color-border);">
-              <p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0 0 2px;">Signed in as</p>
-              <p id="account-menu-identity" style="font-size:var(--text-sm); font-weight:600; margin:0; word-break:break-all;"></p>
+            style="width:30px;height:30px;border-radius:50%;background:var(--brand-accent-light);color:var(--brand-accent);border:1px solid var(--color-border);cursor:pointer;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;">··</button>
+          <div id="account-menu" style="display:none;position:absolute;right:0;top:38px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);box-shadow:0 4px 16px rgba(0,0,0,0.12);min-width:210px;z-index:200;padding:var(--space-2) 0;">
+            <div id="account-menu-header" style="padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--color-border);">
+              <p style="font-size:var(--text-xs);color:var(--color-text-muted);margin:0 0 2px;">Signed in as</p>
+              <p id="account-menu-identity" style="font-size:var(--text-sm);font-weight:600;margin:0;word-break:break-all;"></p>
+              <p id="account-menu-credits" style="font-size:var(--text-xs);color:var(--brand-primary);margin:2px 0 0;font-weight:500;">— credits remaining</p>
             </div>
-            <a href="buy-credits.html" style="display:block; padding:var(--space-3) var(--space-4); font-size:var(--text-sm); color:var(--color-text); text-decoration:none;">Buy credits</a>
-            <a href="auth.html" id="switch-account-btn" onclick="handleSwitchAccount(event)" style="display:block; padding:var(--space-3) var(--space-4); font-size:var(--text-sm); color:var(--color-text); text-decoration:none;">Switch account</a>
-            <div style="border-top:1px solid var(--color-border); margin-top:var(--space-1);"></div>
-            <a href="#" id="sign-out-btn" onclick="handleSignOut(event); return false;" style="display:block; padding:var(--space-3) var(--space-4); font-size:var(--text-sm); color:#DC2626; text-decoration:none;">Sign out</a>
+            <a href="buy-credits.html" style="display:flex;align-items:center;gap:8px;padding:var(--space-3) var(--space-4);font-size:var(--text-sm);color:var(--color-text);text-decoration:none;" onmouseover="this.style.background='var(--color-surface-alt)'" onmouseout="this.style.background=''">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Buy credits
+            </a>
+            <a href="auth.html" id="switch-account-btn" onclick="handleSwitchAccount(event)" style="display:flex;align-items:center;gap:8px;padding:var(--space-3) var(--space-4);font-size:var(--text-sm);color:var(--color-text);text-decoration:none;" onmouseover="this.style.background='var(--color-surface-alt)'" onmouseout="this.style.background=''">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 16l4-4-4-4M7 8l-4 4 4 4"/></svg>Switch account
+            </a>
+            <div style="border-top:1px solid var(--color-border);margin:var(--space-1) 0;"></div>
+            <a href="#" id="sign-out-btn" onclick="handleSignOut(event);return false;" style="display:flex;align-items:center;gap:8px;padding:var(--space-3) var(--space-4);font-size:var(--text-sm);color:#DC2626;text-decoration:none;" onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background=''">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign out
+            </a>
           </div>
         </div>
       </div>
@@ -255,7 +262,7 @@
         <p class="stat-card-meta">Lifetime count</p>
       </div>
       <div class="stat-card">
-        <p class="stat-card-label">Public verifications</p>
+        <p class="stat-card-label">Public stamps</p>
         <p class="stat-card-value" id="stat-verifications">—</p>
         <p class="stat-card-meta">Across all your stamps</p>
       </div>
@@ -350,22 +357,23 @@
         avatarEl.textContent = (seed.slice(0, 2) || '··').toUpperCase();
       }
 
-      // Populate account menu identity
+      // Populate account menu identity — truncated for wallet, email for others
       const menuIdentity = document.getElementById('account-menu-identity');
+      const menuCredits  = document.getElementById('account-menu-credits');
       if (menuIdentity) {
-        menuIdentity.textContent = isWallet
-          ? (profile.wallet_address ?? profile.display_name ?? 'Wallet user')
+        menuIdentity.textContent = isWallet && profile.wallet_address
+          ? profile.wallet_address.slice(0,6) + '…' + profile.wallet_address.slice(-4)
           : (user.email ?? profile.display_name ?? 'User');
-        // Show full wallet address in menu, truncated in avatar
-        if (isWallet && profile.wallet_address) {
-          menuIdentity.style.fontSize = 'var(--text-xs)';
-        }
+      }
+      if (menuCredits) {
+        menuCredits.textContent = `${profile.credits_balance ?? 0} credits remaining`;
       }
 
       // Show/hide disconnect wallet option
       const switchBtn = document.getElementById('switch-account-btn');
       if (switchBtn && isWallet) {
-        switchBtn.textContent = 'Switch account / wallet';
+        switchBtn.querySelector('svg + text') ?? null; // no-op — text set in HTML
+        switchBtn.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = 'Switch account / wallet'; });
       }
 
       // Update credit balance
@@ -384,7 +392,14 @@
 
         if (stats) {
           document.getElementById('stat-total-stamps').textContent = stats.total_stamps || 0;
-          document.getElementById('stat-verifications').textContent = stats.total_verifications || 0;
+          // Count public stamps separately (verification_count not yet wired up)
+          const { count: publicCount } = await window.tsDB
+            .from('stamps')
+            .select('*', { count: 'exact', head: true })
+            .eq('creator_profile_id', user.id)
+            .eq('visibility', 'public')
+            .eq('status', 'confirmed');
+          document.getElementById('stat-verifications').textContent = publicCount ?? 0;
           document.getElementById('stat-sealed-pending').textContent = stats.sealed_pending_reveal || 0;
         } else {
           document.getElementById('stat-total-stamps').textContent = '0';
@@ -483,7 +498,7 @@
         document.getElementById('load-more-btn').onclick = (e) => {
           e.preventDefault();
           loadStamps(
-            document.getElementById('user-avatar').__userId,
+            window._dashUserId,
             currentFilter,
             currentOffset + PAGE_SIZE
           );
@@ -531,10 +546,16 @@
       // Badge
       let badge = '';
       if (stamp.visibility === 'sealed' && !stamp.revealed) {
-        const revealDate = stamp.sealed_until
-          ? formatDate(new Date(stamp.sealed_until))
-          : '?';
-        badge = `<span class="badge badge-accent">Sealed · reveals ${revealDate}</span>`;
+        const sealedUntil = stamp.sealed_until ? new Date(stamp.sealed_until) : null;
+        const isOverdue   = sealedUntil && sealedUntil <= new Date();
+        const revealLabel = sealedUntil ? formatRevealDate(sealedUntil) : '?';
+        if (isOverdue) {
+          badge = `<span class="badge badge-accent" style="background:#FEF3C7;color:#92400E;">⚡ Reveal pending</span>`;
+        } else {
+          badge = `<span class="badge badge-accent">🔒 Reveals ${revealLabel}</span>`;
+        }
+      } else if (stamp.visibility === 'sealed' && stamp.revealed) {
+        badge = `<span class="badge badge-success"><span class="badge-dot"></span> Revealed</span>`;
       } else {
         badge = `<span class="badge badge-success"><span class="badge-dot"></span> Verified</span>`;
       }
@@ -568,12 +589,28 @@
     }
 
     function formatDate(d) {
-      const now = new Date();
-      const diffDays = Math.floor((now - d) / 86400000);
-      if (diffDays === 0) return 'Today';
-      if (diffDays === 1) return 'Yesterday';
-      if (diffDays < 7) return `${diffDays}d ago`;
-      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const now     = new Date();
+      const diffMs  = now - d;
+      const diffDays = Math.floor(diffMs / 86400000);
+      if (diffDays === 0)  return 'Today';
+      if (diffDays === 1)  return 'Yesterday';
+      if (diffDays > 1 && diffDays < 7) return `${diffDays}d ago`;
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+    }
+
+    // Format a future date for seal reveal (e.g. "in 2 days", "May 21 at 10:00 UTC")
+    function formatRevealDate(d) {
+      const now      = new Date();
+      const diffMs   = d - now;  // positive = future
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHrs  = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+      if (diffMs < 0)       return 'overdue'; // past but not revealed
+      if (diffMins < 60)    return `in ${diffMins}m`;
+      if (diffHrs < 24)     return `in ${diffHrs}h`;
+      if (diffDays === 1)   return 'tomorrow';
+      if (diffDays < 7)     return `in ${diffDays} days`;
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }) + ' UTC';
     }
 
     function escapeHtml(str) {
