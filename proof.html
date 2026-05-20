@@ -619,7 +619,7 @@
           try {
             const supabaseUrl  = window.TRUTHSTAMP_CONFIG?.SUPABASE_URL;
             const supabaseAnon = window.TRUTHSTAMP_CONFIG?.SUPABASE_ANON_KEY;
-            console.log('[TruthStamp] Calling decrypt-sealed for proof #', stamp.proof_id);
+            alert('DEBUG: Calling decrypt-sealed for proof #' + stamp.proof_id + '\nURL: ' + supabaseUrl);
             const resp = await fetch(`${supabaseUrl}/functions/v1/decrypt-sealed`, {
               method:  'POST',
               headers: {
@@ -630,14 +630,14 @@
               body: JSON.stringify({ proof_id: stamp.proof_id }),
             });
             const result = await resp.json();
-            console.log('[TruthStamp] decrypt-sealed response:', result);
+            alert('DEBUG: decrypt-sealed response:\nStatus: ' + resp.status + '\n' + JSON.stringify(result, null, 2));
             if (result.success && result.content) {
               text = result.content;
             } else {
-              console.warn('[TruthStamp] decrypt-sealed failed:', result.error);
+              alert('DEBUG: decrypt-sealed failed: ' + result.error);
             }
           } catch(e) {
-            console.warn('[TruthStamp] Server decrypt failed:', e);
+            alert('DEBUG: fetch error: ' + e.message);
           }
         }
 
