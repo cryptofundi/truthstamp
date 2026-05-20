@@ -617,15 +617,24 @@
         // If still no text (non-owner, content not yet cached) — ask server to decrypt
         if (!text) {
           try {
-            const supabaseUrl = window.TRUTHSTAMP_CONFIG?.SUPABASE_URL;
+            const supabaseUrl  = window.TRUTHSTAMP_CONFIG?.SUPABASE_URL;
+            const supabaseAnon = window.TRUTHSTAMP_CONFIG?.SUPABASE_ANON_KEY;
+            console.log('[TruthStamp] Calling decrypt-sealed for proof #', stamp.proof_id);
             const resp = await fetch(`${supabaseUrl}/functions/v1/decrypt-sealed`, {
               method:  'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body:    JSON.stringify({ proof_id: stamp.proof_id }),
+              headers: {
+                'Content-Type':  'application/json',
+                'apikey':        supabaseAnon ?? '',
+                'Authorization': `Bearer ${supabaseAnon ?? ''}`,
+              },
+              body: JSON.stringify({ proof_id: stamp.proof_id }),
             });
             const result = await resp.json();
+            console.log('[TruthStamp] decrypt-sealed response:', result);
             if (result.success && result.content) {
               text = result.content;
+            } else {
+              console.warn('[TruthStamp] decrypt-sealed failed:', result.error);
             }
           } catch(e) {
             console.warn('[TruthStamp] Server decrypt failed:', e);
@@ -649,16 +658,15 @@
         } else if (text) {
           contentText.textContent = text;
         } else if (!isOwner) {
-          // Non-owner, seal date passed, content not yet auto-cached
-          // Owner hasn't visited since seal date — content not decrypted to DB yet
+          // Non-owner, seal date passed, server decrypt also failed
           contentBlock.innerHTML = `
             <div class="proof-content-hash-only">
               <div style="font-size: 2rem; margin-bottom: 8px;">🔓</div>
               <p style="margin: 0; color: var(--color-text-secondary); line-height: 1.6;">
                 Seal date has passed.<br>
                 <span style="font-size:var(--text-xs); color:var(--color-text-muted);">
-                  Content will appear here once the owner visits this page,
-                  or after they click Reveal on-chain.
+                  Content will be permanently visible after the owner clicks
+                  <strong>Reveal on-chain</strong>.
                 </span>
               </p>
             </div>`;
