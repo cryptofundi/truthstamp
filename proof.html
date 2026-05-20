@@ -18,6 +18,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/supabase-client.js"></script>
+  <script src="js/nav.js"></script>
 
   <style>
     .proof-shell { max-width: 680px; margin: 0 auto; padding: var(--space-8) var(--space-5); }
@@ -234,10 +235,23 @@
 
       <!-- URL bar -->
       <div class="url-bar">
+        <a href="javascript:history.back()" style="display:inline-flex; align-items:center; gap:4px; font-size:var(--text-xs); color:var(--color-text-muted); text-decoration:none; flex-shrink:0;"
+           onmouseover="this.style.color='var(--brand-primary)'" onmouseout="this.style.color='var(--color-text-muted)'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </a>
         <span class="url-text" id="proof-url">truthstamp.io/proof.html?id=...</span>
-        <div class="verify-seal">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-          Verified on MegaETH
+        <div style="display:flex; align-items:center; gap:var(--space-2); flex-shrink:0; flex-wrap:wrap; justify-content:flex-end;">
+          <div class="verify-seal">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            Verified on MegaETH
+          </div>
+          <a id="explorer-link-top" href="#" target="_blank" rel="noopener"
+             style="display:none; align-items:center; gap:4px; font-size:var(--text-xs); color:var(--color-text-muted); text-decoration:none;"
+             onmouseover="this.style.color='var(--brand-primary)'" onmouseout="this.style.color='var(--color-text-muted)'">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            View tx ↗
+          </a>
         </div>
       </div>
 
@@ -323,6 +337,12 @@
           <button class="btn btn-secondary" onclick="shareWhatsApp()">WhatsApp</button>
           <button class="btn btn-secondary" onclick="downloadCertificate()">⬇ Certificate</button>
           <a id="explorer-link" href="#" target="_blank" class="btn btn-ghost">View on explorer →</a>
+        </div>
+        <!-- Create your own CTA -->
+        <div style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border); text-align: center;">
+          <a href="stamp.html" style="font-size: var(--text-sm); color: var(--brand-primary); text-decoration: none; font-weight: 500;">
+            Create your own permanent proof →
+          </a>
         </div>
       </article>
 
@@ -826,9 +846,14 @@
       const explorerBase = cfg?.CONTRACT_EXPLORER ?? 'https://megaeth-testnet-v2.blockscout.com';
       document.getElementById('tech-tx').innerHTML =
         `<a href="${explorerBase}/tx/${stamp.tx_hash}" target="_blank" rel="noopener">${stamp.tx_hash}</a>`;
-
       const explorerLink = document.getElementById('explorer-link');
       explorerLink.href = `${explorerBase}/tx/${stamp.tx_hash}`;
+      // Populate top "View tx" link beside verified badge
+      const topLink = document.getElementById('explorer-link-top');
+      if (topLink) {
+        topLink.href = `${explorerBase}/tx/${stamp.tx_hash}`;
+        topLink.style.display = 'inline-flex';
+      }
     }
 
     if (stamp.storage_uri) {
