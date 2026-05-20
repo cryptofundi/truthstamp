@@ -469,12 +469,58 @@
 
     // ── Fetch StampCreated event log to get Arweave URI ──────────────────────
     // StampCreated topic0 = 0x42238752c6462d1388ed694ac7c03dd761a5e3c9b1b95c4ac0b827d5e53b7624
-    // Indexed: topic[1]=proofId, topic[2]=creator, topic[3]=contentHash
+    // StampRevealed topic0 = 0x0cefc025664943c9b65dbaf4f2261fc28d8fcf66a08e968f185bebe12697aaae
+    // Indexed: StampCreated: topic[1]=proofId, topic[2]=creator, topic[3]=contentHash
+    // Indexed: StampRevealed: topic[1]=proofId, topic[2]=revealer
     async function fetchEventArweaveUri(proofId, contentHash) {
       try {
-        // Filter by event sig + proofId only (proofId is unique, no need for contentHash)
         const proofIdPadded = BigInt(proofId).toString(16).padStart(64, '0');
 
+        // First try StampRevealed — has the actual storageUri for sealed stamps
+        const revealedRes = await fetch(RPC, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0', id: 11, method: 'eth_getLogs',
+            params: [{
+              fromBlock: '0x1',
+              toBlock:   'latest',
+              address:   CONTRACT,
+              topics: [
+                '0x0cefc025664943c9b65dbaf4f2261fc28d8fcf66a08e968f185bebe12697aaae',
+                '0x' + proofIdPadded
+              ]
+            }]
+          })
+        });
+        const revealedRpc  = await revealedRes.json();
+        const revealedLogs = revealedRpc.result ?? [];
+        console.log('[verify] StampRevealed logs:', revealedLogs.length);
+
+        if (revealedLogs.length) {
+          // StampRevealed data: (string storageUri) — single dynamic string
+          const data = revealedLogs[0].data.replace('0x','');
+          // data layout: offset(32) + length(32) + string bytes
+          function hexToStr(hex) {
+            return decodeURIComponent(hex.replace(/../g, '%$&'));
+          }
+          const offset  = parseInt(data.slice(0, 64), 16);
+          const length  = parseInt(data.slice(offset*2, offset*2 + 64), 16);
+          const strHex  = data.slice(offset*2 + 64, offset*2 + 64 + length*2);
+          const storageUri = strHex ? hexToStr(strHex) : '';
+          console.log('[verify] StampRevealed storageUri:', storageUri);
+          if (storageUri) {
+            return {
+              storageUri,
+              shortText:  '',
+              createdAt:  0,
+              txHash:     revealedLogs[0].transactionHash,
+              isRevealed: true,
+            };
+          }
+        }
+
+        // Fallback: StampCreated event (for public stamps with storageUri at creation)
         const res = await fetch(RPC, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -486,14 +532,13 @@
               address:   CONTRACT,
               topics: [
                 '0x42238752c6462d1388ed694ac7c03dd761a5e3c9b1b95c4ac0b827d5e53b7624',
-                '0x' + proofIdPadded  // topic[1] = proofId (indexed)
-                // no other topic filters — simpler and more compatible
+                '0x' + proofIdPadded
               ]
             }]
           })
         });
         const rpc  = await res.json();
-        console.log('[verify] eth_getLogs result:', rpc);
+        console.log('[verify] StampCreated logs result:', rpc.result?.length);
 
         const logs = rpc.result ?? [];
         if (!logs.length) {
@@ -587,15 +632,16 @@
       if (!enrichEl) return;
 
       if (event?.storageUri) {
-        const txHash   = event.txHash ?? dbStamp?.tx_hash ?? '';
+        const txHash      = event.txHash ?? dbStamp?.tx_hash ?? '';
         const arweaveTxId = event.storageUri.replace('ar://','');
+        const revealLabel = event.isRevealed ? 'View revealed content on Arweave ↗' : 'View TSP-1 payload on Arweave ↗';
         enrichEl.innerHTML =
           '<div class="result-row" style="margin-top:0;">' +
-            '<span class="result-key">Arweave proof</span>' +
+            '<span class="result-key">Arweave ' + (event.isRevealed ? '(revealed)' : 'proof') + '</span>' +
             '<span class="result-val">' +
               '<a href="https://arweave.net/' + arweaveTxId + '" target="_blank" rel="noopener" ' +
                  'style="color:var(--brand-primary); font-size:var(--text-xs);">' +
-                'View TSP-1 payload on Arweave ↗' +
+                revealLabel +
               '</a>' +
             '</span>' +
           '</div>' +
