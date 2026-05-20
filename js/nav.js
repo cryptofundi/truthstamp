@@ -22,8 +22,7 @@
       cursor: pointer;
       padding: 0;
       flex-shrink: 0;
-    }
-    .ts-hamburger span {
+    }    .ts-hamburger span {
       display: block;
       width: 18px; height: 2px;
       background: var(--color-text);
@@ -156,10 +155,15 @@
     /* Only show hamburger on mobile */
     @media (max-width: 768px) {
       .ts-hamburger { display: flex; }
-      .nav-links { display: none !important; }
+      /* Hide text nav links but keep account wrap visible */
+      .nav-links > a { display: none !important; }
+      .nav-links > span { display: none !important; }
+      .nav-links > .btn { display: none !important; }
+      /* Keep ts-account-wrap hidden on mobile — hamburger handles it */
+      #ts-account-wrap { display: none !important; }
     }
     @media (min-width: 769px) {
-      .ts-drawer { display: none; }
+      .ts-drawer { display: none !important; }
       .ts-drawer-overlay { display: none !important; }
     }
   `;
@@ -280,13 +284,71 @@
       if (e.key === 'Escape') closeDrawer();
     });
 
-    // ── Load user data ──────────────────────────────────────────────────
+  // ── Desktop account dropdown ──────────────────────────────────────────
+  // Inject into nav-links on pages that don't have their own (non-dashboard pages)
+  const navLinks = document.querySelector('.nav-links');
+  const hasDashboardMenu = !!document.getElementById('user-avatar');
+
+  if (navLinks && !hasDashboardMenu && !document.getElementById('ts-account-menu')) {
+    const accountWrap = document.createElement('div');
+    accountWrap.id    = 'ts-account-wrap';
+    accountWrap.style.cssText = 'position:relative; display:inline-block;';
+    accountWrap.innerHTML = `
+      <button id="ts-avatar-btn"
+        style="width:30px;height:30px;border-radius:50%;background:var(--brand-accent-light);color:var(--brand-accent);border:1px solid var(--color-border);cursor:pointer;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">··</button>
+      <div id="ts-account-menu" style="display:none;position:absolute;right:0;top:38px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);box-shadow:0 4px 16px rgba(0,0,0,0.12);min-width:210px;z-index:200;padding:var(--space-2) 0;">
+        <div style="padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--color-border);">
+          <p style="font-size:var(--text-xs);color:var(--color-text-muted);margin:0 0 2px;">Signed in as</p>
+          <p id="ts-menu-identity" style="font-size:var(--text-sm);font-weight:600;margin:0;word-break:break-all;">—</p>
+          <p id="ts-menu-credits" style="font-size:var(--text-xs);color:var(--brand-primary);margin:2px 0 0;font-weight:500;">— credits remaining</p>
+        </div>
+        <a href="buy-credits.html" style="display:flex;align-items:center;gap:8px;padding:var(--space-3) var(--space-4);font-size:var(--text-sm);color:var(--color-text);text-decoration:none;" onmouseover="this.style.background='var(--color-surface-alt)'" onmouseout="this.style.background=''">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Buy credits
+        </a>
+        <a href="dashboard.html" style="display:flex;align-items:center;gap:8px;padding:var(--space-3) var(--space-4);font-size:var(--text-sm);color:var(--color-text);text-decoration:none;" onmouseover="this.style.background='var(--color-surface-alt)'" onmouseout="this.style.background=''">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard
+        </a>
+        <a id="ts-switch-btn" href="auth.html" style="display:flex;align-items:center;gap:8px;padding:var(--space-3) var(--space-4);font-size:var(--text-sm);color:var(--color-text);text-decoration:none;" onmouseover="this.style.background='var(--color-surface-alt)'" onmouseout="this.style.background=''">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 16l4-4-4-4M7 8l-4 4 4 4"/></svg>Switch account
+        </a>
+        <div style="border-top:1px solid var(--color-border);margin:var(--space-1) 0;"></div>
+        <a id="ts-signout-btn" href="#" style="display:flex;align-items:center;gap:8px;padding:var(--space-3) var(--space-4);font-size:var(--text-sm);color:#DC2626;text-decoration:none;" onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background=''">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign out
+        </a>
+      </div>`;
+
+    navLinks.appendChild(accountWrap);
+
+    // Toggle dropdown
+    document.getElementById('ts-avatar-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const menu = document.getElementById('ts-account-menu');
+      menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    });
+    document.addEventListener('click', () => {
+      const menu = document.getElementById('ts-account-menu');
+      if (menu) menu.style.display = 'none';
+    });
+
+    // Sign out
+    document.getElementById('ts-signout-btn').addEventListener('click', async (e) => {
+      e.preventDefault();
+      try { if (window.tsDB) await window.tsDB.auth.signOut(); } catch {}
+      window.location.href = 'auth.html';
+    });
+
+    // Switch account
+    document.getElementById('ts-switch-btn').addEventListener('click', async (e) => {
+      e.preventDefault();
+      try { if (window.tsDB) await window.tsDB.auth.signOut(); } catch {}
+      window.location.href = 'auth.html';
+    });
+  }
     async function loadUserData() {
       try {
         if (!window.tsDB) return;
         const { data: { user } } = await window.tsDB.auth.getUser();
         if (!user) {
-          // Not logged in — show sign in link
           document.getElementById('ts-drawer-user').innerHTML = `
             <div class="ts-drawer-avatar">?</div>
             <div class="ts-drawer-user-info">
@@ -297,7 +359,6 @@
           return;
         }
 
-        // Get profile
         const { data: profile } = await window.tsDB
           .from('profiles')
           .select('display_name, credits_balance, wallet_address, auth_method')
@@ -307,16 +368,26 @@
         const name     = profile?.display_name || user.email || user.id.slice(0,8) + '…';
         const credits  = profile?.credits_balance ?? 0;
         const initials = name.replace(/[^A-Za-z]/g,'').slice(0,2).toUpperCase() || '??';
+        const identity = (profile?.auth_method === 'wallet' && profile?.wallet_address)
+          ? profile.wallet_address.slice(0,6) + '…' + profile.wallet_address.slice(-4)
+          : user.email ?? name;
 
-        document.getElementById('ts-drawer-avatar').textContent      = initials;
-        document.getElementById('ts-drawer-name').textContent        = name;
+        // Mobile drawer
+        document.getElementById('ts-drawer-avatar').textContent       = initials;
+        document.getElementById('ts-drawer-name').textContent         = name;
         document.getElementById('ts-drawer-credit-count').textContent = credits;
-
-        // Wallet badge
         if (profile?.auth_method === 'wallet' && profile?.wallet_address) {
           document.getElementById('ts-drawer-credits').innerHTML =
-            `<span>${credits}</span> credits · ${profile.wallet_address.slice(0,6)}…${profile.wallet_address.slice(-4)}`;
+            `<span>${credits}</span> credits · ${identity}`;
         }
+
+        // Desktop dropdown (injected by nav.js — not present on dashboard which has its own)
+        const avatarBtn  = document.getElementById('ts-avatar-btn');
+        const menuIdent  = document.getElementById('ts-menu-identity');
+        const menuCredit = document.getElementById('ts-menu-credits');
+        if (avatarBtn)  avatarBtn.textContent  = initials;
+        if (menuIdent)  menuIdent.textContent  = identity;
+        if (menuCredit) menuCredit.textContent = `${credits} credits remaining`;
 
       } catch(e) {
         console.warn('[TruthStamp nav] Could not load user data:', e);
