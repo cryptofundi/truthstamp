@@ -344,17 +344,21 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
   }
   .mob-tab.active{background:var(--brand);border-color:var(--brand);color:#fff}
 
-  /* Feed header sticky offset = nav + tabs only (today-bar is a card, not sticky) */
+  /* Feed header sticky offset = nav(56) + tabs(12+12+36+1border = 61px) */
   .feed-header{
-    top:calc(var(--nav-h) + 49px);
+    top:calc(var(--nav-h) + 61px);
     padding:14px var(--page-pad) 10px;
     background:rgba(248,248,245,0.97);
   }
   .feed-title{font-size:15px}
 
-  /* Filter chips: fade right */
+  /* Filter chips: sticky just below feed-header, fade right */
   .filter-bar{
     padding:8px var(--page-pad);gap:6px;
+    position:sticky;
+    top:calc(var(--nav-h) + 61px + 44px);
+    z-index:45;
+    background:var(--surface);
     -webkit-mask-image:linear-gradient(to right,black 88%,transparent);
     mask-image:linear-gradient(to right,black 88%,transparent);
   }
@@ -363,7 +367,7 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
   .feed-intro{padding:8px var(--page-pad) 0;font-size:12.5px;color:var(--text-muted);line-height:1.5}
 
   /* Cards: margin only, NO width property */
-  .stamp-list{padding:10px 0;overflow:visible;min-width:0;width:100%}
+  .stamp-list{padding:10px 0 10px;overflow:visible;min-width:0;width:100%;scroll-margin-top:8px}
   .stamp-card{
     margin:0 var(--page-pad) 10px;
     border-radius:var(--card-radius);
