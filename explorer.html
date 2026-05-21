@@ -344,21 +344,18 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
   }
   .mob-tab.active{background:var(--brand);border-color:var(--brand);color:#fff}
 
-  /* Feed header sticky offset = nav(56) + tabs(12+12+36+1border = 61px) */
+  /* Feed header: NOT sticky on mobile — scrolls naturally with content */
   .feed-header{
-    top:calc(var(--nav-h) + 61px);
+    position:static;
     padding:14px var(--page-pad) 10px;
-    background:rgba(248,248,245,0.97);
+    background:var(--bg);
   }
   .feed-title{font-size:15px}
 
-  /* Filter chips: sticky just below feed-header, fade right */
+  /* Filter chips: NOT sticky on mobile — scrolls naturally, fade right */
   .filter-bar{
+    position:static;
     padding:8px var(--page-pad);gap:6px;
-    position:sticky;
-    top:calc(var(--nav-h) + 61px + 44px);
-    z-index:45;
-    background:var(--surface);
     -webkit-mask-image:linear-gradient(to right,black 88%,transparent);
     mask-image:linear-gradient(to right,black 88%,transparent);
   }
