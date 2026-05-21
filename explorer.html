@@ -219,7 +219,7 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
   .nav-links,.nav-search,.btn-ghost,.btn-primary{display:none}
   .hamburger,.mob-search-btn{display:flex}
   .today-bar{padding:12px 16px;gap:0;flex-direction:column;align-items:flex-start}
-  .today-stats{display:grid!important;grid-template-columns:1fr 1fr 1fr 1fr;gap:0;width:100%;margin-top:8px}
+  .today-stats{display:grid!important;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin-top:8px}
   .today-stat{display:flex;flex-direction:column;align-items:flex-start;padding:0;position:static}
   .today-stat+.today-stat::before{display:none}
   .today-stat-num{font-size:20px;font-weight:700}
@@ -232,9 +232,9 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
   .mob-nav-icon{width:22px;height:22px;display:block}
   .mob-nav-item.stamp-cta .mob-nav-icon{background:var(--brand);color:#fff;border-radius:14px;width:44px;height:44px;display:grid;place-items:center;margin-top:-16px;box-shadow:0 4px 14px rgba(40,84,232,0.4);padding:10px}
   .mob-nav-item.stamp-cta{color:var(--text);font-weight:600;font-size:10.5px}
-  .mobile-tabs{display:flex;overflow-x:auto;scrollbar-width:none;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:var(--nav-h);z-index:40}
+  .mobile-tabs{display:flex;overflow-x:auto;scrollbar-width:none;gap:6px;padding:10px 12px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:var(--nav-h);z-index:40;-webkit-overflow-scrolling:touch}
   .mobile-tabs::-webkit-scrollbar{display:none}
-  .mob-tab{flex-shrink:0;padding:7px 20px;border-radius:24px;font-size:13.5px;font-weight:500;cursor:pointer;background:var(--surface-alt);color:var(--text-sec);border:1.5px solid var(--border-md);transition:all .15s}
+  .mob-tab{flex-shrink:0;padding:6px 14px;border-radius:24px;font-size:13px;font-weight:500;cursor:pointer;background:var(--surface-alt);color:var(--text-sec);border:1.5px solid var(--border-md);transition:all .15s;white-space:nowrap}
   .mob-tab.active{background:var(--brand);border-color:var(--brand);color:#fff}
   .feed-header{top:calc(var(--nav-h) + 52px);padding:14px 16px 12px}
   .stamp-card{margin:0 12px 10px}
@@ -276,17 +276,17 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
 
 <div class="today-bar">
   <div class="today-label">
-    📡 Today in TruthStamp
+    📡 TruthStamp Protocol
     <div class="live-chip">LIVE</div>
   </div>
   <div class="today-stats">
     <div class="today-stat">
       <span class="today-stat-num" id="st-total">—</span>
-      <span class="today-stat-label">Stamps created</span>
+      <span class="today-stat-label">Total stamps</span>
     </div>
     <div class="today-stat">
       <span class="today-stat-num" id="st-reveals">—</span>
-      <span class="today-stat-label">Reveals unlocked</span>
+      <span class="today-stat-label">Revealed</span>
     </div>
     <div class="today-stat">
       <span class="today-stat-num" id="st-seals">—</span>
@@ -294,7 +294,7 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
     </div>
     <div class="today-stat">
       <span class="today-stat-num" id="st-creators">—</span>
-      <span class="today-stat-label">Creators active</span>
+      <span class="today-stat-label">Creators</span>
     </div>
   </div>
 </div>
@@ -678,7 +678,7 @@ async function loadStamps(reset = true) {
       .from('stamps_with_creator')
       .select('proof_id, content_type, visibility, display_title, text_content, file_name, file_size_bytes, tags, block_timestamp, status, storage_uri, sealed_until, revealed, content_hash, tx_hash, creator_identity, creator_address')
       .eq('status', 'confirmed')
-      .neq('visibility', 'none')
+      .in('visibility', ['public','sealed','hash_only'])
       .eq('is_hidden', false)
       .eq('contract_address', CONTRACT);
 
@@ -729,14 +729,17 @@ function renderFeed() {
     });
   }
 
-  // Apply search
+  // Apply search filter
   const q = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
   if (q) {
     filtered = filtered.filter(s =>
-      (s.text_content||'').toLowerCase().includes(q) ||
-      (s.display_title||'').toLowerCase().includes(q) ||
-      (s.creator_identity||'').toLowerCase().includes(q) ||
-      String(s.proof_id).includes(q)
+      (s.text_content    || '').toLowerCase().includes(q) ||
+      (s.display_title   || '').toLowerCase().includes(q) ||
+      (s.file_name       || '').toLowerCase().includes(q) ||
+      (s.creator_identity|| '').toLowerCase().includes(q) ||
+      (s.creator_address || '').toLowerCase().includes(q) ||
+      String(s.proof_id || '').includes(q) ||
+      getCategories(s.tags).some(c => c.toLowerCase().includes(q))
     );
   }
 
@@ -762,36 +765,35 @@ async function loadMore() {
 // ── Load today stats ──────────────────────────────────────────────────────
 async function loadTodayStats() {
   try {
-    const todayStart = new Date();
-    todayStart.setUTCHours(0,0,0,0);
-
     const [{ count: total }, { count: reveals }, { count: sealed }, { data: creatorsData }] = await Promise.all([
+      // All-time total confirmed stamps
       window.tsDB.from('stamps').select('*',{count:'exact',head:true})
-        .eq('status','confirmed').eq('contract_address',CONTRACT)
-        .gte('block_timestamp', todayStart.toISOString()),
+        .eq('status','confirmed').eq('contract_address',CONTRACT),
+      // Revealed sealed stamps
       window.tsDB.from('stamps').select('*',{count:'exact',head:true})
         .eq('visibility','sealed').eq('revealed',true)
-        .eq('contract_address',CONTRACT)
-        .gte('updated_at', todayStart.toISOString()),
+        .eq('contract_address',CONTRACT),
+      // Pending sealed stamps (seals still ticking)
       window.tsDB.from('stamps').select('*',{count:'exact',head:true})
         .eq('visibility','sealed').eq('revealed',false)
         .eq('contract_address',CONTRACT),
+      // Unique creators
       window.tsDB.from('stamps').select('creator_identity')
-        .eq('status','confirmed').eq('contract_address',CONTRACT)
-        .gte('block_timestamp', todayStart.toISOString()),
+        .eq('status','confirmed').eq('contract_address',CONTRACT),
     ]);
 
-    const uniqueCreators = new Set((creatorsData||[]).map(r => r.creator_identity)).size;
+    const uniqueCreators = new Set((creatorsData||[]).map(r => r.creator_identity).filter(Boolean)).size;
 
-    animateCount('st-total',   total    ?? 0);
-    animateCount('st-reveals', reveals  ?? 0);
-    animateCount('st-seals',   sealed   ?? 0);
-    animateCount('st-creators',uniqueCreators);
+    animateCount('st-total',    total          ?? 0);
+    animateCount('st-reveals',  reveals        ?? 0);
+    animateCount('st-seals',    sealed         ?? 0);
+    animateCount('st-creators', uniqueCreators);
 
-    // Update sidebar counts
-    el('cnt-total')?.textContent   !== undefined && (el('cnt-total').textContent   = total   ?? 0);
-    el('cnt-reveals')?.textContent !== undefined && (el('cnt-reveals').textContent = reveals ?? 0);
-    el('cnt-sealed')?.textContent  !== undefined && (el('cnt-sealed').textContent  = sealed  ?? 0);
+    // Sidebar counts
+    const setEl = (id,v) => { const e=el(id); if(e) e.textContent=v; };
+    setEl('cnt-total',   total   ?? 0);
+    setEl('cnt-reveals', reveals ?? 0);
+    setEl('cnt-sealed',  sealed  ?? 0);
 
   } catch(e) { console.warn('[Explorer] stats error:', e); }
 }
@@ -1011,12 +1013,35 @@ function resetOpts() { document.querySelectorAll('.drawer-check').forEach(c => c
 function applyDrawerFilters() { closeFilterDrawer(); renderFeed(); }
 
 // ── Init ──────────────────────────────────────────────────────────────────
+function waitForDB(cb, tries = 0) {
+  // If tsDB already set by supabase-client.js — use it
+  if (window.tsDB) { cb(); return; }
+  // If supabase lib loaded but tsDB not set — init directly
+  if (window.supabase && cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY) {
+    window.tsDB = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+    console.log('[Explorer] Initialised tsDB directly');
+    cb();
+    return;
+  }
+  if (tries > 30) {
+    console.error('[Explorer] Could not initialise Supabase client');
+    document.getElementById('stampList').innerHTML =
+      '<div class="feed-empty"><div class="feed-empty-icon">⚠️</div>' +
+      '<h3>Connection failed</h3>' +
+      '<p style="font-size:13px;color:var(--text-muted)">Could not connect to TruthStamp database. Please refresh the page.</p></div>';
+    return;
+  }
+  setTimeout(() => waitForDB(cb, tries + 1), 150);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-  loadStamps();
-  loadTodayStats();
-  loadRevealCalendar();
-  loadTopCreators();
-  loadSidebarCounts();
+  waitForDB(() => {
+    loadStamps();
+    loadTodayStats();
+    loadRevealCalendar();
+    loadTopCreators();
+    loadSidebarCounts();
+  });
 });
 </script>
 </body>
