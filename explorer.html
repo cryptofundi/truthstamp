@@ -623,8 +623,8 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
   </div>
 </div>
 
-<script src="js/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/nav.js"></script>
 <script>
@@ -1163,36 +1163,51 @@ function resetOpts() { document.querySelectorAll('.drawer-check').forEach(c => c
 function applyDrawerFilters() { closeFilterDrawer(); renderFeed(); }
 
 // ── Init ──────────────────────────────────────────────────────────────────
-function waitForDB(cb, tries = 0) {
-  // If tsDB already set by supabase-client.js — use it
-  if (window.tsDB) { cb(); return; }
-  // If supabase lib loaded but tsDB not set — init directly
-  if (window.supabase && cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY) {
-    window.tsDB = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-    console.log('[Explorer] Initialised tsDB directly');
-    cb();
-    return;
+function initExplorer() {
+  loadStamps();
+  loadTodayStats();
+  loadRevealCalendar();
+  loadTopCreators();
+  loadSidebarCounts();
+}
+
+function waitForDB(tries) {
+  tries = tries || 0;
+
+  // Already set by supabase-client.js — best case
+  if (window.tsDB) { initExplorer(); return; }
+
+  // supabase lib loaded — create client directly
+  if (window.supabase && window.TRUTHSTAMP_CONFIG &&
+      window.TRUTHSTAMP_CONFIG.SUPABASE_URL &&
+      window.TRUTHSTAMP_CONFIG.SUPABASE_ANON_KEY) {
+    try {
+      window.tsDB = window.supabase.createClient(
+        window.TRUTHSTAMP_CONFIG.SUPABASE_URL,
+        window.TRUTHSTAMP_CONFIG.SUPABASE_ANON_KEY
+      );
+      console.log('[Explorer] tsDB created directly');
+      initExplorer();
+      return;
+    } catch(e) {
+      console.warn('[Explorer] direct init failed:', e.message);
+    }
   }
-  if (tries > 30) {
-    console.error('[Explorer] Could not initialise Supabase client');
+
+  // Still waiting — retry up to 5 seconds
+  if (tries > 50) {
     document.getElementById('stampList').innerHTML =
       '<div class="feed-empty"><div class="feed-empty-icon">⚠️</div>' +
       '<h3>Connection failed</h3>' +
-      '<p style="font-size:13px;color:var(--text-muted)">Could not connect to TruthStamp database. Please refresh the page.</p></div>';
+      '<p style="font-size:13px;color:var(--text-muted)">' +
+      'Could not connect to database. Please check your connection and ' +
+      '<a href="" style="color:var(--brand)">refresh</a>.</p></div>';
     return;
   }
-  setTimeout(() => waitForDB(cb, tries + 1), 150);
+  setTimeout(() => waitForDB(tries + 1), 100);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  waitForDB(() => {
-    loadStamps();
-    loadTodayStats();
-    loadRevealCalendar();
-    loadTopCreators();
-    loadSidebarCounts();
-  });
-});
+document.addEventListener('DOMContentLoaded', () => waitForDB(0));
 </script>
 </body>
 </html>
