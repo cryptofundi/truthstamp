@@ -502,6 +502,21 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
   </div>
 </nav>
 
+<!-- MOBILE INLINE SEARCH BAR — must be immediately after nav for sticky to work -->
+<div class="mob-search-expanded" id="mobSearchExpanded">
+  <input
+    type="search"
+    id="mobSearchInput"
+    placeholder="Search stamps, creators, hash…"
+    autocomplete="off"
+    autocorrect="off"
+    autocapitalize="off"
+    spellcheck="false"
+    enterkeyhint="search"
+  />
+  <button class="mob-search-cancel-btn" onclick="closeMobSearch()">Cancel</button>
+</div>
+
 <div class="today-bar">
   <div class="today-label">
     📡 TruthStamp Protocol
@@ -732,20 +747,6 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
   </div>
 </div>
 
-<!-- MOBILE INLINE SEARCH BAR (Etherscan-style, slides in below nav) -->
-<div class="mob-search-expanded" id="mobSearchExpanded">
-  <input
-    type="search"
-    id="mobSearchInput"
-    placeholder="Search stamps, creators, hash…"
-    autocomplete="off"
-    autocorrect="off"
-    autocapitalize="off"
-    spellcheck="false"
-    enterkeyhint="search"
-  />
-  <button class="mob-search-cancel-btn" onclick="closeMobSearch()">Cancel</button>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
