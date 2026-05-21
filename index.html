@@ -114,6 +114,11 @@ button { cursor: pointer; font-family: var(--font-sans); border: none; }
 }
 
 .hero-btns { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.hero-note {
+  margin-top: 14px;
+  font-size: 13px; color: var(--text-muted);
+  display: flex; align-items: center; gap: 6px;
+}
 .btn-hero-primary {
   background: var(--brand); color: #fff;
   font-size: 15px; font-weight: 600;
@@ -521,6 +526,10 @@ footer {
 .footer-socials a { font-size: 14px; color: var(--text-muted); transition: color .15s; }
 .footer-socials a:hover { color: var(--brand); }
 
+/* Mob drawer — hidden globally, opened via JS */
+.mob-drawer { display: none; position: fixed; inset: 0; z-index: 500; }
+.mob-drawer.open { display: block; }
+
 /* ============================================================
    MOBILE
    ============================================================ */
@@ -531,11 +540,7 @@ footer {
   .mob-menu-btn { display: block; }
   .btn-ghost { display: none; }
 
-  /* Mobile menu drawer */
-  .mob-drawer {
-    display: none; position: fixed; inset: 0; z-index: 500;
-  }
-  .mob-drawer.open { display: block; }
+  /* Mobile menu drawer styles */
   .mob-drawer-overlay {
     position: absolute; inset: 0;
     background: rgba(0,0,0,0.4); backdrop-filter: blur(3px);
@@ -684,7 +689,7 @@ footer {
     <li><a href="docs.html">Docs</a></li>
   </ul>
   <div class="nav-right">
-    <button class="btn-ghost">Sign in</button>
+    <a href="auth.html" class="btn-ghost">Sign in</a>
     <a href="auth.html" class="btn-brand">Sign up</a>
     <button class="mob-menu-btn" onclick="openMobDrawer()">☰</button>
   </div>
@@ -728,6 +733,7 @@ footer {
       <a href="auth.html" class="btn-hero-primary">Create your first stamp</a>
       <a href="explorer.html" class="btn-hero-secondary">Explore public proofs</a>
     </div>
+    <p class="hero-note">🎁 10 free credits on sign up · No credit card required</p>
   </div>
 
   <!-- RIGHT: cube + floating pills -->
@@ -970,7 +976,7 @@ footer {
 <!-- FINAL CTA -->
 <section class="cta-section">
   <div class="cta-title">Stamp your truth.<br>Build the future's memory.</div>
-  <p class="cta-sub">First 30 stamps a month are free. No credit card needed. Takes 60 seconds.</p>
+  <p class="cta-sub">Get 10 free credits on sign up. No credit card needed. Takes 60 seconds to start.</p>
   <div class="cta-btns">
     <a href="auth.html" class="btn-hero-primary">Create your stamp</a>
     <a href="explorer.html" class="btn-hero-secondary">Explore public proofs</a>
