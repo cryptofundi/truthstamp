@@ -434,12 +434,46 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
   .footer-socials{gap:20px}
 
 }
-.mob-search-overlay{display:none;position:fixed;inset:0;z-index:500;background:var(--surface);padding:14px 16px;flex-direction:column;gap:16px}
-.mob-search-overlay.open{display:flex}
-.mob-search-bar{display:flex;align-items:center;gap:10px}
-.mob-search-bar input{flex:1;background:var(--bg);border:1px solid var(--border-md);border-radius:var(--r-md);color:var(--text);font-family:var(--font-sans);font-size:15px;padding:10px 14px;outline:none;transition:border .2s,box-shadow .2s}
-.mob-search-bar input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-mid)}
-.mob-search-cancel{color:var(--brand);font-size:14px;font-weight:500;white-space:nowrap}
+/* ── Mobile inline search bar (Etherscan-style) ────────────────────────── */
+.mob-search-overlay{display:none} /* disabled — no longer used */
+
+/* Search bar that expands inside the nav on mobile */
+.mob-search-expanded{
+  display:none;
+  position:sticky;top:var(--nav-h);z-index:99;
+  background:var(--surface);
+  border-bottom:2px solid var(--brand);
+  padding:10px var(--page-pad);
+  gap:10px;
+  align-items:center;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+.mob-search-expanded.open{display:flex}
+.mob-search-expanded input{
+  flex:1;
+  background:var(--bg);
+  border:1.5px solid var(--border-md);
+  border-radius:var(--r-md);
+  color:var(--text);
+  font-family:var(--font-sans);
+  font-size:15px;
+  padding:10px 14px;
+  outline:none;
+  transition:border .15s,box-shadow .15s;
+  /* Prevent iOS zoom on focus (font-size >= 16 prevents zoom) */
+  font-size:16px;
+}
+.mob-search-expanded input:focus{
+  border-color:var(--brand);
+  box-shadow:0 0 0 3px var(--brand-mid);
+  background:#fff;
+}
+.mob-search-cancel-btn{
+  color:var(--brand);font-size:14px;font-weight:600;
+  white-space:nowrap;flex-shrink:0;
+  padding:8px 4px;
+  background:none;border:none;cursor:pointer;
+}
 </style>
 </head>
 <body>
@@ -698,11 +732,19 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
   </div>
 </div>
 
-<div class="mob-search-overlay" id="mobSearchOverlay">
-  <div class="mob-search-bar">
-    <input type="text" id="mobSearchInput" placeholder="Search stamps, creators…"/>
-    <button class="mob-search-cancel" onclick="closeMobSearch()">Cancel</button>
-  </div>
+<!-- MOBILE INLINE SEARCH BAR (Etherscan-style, slides in below nav) -->
+<div class="mob-search-expanded" id="mobSearchExpanded">
+  <input
+    type="search"
+    id="mobSearchInput"
+    placeholder="Search stamps, creators, hash…"
+    autocomplete="off"
+    autocorrect="off"
+    autocapitalize="off"
+    spellcheck="false"
+    enterkeyhint="search"
+  />
+  <button class="mob-search-cancel-btn" onclick="closeMobSearch()">Cancel</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1223,27 +1265,53 @@ function toggleSort() {
   loadStamps();
 }
 
-// ── Search ────────────────────────────────────────────────────────────────
-document.getElementById('searchInput').addEventListener('input', renderFeed);
-document.addEventListener('keydown', e => {
-  if (e.key==='/' && document.activeElement.tagName!=='INPUT') {
-    e.preventDefault(); document.getElementById('searchInput').focus();
+// ── Mobile search (inline, Etherscan-style) ───────────────────────────────
+function openMobSearch() {
+  const bar = document.getElementById('mobSearchExpanded');
+  bar.classList.add('open');
+  // Small delay so the element is visible before focus (iOS Safari requirement)
+  setTimeout(() => {
+    const inp = document.getElementById('mobSearchInput');
+    inp.focus();
+    inp.select();
+  }, 80);
+  // Scroll to top so search bar is visible
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function closeMobSearch() {
+  const bar = document.getElementById('mobSearchExpanded');
+  bar.classList.remove('open');
+  const inp = document.getElementById('mobSearchInput');
+  inp.value = '';
+  inp.blur();
+  // Clear search from main input and re-render all
+  document.getElementById('searchInput').value = '';
+  renderFeed();
+}
+
+// Live filtering as user types — results show immediately in the feed below
+document.getElementById('mobSearchInput').addEventListener('input', function() {
+  document.getElementById('searchInput').value = this.value.trim();
+  renderFeed();
+});
+
+// Enter key on mobile keyboard triggers search (no need to press Cancel)
+document.getElementById('mobSearchInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    this.blur(); // dismiss keyboard so user can see results
+    // Keep search active — results already showing live
   }
 });
 
-// ── Mobile search ─────────────────────────────────────────────────────────
-function openMobSearch() {
-  document.getElementById('mobSearchOverlay').classList.add('open');
-  setTimeout(() => document.getElementById('mobSearchInput').focus(), 100);
-}
-function closeMobSearch() {
-  document.getElementById('mobSearchOverlay').classList.remove('open');
-  document.getElementById('mobSearchInput').value = '';
-  renderFeed();
-}
-document.getElementById('mobSearchInput').addEventListener('input', function() {
-  document.getElementById('searchInput').value = this.value;
-  renderFeed();
+// Also handle the desktop search input
+document.getElementById('searchInput').addEventListener('input', renderFeed);
+document.addEventListener('keydown', e => {
+  if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+    e.preventDefault();
+    document.getElementById('searchInput').focus();
+  }
 });
 
 // ── Filter drawer ─────────────────────────────────────────────────────────
