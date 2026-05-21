@@ -106,8 +106,8 @@ button{cursor:pointer;font-family:var(--font-sans);border:none;background:none}
 /* STAMP CARDS */
 .stamp-list{padding:14px 0}
 .feed-intro{padding:8px 24px 4px;font-size:13px;color:var(--text-muted);line-height:1.5}
-/* overflow:hidden on card so children can't escape */
-.stamp-card{margin:0 20px 10px;background:var(--surface);border-radius:var(--r-lg);padding:16px 18px;cursor:pointer;box-shadow:var(--shadow-card);transition:box-shadow .2s,transform .15s;position:relative;overflow:hidden;border-left:3px solid transparent;box-sizing:border-box;width:calc(100% - 40px);max-width:100%}
+/* NO overflow:hidden on card — that clips badge/content on mobile */
+.stamp-card{margin:0 20px 10px;background:var(--surface);border-radius:var(--r-lg);padding:16px 18px;cursor:pointer;box-shadow:var(--shadow-card);transition:box-shadow .2s,transform .15s;position:relative;border-left:3px solid transparent;box-sizing:border-box;width:calc(100% - 40px);max-width:100%;word-break:break-word;overflow-wrap:break-word}
 .stamp-card:hover{box-shadow:var(--shadow-hover);transform:translateY(-1px)}
 .stamp-card.public{border-left-color:var(--green)}
 .stamp-card.sealed{border-left-color:var(--amber)}
@@ -321,7 +321,7 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
   }
   .mob-tab.active{background:var(--brand);border-color:var(--brand);color:#fff}
 
-  /* Feed header sticky offset = nav + tabs */
+  /* Feed header sticky offset = nav + tabs only (today-bar is a card, not sticky) */
   .feed-header{
     top:calc(var(--nav-h) + 49px);
     padding:14px var(--page-pad) 10px;
@@ -339,9 +339,28 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
 
   .feed-intro{padding:8px var(--page-pad) 0;font-size:12.5px;color:var(--text-muted);line-height:1.5}
 
-  /* Cards: proper margins */
+  /* Cards: proper margins, no width overflow */
   .stamp-list{padding:10px 0}
-  .stamp-card{margin:0 var(--page-pad) 10px;border-radius:var(--card-radius)}
+  .stamp-card{
+    margin:0 var(--page-pad) 10px;
+    border-radius:var(--card-radius);
+    width:calc(100% - 32px);
+    padding:14px 14px;
+  }
+  /* Card top row: ensure badges don't overflow */
+  .stamp-card-top{gap:8px}
+  .stamp-meta{min-width:0;flex:1}
+  .stamp-author{font-size:13px}
+  .stamp-sub{font-size:11.5px}
+
+  /* Badge row: wrap on small screens, don't overflow */
+  .stamp-badges{max-width:55%;flex-wrap:wrap;gap:4px}
+  .badge{font-size:10.5px;padding:2px 8px}
+  /* Footer: stack if needed */
+  .stamp-footer{flex-wrap:wrap;gap:6px}
+  .stamp-hash-text{max-width:120px}
+  /* Content text sizing */
+  .stamp-content{font-size:14px}
   .load-more-btn{margin:8px var(--page-pad) 0;width:calc(100% - 32px)}
 
   /* Body: clear bottom nav + iOS home bar */
