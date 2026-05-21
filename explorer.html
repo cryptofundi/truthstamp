@@ -28,7 +28,7 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
 a{color:inherit;text-decoration:none}
 button{cursor:pointer;font-family:var(--font-sans);border:none;background:none}
 
@@ -106,8 +106,8 @@ button{cursor:pointer;font-family:var(--font-sans);border:none;background:none}
 /* STAMP CARDS */
 .stamp-list{padding:14px 0}
 .feed-intro{padding:8px 24px 4px;font-size:13px;color:var(--text-muted);line-height:1.5}
-/* NO overflow:hidden on card — that clips badge/content on mobile */
-.stamp-card{margin:0 20px 10px;background:var(--surface);border-radius:var(--r-lg);padding:16px 18px;cursor:pointer;box-shadow:var(--shadow-card);transition:box-shadow .2s,transform .15s;position:relative;border-left:3px solid transparent;box-sizing:border-box;width:calc(100% - 40px);max-width:100%;word-break:break-word;overflow-wrap:break-word}
+/* Card: NO explicit width, NO overflow:hidden — margin handles the inset */
+.stamp-card{margin:0 20px 10px;background:var(--surface);border-radius:var(--r-lg);padding:16px 18px;cursor:pointer;box-shadow:var(--shadow-card);transition:box-shadow .2s,transform .15s;position:relative;border-left:3px solid transparent;box-sizing:border-box;word-break:break-word;overflow-wrap:break-word}
 .stamp-card:hover{box-shadow:var(--shadow-hover);transform:translateY(-1px)}
 .stamp-card.public{border-left-color:var(--green)}
 .stamp-card.sealed{border-left-color:var(--amber)}
@@ -159,7 +159,7 @@ button{cursor:pointer;font-family:var(--font-sans);border:none;background:none}
 .feed-empty{padding:48px 24px;text-align:center;color:var(--text-muted)}
 .feed-empty-icon{font-size:2.5rem;margin-bottom:12px}
 .feed-empty h3{font-size:15px;color:var(--text-sec);margin-bottom:6px}
-.load-more-btn{display:block;margin:8px 20px 0;width:calc(100% - 40px);padding:12px;border:1.5px dashed var(--border-md);border-radius:var(--r-lg);color:var(--text-muted);font-size:13.5px;font-weight:500;transition:all .15s;background:none;cursor:pointer}
+.load-more-btn{display:block;margin:8px 20px 0;padding:12px;border:1.5px dashed var(--border-md);border-radius:var(--r-lg);color:var(--text-muted);font-size:13.5px;font-weight:500;transition:all .15s;background:none;cursor:pointer}
 .load-more-btn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-bg)}
 
 /* RIGHT PANEL */
@@ -339,12 +339,11 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
 
   .feed-intro{padding:8px var(--page-pad) 0;font-size:12.5px;color:var(--text-muted);line-height:1.5}
 
-  /* Cards: proper margins, no width overflow */
+  /* Cards: proper margins, no explicit width needed */
   .stamp-list{padding:10px 0}
   .stamp-card{
     margin:0 var(--page-pad) 10px;
     border-radius:var(--card-radius);
-    width:calc(100% - 32px);
     padding:14px 14px;
   }
   /* Card top row: ensure badges don't overflow */
@@ -361,7 +360,7 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
   .stamp-hash-text{max-width:120px}
   /* Content text sizing */
   .stamp-content{font-size:14px}
-  .load-more-btn{margin:8px var(--page-pad) 0;width:calc(100% - 32px)}
+  .load-more-btn{margin:8px var(--page-pad) 0;width:auto}
 
   /* Body: clear bottom nav + iOS home bar */
   body{padding-bottom:calc(78px + env(safe-area-inset-bottom,12px))}
