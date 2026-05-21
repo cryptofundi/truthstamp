@@ -91,7 +91,7 @@ button{cursor:pointer;font-family:var(--font-sans);border:none;background:none}
 .sidebar-cta-btn:hover{background:rgba(0,0,0,0.28)}
 
 /* FEED */
-.feed{padding:0 0 60px}
+.feed{padding:0 0 60px;overflow:visible}
 .feed-header{display:flex;align-items:center;justify-content:space-between;padding:18px 24px 14px;position:sticky;top:var(--nav-h);background:rgba(248,248,245,0.97);backdrop-filter:blur(8px);z-index:50;border-bottom:1px solid var(--border)}
 .feed-title{font-size:16px;font-weight:600}
 .feed-subtitle{font-size:12px;color:var(--text-muted);margin-top:2px}
@@ -104,10 +104,10 @@ button{cursor:pointer;font-family:var(--font-sans);border:none;background:none}
 .chip.active{background:var(--brand);border-color:var(--brand);color:#fff}
 
 /* STAMP CARDS */
-.stamp-list{padding:14px 0}
+.stamp-list{padding:10px 0;overflow:visible}
 .feed-intro{padding:8px 24px 4px;font-size:13px;color:var(--text-muted);line-height:1.5}
 /* Card: NO explicit width, NO overflow:hidden — margin handles the inset */
-.stamp-card{margin:0 20px 10px;background:var(--surface);border-radius:var(--r-lg);padding:16px 18px;cursor:pointer;box-shadow:var(--shadow-card);transition:box-shadow .2s,transform .15s;position:relative;border-left:3px solid transparent;box-sizing:border-box;word-break:break-word;overflow-wrap:break-word}
+.stamp-card{margin:0 20px 10px;background:var(--surface);border-radius:var(--r-lg);padding:16px 18px;cursor:pointer;box-shadow:var(--shadow-card);transition:box-shadow .2s,transform .15s;position:relative;border-left:3px solid transparent;word-break:break-word;overflow-wrap:break-word}
 .stamp-card:hover{box-shadow:var(--shadow-hover);transform:translateY(-1px)}
 .stamp-card.public{border-left-color:var(--green)}
 .stamp-card.sealed{border-left-color:var(--amber)}
@@ -225,6 +225,28 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
 .drawer-check.on{background:var(--brand);border-color:var(--brand);color:#fff}
 .drawer-apply{display:block;width:100%;background:var(--brand);border:none;color:#fff;font-family:var(--font-sans);font-size:15px;font-weight:600;padding:14px;border-radius:var(--r-md);cursor:pointer;margin-top:4px}
 .drawer-reset{display:block;width:100%;background:none;border:none;color:var(--text-muted);font-family:var(--font-sans);font-size:14px;padding:10px;cursor:pointer}
+/* Drawer info panels */
+.drawer-divider{height:1px;background:var(--border-md);margin:8px 0 20px}
+.drawer-panel{background:var(--surface-alt);border-radius:var(--r-lg);padding:14px;margin-bottom:14px}
+.drawer-panel-title{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:0.7px;text-transform:uppercase;color:var(--text-sec);margin-bottom:12px}
+.drawer-cal-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.drawer-cal-item:last-child{border-bottom:none;padding-bottom:0}
+.drawer-cal-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.drawer-cal-info{flex:1}
+.drawer-cal-when{font-size:13px;font-weight:600;color:var(--text)}
+.drawer-cal-desc{font-size:12px;color:var(--text-sec);margin-top:2px;line-height:1.4}
+.drawer-cal-count{font-size:11px;color:var(--text-muted);margin-top:3px}
+.drawer-cal-emoji{font-size:20px;flex-shrink:0}
+.drawer-view-all{display:flex;align-items:center;justify-content:center;gap:5px;width:100%;margin-top:10px;padding:8px;font-size:13px;font-weight:500;color:var(--brand);border:1.5px solid var(--brand-bg);border-radius:var(--r-sm);background:var(--brand-bg);transition:background .15s}
+.drawer-view-all:hover{background:rgba(40,84,232,0.15)}
+.drawer-creator-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.drawer-creator-item:last-child{border-bottom:none;padding-bottom:0}
+.drawer-creator-rank{font-size:13px;font-weight:700;color:var(--text-muted);width:16px;flex-shrink:0}
+.drawer-creator-avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.drawer-creator-info{flex:1;min-width:0}
+.drawer-creator-name{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drawer-creator-sub{font-size:11.5px;color:var(--text-muted)}
+.drawer-creator-count{font-size:14px;font-weight:700;color:var(--brand);flex-shrink:0}
 
 /* ── MOBILE ────────────────────────────────────────────────────────────── */
 @media(max-width:900px){
@@ -339,12 +361,13 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
 
   .feed-intro{padding:8px var(--page-pad) 0;font-size:12.5px;color:var(--text-muted);line-height:1.5}
 
-  /* Cards: proper margins, no explicit width needed */
-  .stamp-list{padding:10px 0}
+  /* Cards: margin only, NO width property */
+  .stamp-list{padding:10px 0;overflow:visible}
   .stamp-card{
     margin:0 var(--page-pad) 10px;
     border-radius:var(--card-radius);
     padding:14px 14px;
+    box-sizing:border-box;
   }
   /* Card top row: ensure badges don't overflow */
   .stamp-card-top{gap:8px}
@@ -650,6 +673,26 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
   </div>
   <button class="drawer-apply" onclick="applyDrawerFilters()">Apply filters</button>
   <button class="drawer-reset" onclick="resetOpts()">Reset all</button>
+
+  <div class="drawer-divider"></div>
+
+  <!-- Reveal Calendar -->
+  <div class="drawer-panel">
+    <div class="drawer-panel-title">📅 Reveal Calendar</div>
+    <div id="drawerCalendar">
+      <div style="text-align:center;padding:12px 0;color:var(--text-muted);font-size:13px">Loading…</div>
+    </div>
+    <button class="drawer-view-all" onclick="closeFilterDrawer()">View full calendar →</button>
+  </div>
+
+  <!-- Top Creators -->
+  <div class="drawer-panel">
+    <div class="drawer-panel-title">🏆 Top Creators</div>
+    <div id="drawerCreators">
+      <div style="text-align:center;padding:12px 0;color:var(--text-muted);font-size:13px">Loading…</div>
+    </div>
+    <button class="drawer-view-all" onclick="closeFilterDrawer()">View all creators →</button>
+  </div>
 </div>
 
 <div class="mob-search-overlay" id="mobSearchOverlay">
@@ -1205,6 +1248,95 @@ function openFilterDrawer() {
   document.getElementById('filterDrawer').classList.add('open');
   document.getElementById('drawerOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
+  renderDrawerCalendar();
+  renderDrawerCreators();
+}
+
+function renderDrawerCalendar() {
+  const el = document.getElementById('drawerCalendar');
+  if (!el) return;
+  if (window._drawerCalDone) return; // only load once per session
+  if (!window.tsDB) return;
+  const now = new Date();
+  window.tsDB.from('stamps')
+    .select('sealed_until')
+    .eq('visibility','sealed').eq('revealed',false)
+    .eq('contract_address', CONTRACT)
+    .gte('sealed_until', now.toISOString())
+    .order('sealed_until',{ascending:true})
+    .limit(20)
+    .then(({data}) => {
+      if (!data || !data.length) {
+        el.innerHTML = '<div style="text-align:center;padding:12px 0;color:var(--text-muted);font-size:13px">No upcoming reveals</div>';
+        return;
+      }
+      // Group by day
+      const groups = {};
+      data.forEach(r => {
+        const d = new Date(r.sealed_until);
+        const key = d.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
+        groups[key] = (groups[key] || 0) + 1;
+      });
+      const today = now.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
+      const tomorrow = new Date(now.getTime()+86400000).toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
+      const dotColors = ['#1D9E75','#BA7517','#2854E8','#9B9A96'];
+      let i = 0; let html = '';
+      Object.entries(groups).slice(0,4).forEach(([day, count]) => {
+        const label = day === today ? 'Today' : day === tomorrow ? 'Tomorrow' : day;
+        const color = dotColors[i++ % dotColors.length];
+        html += `<div class="drawer-cal-item">
+          <div class="drawer-cal-dot" style="background:${color}"></div>
+          <div class="drawer-cal-info">
+            <div class="drawer-cal-when">${label}</div>
+            <div class="drawer-cal-count">🔒 ${count} stamp${count>1?'s':''} unsealing</div>
+          </div>
+        </div>`;
+      });
+      el.innerHTML = html;
+      window._drawerCalDone = true;
+    }).catch(() => {
+      el.innerHTML = '<div style="text-align:center;padding:8px 0;color:var(--text-muted);font-size:12px">Could not load</div>';
+    });
+}
+
+function renderDrawerCreators() {
+  const el = document.getElementById('drawerCreators');
+  if (!el) return;
+  if (window._drawerCreatorsDone) return;
+  if (!window.tsDB) return;
+  window.tsDB.from('stamps')
+    .select('creator_identity, creator_address')
+    .eq('status','confirmed').eq('contract_address', CONTRACT)
+    .then(({data}) => {
+      if (!data || !data.length) {
+        el.innerHTML = '<div style="text-align:center;padding:12px 0;color:var(--text-muted);font-size:13px">No creators yet</div>';
+        return;
+      }
+      const counts = {};
+      data.forEach(r => {
+        const id = r.creator_identity || r.creator_address || 'Anonymous';
+        counts[id] = (counts[id] || 0) + 1;
+      });
+      const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,3);
+      let html = '';
+      sorted.forEach(([id, count], idx) => {
+        const trunc = id.startsWith('0x') && id.length>=10 ? id.slice(0,6)+'…'+id.slice(-4) : id.slice(0,10)+(id.length>10?'…':'');
+        const initials = id.startsWith('0x') ? id.slice(2,4).toUpperCase() : id.slice(0,2).toUpperCase();
+        html += `<div class="drawer-creator-item">
+          <div class="drawer-creator-rank">${idx+1}</div>
+          <div class="drawer-creator-avatar" style="background:${avatarColor(id)}">${initials}</div>
+          <div class="drawer-creator-info">
+            <div class="drawer-creator-name">${escHtml(trunc)}</div>
+            <div class="drawer-creator-sub">${count} stamp${count>1?'s':''}</div>
+          </div>
+          <div class="drawer-creator-count">${count}</div>
+        </div>`;
+      });
+      el.innerHTML = html;
+      window._drawerCreatorsDone = true;
+    }).catch(() => {
+      el.innerHTML = '<div style="text-align:center;padding:8px 0;color:var(--text-muted);font-size:12px">Could not load</div>';
+    });
 }
 function closeFilterDrawer() {
   document.getElementById('filterDrawer').classList.remove('open');
