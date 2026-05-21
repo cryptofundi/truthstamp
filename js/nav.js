@@ -217,6 +217,22 @@
       </div>
 
       <div class="ts-drawer-section">
+        <p class="ts-drawer-section-label">Explore</p>
+        <a href="explorer.html" class="ts-drawer-link ${currentPage==='explorer.html'?'active':''}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Explorer
+        </a>
+        <a href="verify.html" class="ts-drawer-link ${currentPage==='verify.html'?'active':''}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          Verify a Stamp
+        </a>
+        <a href="trust.html" class="ts-drawer-link ${currentPage==='trust.html'?'active':''}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Trust
+        </a>
+      </div>
+
+      <div class="ts-drawer-section">
         <p class="ts-drawer-section-label">My Account</p>
         <a href="dashboard.html" class="ts-drawer-link ${currentPage==='dashboard.html'?'active':''}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
@@ -229,18 +245,6 @@
         <a href="pricing.html" class="ts-drawer-link ${currentPage==='pricing.html'?'active':''}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
           Buy Credits
-        </a>
-      </div>
-
-      <div class="ts-drawer-section">
-        <p class="ts-drawer-section-label">Explore</p>
-        <a href="verify.html" class="ts-drawer-link ${currentPage==='verify.html'?'active':''}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          Verify a Stamp
-        </a>
-        <a href="trust.html" class="ts-drawer-link ${currentPage==='trust.html'?'active':''}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          Trust
         </a>
       </div>
 
