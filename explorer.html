@@ -106,38 +106,51 @@ button{cursor:pointer;font-family:var(--font-sans);border:none;background:none}
 /* STAMP CARDS */
 .stamp-list{padding:14px 0}
 .feed-intro{padding:8px 24px 4px;font-size:13px;color:var(--text-muted);line-height:1.5}
-.stamp-card{margin:0 20px 10px;background:var(--surface);border-radius:var(--r-lg);padding:16px 18px;cursor:pointer;box-shadow:var(--shadow-card);transition:box-shadow .2s,transform .15s;position:relative;overflow:hidden;border-left:3px solid transparent}
+/* overflow:hidden on card so children can't escape */
+.stamp-card{margin:0 20px 10px;background:var(--surface);border-radius:var(--r-lg);padding:16px 18px;cursor:pointer;box-shadow:var(--shadow-card);transition:box-shadow .2s,transform .15s;position:relative;overflow:hidden;border-left:3px solid transparent;box-sizing:border-box;width:calc(100% - 40px);max-width:100%}
 .stamp-card:hover{box-shadow:var(--shadow-hover);transform:translateY(-1px)}
 .stamp-card.public{border-left-color:var(--green)}
 .stamp-card.sealed{border-left-color:var(--amber)}
 .stamp-card.revealed{border-left-color:var(--purple)}
 .stamp-card.url-type{border-left-color:var(--cyan)}
 .stamp-card.hash-only{border-left-color:var(--text-muted)}
-.stamp-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+/* card-top: flex row — meta must shrink */
+.stamp-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;min-width:0}
 .stamp-avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0}
+/* min-width:0 is the key fix — lets flex child shrink below text width */
 .stamp-meta{flex:1;min-width:0}
 .stamp-author{font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stamp-sub{font-size:12px;color:var(--text-muted);margin-top:1px}
-.stamp-badges{display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
-.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.1px}
+.stamp-sub{font-size:12px;color:var(--text-muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stamp-badges{display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;max-width:50%}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.1px;white-space:nowrap}
 .badge-type{background:var(--surface-alt);color:var(--text-sec)}
 .badge-public{background:var(--green-bg);color:var(--green)}
 .badge-sealed{background:var(--amber-bg);color:var(--amber)}
 .badge-revealed{background:var(--purple-bg);color:var(--purple)}
 .badge-pending{background:var(--amber-bg);color:var(--amber)}
 .badge-hash{background:var(--surface-alt);color:var(--text-muted)}
-.stamp-content{font-size:14.5px;line-height:1.55;color:var(--text);margin-bottom:12px}
-.reveal-row{display:flex;align-items:center;gap:8px;background:var(--amber-fill);border:1px solid var(--amber-border);border-radius:var(--r-sm);padding:8px 12px;margin-bottom:10px;font-size:12.5px;font-weight:500;color:var(--amber)}
-.stamp-sealed-msg{font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:6px;margin-bottom:10px}
-.stamp-url-link{color:var(--brand);font-size:13px;word-break:break-all;display:flex;align-items:center;gap:5px;margin-bottom:10px}
-.stamp-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
-.stamp-hash{font-family:var(--font-mono);font-size:11.5px;color:var(--text-muted);display:flex;align-items:center;gap:5px}
-.stamp-hash a{color:inherit;transition:color .15s}
+/* content text: allow wrap, prevent overflow */
+.stamp-content{font-size:14.5px;line-height:1.55;color:var(--text);margin-bottom:12px;overflow-wrap:break-word;word-break:break-word}
+/* reveal row: wrap on mobile, shorter copy handled in JS */
+.reveal-row{display:flex;align-items:flex-start;gap:8px;background:var(--amber-fill);border:1px solid var(--amber-border);border-radius:var(--r-sm);padding:8px 12px;margin-bottom:10px;font-size:12.5px;font-weight:500;color:var(--amber);flex-wrap:wrap;overflow-wrap:break-word;word-break:break-word}
+.stamp-sealed-msg{font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:6px;margin-bottom:10px;overflow-wrap:break-word;word-break:break-word;min-width:0}
+.stamp-sealed-msg span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+/* url link: truncate long URLs */
+.stamp-url-link{color:var(--brand);font-size:13px;word-break:break-all;overflow-wrap:anywhere;display:flex;align-items:flex-start;gap:5px;margin-bottom:10px;min-width:0}
+/* footer: hash truncates, link stays right */
+.stamp-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;min-width:0}
+.stamp-hash{font-family:var(--font-mono);font-size:11.5px;color:var(--text-muted);display:flex;align-items:center;gap:5px;min-width:0;overflow:hidden}
+.stamp-hash-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px}
+.stamp-hash a{color:inherit;transition:color .15s;flex-shrink:0}
 .stamp-hash a:hover{color:var(--brand)}
-.proof-link{display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:500;color:var(--brand);padding:5px 12px;background:var(--brand-bg);border-radius:var(--r-sm);transition:background .15s}
+.proof-link{display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:500;color:var(--brand);padding:5px 12px;background:var(--brand-bg);border-radius:var(--r-sm);transition:background .15s;white-space:nowrap;flex-shrink:0}
 .proof-link:hover{background:rgba(40,84,232,0.18)}
-.arweave-link{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--purple);font-weight:500;transition:color .15s}
+.arweave-link{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--purple);font-weight:500;transition:color .15s;white-space:nowrap;flex-shrink:0}
 .arweave-link:hover{color:var(--brand)}
+/* infinite scroll sentinel */
+.scroll-sentinel{height:1px;margin-top:8px}
+.scroll-loading{padding:20px 24px;text-align:center;color:var(--text-muted);font-size:13px;display:none}
+.scroll-loading.show{display:block}
 
 /* LOADING / EMPTY STATES */
 .feed-loading{padding:48px 24px;text-align:center;color:var(--text-muted)}
@@ -535,6 +548,8 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
       </div>
     </div>
     <button class="load-more-btn" id="loadMoreBtn" style="display:none" onclick="loadMore()">Load more stamps</button>
+    <div class="scroll-sentinel" id="scrollSentinel"></div>
+    <div class="scroll-loading" id="scrollLoading">Loading more stamps…</div>
   </main>
 
   <aside class="right-panel">
@@ -744,22 +759,25 @@ function buildCard(s) {
   // Content section
   let contentHtml = '';
   if (isSealed && !isOverdue) {
-    const revealStr = sealedUntil ? timeUntil(sealedUntil) + ' · ' + sealedUntil.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'}) + ' UTC' : '';
+    const revealStr = sealedUntil
+      ? timeUntil(sealedUntil) + ' · '
+        + sealedUntil.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'})
+      : '';
     contentHtml = `
       <div class="reveal-row">⏱ Reveals ${escHtml(revealStr)}</div>
-      <div class="stamp-sealed-msg">🔒 Content sealed. Timestamp locked on-chain — immutable.</div>`;
+      <div class="stamp-sealed-msg">🔒 Sealed. Timestamp locked on-chain.</div>`;
   } else if (isSealed && isOverdue) {
     contentHtml = `
-      <div class="reveal-row" style="background:rgba(248,220,255,0.4);border-color:rgba(83,74,183,0.2);color:var(--purple)">⚡ Seal date passed — awaiting on-chain reveal</div>
-      <div class="stamp-sealed-msg">🔒 Content sealed. Timestamp locked on-chain — immutable.</div>`;
+      <div class="reveal-row" style="background:rgba(248,220,255,0.4);border-color:rgba(83,74,183,0.2);color:var(--purple)">⚡ Awaiting on-chain reveal</div>
+      <div class="stamp-sealed-msg">🔒 Sealed. Timestamp locked on-chain.</div>`;
   } else if (isHashOnly) {
-    contentHtml = `<div class="stamp-sealed-msg">🔐 Hash-only stamp — maximum privacy. Content never stored.</div>`;
+    contentHtml = `<div class="stamp-sealed-msg">🔐 Hash-only · maximum privacy</div>`;
   } else if (isUrl && s.text_content) {
     let url = s.text_content;
     try { const p = JSON.parse(url); url = p.url ?? url; } catch {}
     contentHtml = `<div class="stamp-url-link">🔗 <span>${escHtml(url.length > 80 ? url.slice(0,80)+'…' : url)}</span></div>`;
   } else if (isFile) {
-    contentHtml = `<div class="stamp-sealed-msg">📄 ${escHtml(s.file_name || 'File stamp')} ${s.file_size_bytes ? '(' + (s.file_size_bytes/1024).toFixed(1) + ' KB)' : ''}</div>`;
+    contentHtml = `<div class="stamp-sealed-msg">📄 ${escHtml(s.file_name || 'File stamp')}${s.file_size_bytes ? ' · ' + (s.file_size_bytes/1024).toFixed(1) + ' KB' : ''}</div>`;
   } else if (s.text_content) {
     const text = s.text_content.length > 200 ? s.text_content.slice(0,200) + '…' : s.text_content;
     contentHtml = `<div class="stamp-content">${escHtml(text)}</div>`;
@@ -768,21 +786,21 @@ function buildCard(s) {
   }
 
   // Footer right side
-  let footerRight = `<a class="proof-link" href="proof.html?id=${s.proof_id}" onclick="event.stopPropagation()">Proof page →</a>`;
+  let footerRight = `<a class="proof-link" href="proof.html?id=${s.proof_id}" onclick="event.stopPropagation()">Proof →</a>`;
   if (isRevealed && s.storage_uri) {
     const txId = s.storage_uri.replace('ar://','');
-    footerRight = `<a class="arweave-link" href="https://arweave.net/${txId}" target="_blank" rel="noopener" onclick="event.stopPropagation()">View on Arweave ↗</a>`;
+    footerRight = `<a class="arweave-link" href="https://arweave.net/${txId}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Arweave ↗</a>`;
   }
 
-  // Badges
+  // Badges — max 2 on mobile to prevent overflow
   let badges = `<span class="badge badge-type">${escHtml(s.content_type||'text')}</span>`;
   if (isPublic)   badges += `<span class="badge badge-public">public</span>`;
   if (isSealed)   badges += `<span class="badge badge-sealed">sealed</span>`;
   if (isRevealed) badges += `<span class="badge badge-revealed">revealed</span>`;
   if (isHashOnly) badges += `<span class="badge badge-hash">private</span>`;
-  categories.forEach(cat => {
-    badges += `<span class="badge" style="background:var(--brand-bg);color:var(--brand)">${escHtml(cat)}</span>`;
-  });
+  // Only first category badge to avoid badge overflow
+  if (categories.length)
+    badges += `<span class="badge" style="background:var(--brand-bg);color:var(--brand)">${escHtml(categories[0])}</span>`;
 
   return `
     <div class="stamp-card ${cardClass}" onclick="location.href='proof.html?id=${s.proof_id}'"
@@ -799,7 +817,7 @@ function buildCard(s) {
       </div>
       ${contentHtml}
       <div class="stamp-footer">
-        <div class="stamp-hash">${hashDisplay} ${txLink}</div>
+        <div class="stamp-hash"><span class="stamp-hash-text">${hashDisplay}</span>${txLink}</div>
         ${footerRight}
       </div>
     </div>`;
@@ -893,14 +911,28 @@ function renderFeed() {
   document.getElementById('feedSubtitle').textContent = `${filtered.length} stamp${filtered.length !== 1 ? 's' : ''}`;
 }
 
+// ── Infinite scroll ───────────────────────────────────────────────────────
+let isLoadingMore = false;
+
 async function loadMore() {
+  if (isLoadingMore || !hasMore) return;
+  isLoadingMore = true;
+  document.getElementById('scrollLoading').classList.add('show');
   offset += PAGE_SIZE;
-  const btn = document.getElementById('loadMoreBtn');
-  btn.textContent = 'Loading…';
-  btn.disabled = true;
   await loadStamps(false);
-  btn.textContent = 'Load more stamps';
-  btn.disabled = false;
+  document.getElementById('scrollLoading').classList.remove('show');
+  isLoadingMore = false;
+}
+
+function setupInfiniteScroll() {
+  const sentinel = document.getElementById('scrollSentinel');
+  if (!sentinel || !('IntersectionObserver' in window)) return;
+  const observer = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+      loadMore();
+    }
+  }, { rootMargin: '200px' });
+  observer.observe(sentinel);
 }
 
 // ── Load today stats ──────────────────────────────────────────────────────
@@ -1167,11 +1199,13 @@ function applyDrawerFilters() { closeFilterDrawer(); renderFeed(); }
 
 // ── Init ──────────────────────────────────────────────────────────────────
 function initExplorer() {
+  document.getElementById('loadMoreBtn').style.display = 'none';
   loadStamps();
   loadTodayStats();
   loadRevealCalendar();
   loadTopCreators();
   loadSidebarCounts();
+  setupInfiniteScroll();
 }
 
 function waitForDB(tries) {
