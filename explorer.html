@@ -4,672 +4,396 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Explorer — TruthStamp</title>
+<meta name="description" content="Explore public stamps, sealed predictions, and revealed truths — permanently on MegaETH."/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-/* ============================================================
-   TOKENS — TruthStamp light theme
-   ============================================================ */
 :root {
-  --bg:             #F8F8F5;
-  --surface:        #FFFFFF;
-  --surface-alt:    #F2F2EE;
-  --border:         rgba(0,0,0,0.08);
-  --border-md:      rgba(0,0,0,0.12);
+  --bg:#F8F8F5;--surface:#FFFFFF;--surface-alt:#F2F2EE;
+  --border:rgba(0,0,0,0.08);--border-md:rgba(0,0,0,0.12);
+  --text:#1A1A1A;--text-sec:#5F5E5A;--text-muted:#9B9A96;
+  --brand:#2854E8;--brand-dark:#1D3FB8;--brand-bg:#EBF0FD;--brand-mid:rgba(40,84,232,0.12);
+  --green:#1D9E75;--green-bg:#E1F5EE;--green-border:rgba(29,158,117,0.25);
+  --amber:#BA7517;--amber-bg:#FEF3CD;--amber-border:rgba(186,117,23,0.22);--amber-fill:rgba(254,243,205,0.6);
+  --purple:#534AB7;--purple-bg:#EEEDFE;
+  --red:#A32D2D;--red-bg:#FCEBEB;
+  --cyan:#0E7490;--cyan-bg:#E0F2FE;
+  --font-sans:'Inter',-apple-system,system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --r-sm:6px;--r-md:8px;--r-lg:12px;
+  --nav-h:60px;--sidebar-w:240px;--right-w:300px;
+  --shadow-card:0 1px 3px rgba(0,0,0,0.07),0 0 0 1px rgba(0,0,0,0.06);
+  --shadow-hover:0 4px 14px rgba(0,0,0,0.1),0 0 0 1px rgba(0,0,0,0.07);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;font-family:var(--font-sans);border:none;background:none}
 
-  --text:           #1A1A1A;
-  --text-sec:       #5F5E5A;
-  --text-muted:     #9B9A96;
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(255,255,255,0.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:0}
+.nav-logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:16px;letter-spacing:-0.3px;color:var(--text);flex-shrink:0;margin-right:28px}
+.nav-logo-icon{width:30px;height:30px;background:var(--brand);border-radius:7px;display:grid;place-items:center;font-weight:800;font-size:13px;color:#fff}
+.nav-links{display:flex;align-items:center;gap:2px;list-style:none}
+.nav-links a{padding:6px 13px;font-size:14px;font-weight:450;color:var(--text-sec);border-radius:var(--r-sm);transition:color .15s,background .15s;position:relative}
+.nav-links a:hover{color:var(--text);background:var(--surface-alt)}
+.nav-links a.active{color:var(--brand);font-weight:500}
+.nav-links a.active::after{content:'';position:absolute;bottom:-18px;left:13px;right:13px;height:2px;background:var(--brand);border-radius:2px}
+.nav-search{flex:1;max-width:360px;margin-left:16px;position:relative}
+.nav-search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:14px;pointer-events:none}
+.nav-search input{width:100%;background:var(--bg);border:1px solid var(--border-md);border-radius:var(--r-md);color:var(--text);font-family:var(--font-sans);font-size:13.5px;padding:7.5px 36px 7.5px 34px;outline:none;transition:border .2s,box-shadow .2s}
+.nav-search input::placeholder{color:var(--text-muted)}
+.nav-search input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-mid);background:#fff}
+.nav-search-slash{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:var(--surface-alt);color:var(--text-muted);font-family:var(--font-mono);font-size:11px;padding:1px 5px;border-radius:4px;border:1px solid var(--border);pointer-events:none}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.btn-ghost{color:var(--text-sec);font-size:13.5px;font-weight:450;padding:7px 14px;border-radius:var(--r-sm);transition:color .15s,background .15s}
+.btn-ghost:hover{color:var(--text);background:var(--surface-alt)}
+.btn-primary{background:var(--brand);color:#fff;font-size:13.5px;font-weight:600;padding:7px 18px;border-radius:var(--r-md);box-shadow:0 1px 3px rgba(40,84,232,0.3);transition:background .15s,transform .1s,box-shadow .15s}
+.btn-primary:hover{background:var(--brand-dark);transform:translateY(-1px);box-shadow:0 3px 8px rgba(40,84,232,0.3)}
+.hamburger{display:none;color:var(--text-sec);font-size:22px;padding:4px}
+.mob-search-btn{display:none;color:var(--text-sec);font-size:19px;padding:6px;border-radius:var(--r-sm)}
 
-  --brand:          #2854E8;
-  --brand-dark:     #1D3FB8;
-  --brand-bg:       #EBF0FD;
-  --brand-mid:      rgba(40,84,232,0.12);
+/* TODAY BAR */
+.today-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:13px 24px;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.today-label{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;color:var(--text);flex-shrink:0}
+.live-chip{display:inline-flex;align-items:center;gap:5px;background:#ECFDF5;color:#059669;font-size:11px;font-weight:700;letter-spacing:0.4px;padding:2px 8px;border-radius:20px;border:1px solid rgba(5,150,105,0.2)}
+.live-chip::before{content:'';width:6px;height:6px;background:#10B981;border-radius:50%;animation:livepulse 2s infinite}
+@keyframes livepulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.4)}}
+.today-stats{display:flex;align-items:center;flex-wrap:wrap}
+.today-stat{display:flex;align-items:baseline;gap:6px;padding:0 20px;position:relative}
+.today-stat+.today-stat::before{content:'·';position:absolute;left:0;top:50%;transform:translateY(-50%);color:var(--text-muted)}
+.today-stat:first-child{padding-left:0}
+.today-stat-num{font-size:22px;font-weight:700;letter-spacing:-0.5px;line-height:1}
+.today-stat-label{font-size:12px;color:var(--text-muted)}
 
-  --green:          #1D9E75;
-  --green-bg:       #E1F5EE;
-  --green-border:   rgba(29,158,117,0.25);
-  --amber:          #BA7517;
-  --amber-bg:       #FEF3CD;
-  --amber-border:   rgba(186,117,23,0.22);
-  --amber-fill:     rgba(254,243,205,0.6);
-  --purple:         #534AB7;
-  --purple-bg:      #EEEDFE;
-  --red:            #A32D2D;
-  --red-bg:         #FCEBEB;
-  --cyan:           #0E7490;
-  --cyan-bg:        #E0F2FE;
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:var(--sidebar-w) 1fr var(--right-w);max-width:1440px;margin:0 auto;min-height:calc(100vh - var(--nav-h) - 54px)}
 
-  --font-sans: 'Inter', -apple-system, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+/* SIDEBAR */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:20px 0 40px;position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));overflow-y:auto;scrollbar-width:none}
+.sidebar::-webkit-scrollbar{display:none}
+.sidebar-section{padding:0 12px 16px}
+.sidebar-section+.sidebar-section{border-top:1px solid var(--border);padding-top:16px}
+.sidebar-label{font-size:10.5px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--text-muted);padding:0 8px;margin-bottom:4px}
+.sidebar-item{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:var(--r-sm);width:100%;text-align:left;color:var(--text-sec);font-size:13.5px;transition:background .15s,color .15s}
+.sidebar-item:hover{background:var(--surface-alt);color:var(--text)}
+.sidebar-item.active{background:var(--brand-bg);color:var(--brand);font-weight:500}
+.sidebar-item-left{display:flex;align-items:center;gap:8px}
+.sidebar-icon{font-size:14px}
+.sidebar-count{font-size:11.5px;font-weight:600;color:var(--text-muted);background:var(--surface-alt);padding:1px 7px;border-radius:20px;min-width:24px;text-align:center}
+.sidebar-item.active .sidebar-count{background:var(--brand-bg);color:var(--brand)}
+.sidebar-cta{margin:16px 12px 0;background:var(--brand);border-radius:var(--r-lg);padding:14px 16px;color:#fff}
+.sidebar-cta-title{font-size:13px;font-weight:600;margin-bottom:4px}
+.sidebar-cta-sub{font-size:12px;color:rgba(255,255,255,0.78);margin-bottom:12px;line-height:1.45}
+.sidebar-cta-btn{display:block;width:100%;background:rgba(0,0,0,0.18);color:#fff;font-family:var(--font-sans);font-size:13px;font-weight:600;padding:8px;border-radius:7px;cursor:pointer;transition:background .15s;border:none}
+.sidebar-cta-btn:hover{background:rgba(0,0,0,0.28)}
 
-  --r-sm: 6px;  --r-md: 8px;  --r-lg: 12px;  --r-xl: 16px;
-  --nav-h: 60px;
-  --sidebar-w: 240px;
-  --right-w: 300px;
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.06);
-  --shadow-hover: 0 4px 14px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.07);
-}
+/* FEED */
+.feed{padding:0 0 60px}
+.feed-header{display:flex;align-items:center;justify-content:space-between;padding:18px 24px 14px;position:sticky;top:var(--nav-h);background:rgba(248,248,245,0.97);backdrop-filter:blur(8px);z-index:50;border-bottom:1px solid var(--border)}
+.feed-title{font-size:16px;font-weight:600}
+.feed-subtitle{font-size:12px;color:var(--text-muted);margin-top:2px}
+.sort-btn{display:flex;align-items:center;gap:6px;color:var(--text-sec);font-size:12.5px;font-weight:450;padding:6px 12px;border-radius:var(--r-sm);border:1px solid var(--border-md);transition:border-color .15s,color .15s}
+.sort-btn:hover{border-color:var(--brand);color:var(--brand)}
+.filter-bar{padding:12px 24px;display:flex;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border);background:var(--surface)}
+.filter-bar::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;padding:5px 14px;border-radius:20px;font-size:12.5px;font-weight:500;border:1.5px solid var(--border-md);color:var(--text-sec);cursor:pointer;transition:all .15s;background:var(--surface)}
+.chip:hover{border-color:var(--brand);color:var(--brand)}
+.chip.active{background:var(--brand);border-color:var(--brand);color:#fff}
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body {
-  font-family: var(--font-sans);
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
-a { color: inherit; text-decoration: none; }
-button { cursor: pointer; font-family: var(--font-sans); border: none; background: none; }
+/* STAMP CARDS */
+.stamp-list{padding:14px 0}
+.feed-intro{padding:8px 24px 4px;font-size:13px;color:var(--text-muted);line-height:1.5}
+.stamp-card{margin:0 20px 10px;background:var(--surface);border-radius:var(--r-lg);padding:16px 18px;cursor:pointer;box-shadow:var(--shadow-card);transition:box-shadow .2s,transform .15s;position:relative;overflow:hidden;border-left:3px solid transparent}
+.stamp-card:hover{box-shadow:var(--shadow-hover);transform:translateY(-1px)}
+.stamp-card.public{border-left-color:var(--green)}
+.stamp-card.sealed{border-left-color:var(--amber)}
+.stamp-card.revealed{border-left-color:var(--purple)}
+.stamp-card.url-type{border-left-color:var(--cyan)}
+.stamp-card.hash-only{border-left-color:var(--text-muted)}
+.stamp-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.stamp-avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0}
+.stamp-meta{flex:1;min-width:0}
+.stamp-author{font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stamp-sub{font-size:12px;color:var(--text-muted);margin-top:1px}
+.stamp-badges{display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.1px}
+.badge-type{background:var(--surface-alt);color:var(--text-sec)}
+.badge-public{background:var(--green-bg);color:var(--green)}
+.badge-sealed{background:var(--amber-bg);color:var(--amber)}
+.badge-revealed{background:var(--purple-bg);color:var(--purple)}
+.badge-pending{background:var(--amber-bg);color:var(--amber)}
+.badge-hash{background:var(--surface-alt);color:var(--text-muted)}
+.stamp-content{font-size:14.5px;line-height:1.55;color:var(--text);margin-bottom:12px}
+.reveal-row{display:flex;align-items:center;gap:8px;background:var(--amber-fill);border:1px solid var(--amber-border);border-radius:var(--r-sm);padding:8px 12px;margin-bottom:10px;font-size:12.5px;font-weight:500;color:var(--amber)}
+.stamp-sealed-msg{font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.stamp-url-link{color:var(--brand);font-size:13px;word-break:break-all;display:flex;align-items:center;gap:5px;margin-bottom:10px}
+.stamp-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.stamp-hash{font-family:var(--font-mono);font-size:11.5px;color:var(--text-muted);display:flex;align-items:center;gap:5px}
+.stamp-hash a{color:inherit;transition:color .15s}
+.stamp-hash a:hover{color:var(--brand)}
+.proof-link{display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:500;color:var(--brand);padding:5px 12px;background:var(--brand-bg);border-radius:var(--r-sm);transition:background .15s}
+.proof-link:hover{background:rgba(40,84,232,0.18)}
+.arweave-link{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--purple);font-weight:500;transition:color .15s}
+.arweave-link:hover{color:var(--brand)}
 
-/* ============================================================
-   NAV
-   ============================================================ */
-.nav {
-  position: sticky; top: 0; z-index: 100;
-  height: var(--nav-h);
-  background: rgba(255,255,255,0.96);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center;
-  padding: 0 24px; gap: 0;
-}
-.nav-logo {
-  display: flex; align-items: center; gap: 9px;
-  font-weight: 700; font-size: 16px; letter-spacing: -0.3px;
-  color: var(--text); flex-shrink: 0; margin-right: 28px;
-}
-.nav-logo-icon {
-  width: 30px; height: 30px; background: var(--brand);
-  border-radius: 7px; display: grid; place-items: center;
-  font-weight: 800; font-size: 13px; color: #fff;
-}
-.nav-links { display: flex; align-items: center; gap: 2px; list-style: none; }
-.nav-links a {
-  padding: 6px 13px; font-size: 14px; font-weight: 450;
-  color: var(--text-sec); border-radius: var(--r-sm);
-  transition: color .15s, background .15s; position: relative;
-}
-.nav-links a:hover { color: var(--text); background: var(--surface-alt); }
-.nav-links a.active { color: var(--brand); font-weight: 500; }
-.nav-links a.active::after {
-  content: ''; position: absolute; bottom: -18px; left: 13px; right: 13px;
-  height: 2px; background: var(--brand); border-radius: 2px;
-}
-.nav-search {
-  flex: 1; max-width: 360px; margin-left: 16px; position: relative;
-}
-.nav-search-icon {
-  position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
-  color: var(--text-muted); font-size: 14px; pointer-events: none;
-}
-.nav-search input {
-  width: 100%; background: var(--bg); border: 1px solid var(--border-md);
-  border-radius: var(--r-md); color: var(--text); font-family: var(--font-sans);
-  font-size: 13.5px; padding: 7.5px 36px 7.5px 34px; outline: none;
-  transition: border .2s, box-shadow .2s;
-}
-.nav-search input::placeholder { color: var(--text-muted); }
-.nav-search input:focus {
-  border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-mid); background: #fff;
-}
-.nav-search-slash {
-  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-  background: var(--surface-alt); color: var(--text-muted); font-family: var(--font-mono);
-  font-size: 11px; padding: 1px 5px; border-radius: 4px;
-  border: 1px solid var(--border); pointer-events: none;
-}
-.nav-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-.btn-ghost {
-  color: var(--text-sec); font-size: 13.5px; font-weight: 450;
-  padding: 7px 14px; border-radius: var(--r-sm); transition: color .15s, background .15s;
-}
-.btn-ghost:hover { color: var(--text); background: var(--surface-alt); }
-.btn-primary {
-  background: var(--brand); color: #fff; font-size: 13.5px; font-weight: 600;
-  padding: 7px 18px; border-radius: var(--r-md);
-  box-shadow: 0 1px 3px rgba(40,84,232,0.3);
-  transition: background .15s, transform .1s, box-shadow .15s;
-}
-.btn-primary:hover { background: var(--brand-dark); transform: translateY(-1px); box-shadow: 0 3px 8px rgba(40,84,232,0.3); }
-.btn-icon {
-  width: 34px; height: 34px; border-radius: var(--r-sm);
-  display: grid; place-items: center; font-size: 15px;
-  color: var(--text-sec); border: 1px solid var(--border);
-  transition: border-color .15s, background .15s;
-}
-.btn-icon:hover { background: var(--surface-alt); }
-.hamburger { display: none; color: var(--text-sec); font-size: 22px; padding: 4px; }
-.mob-search-btn {
-  display: none; color: var(--text-sec); font-size: 19px;
-  padding: 6px; border-radius: var(--r-sm);
-  transition: background .15s;
-}
-.mob-search-btn:hover { background: var(--surface-alt); }
+/* LOADING / EMPTY STATES */
+.feed-loading{padding:48px 24px;text-align:center;color:var(--text-muted)}
+.feed-spinner{width:32px;height:32px;border:3px solid var(--border-md);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.feed-empty{padding:48px 24px;text-align:center;color:var(--text-muted)}
+.feed-empty-icon{font-size:2.5rem;margin-bottom:12px}
+.feed-empty h3{font-size:15px;color:var(--text-sec);margin-bottom:6px}
+.load-more-btn{display:block;margin:8px 20px 0;width:calc(100% - 40px);padding:12px;border:1.5px dashed var(--border-md);border-radius:var(--r-lg);color:var(--text-muted);font-size:13.5px;font-weight:500;transition:all .15s;background:none;cursor:pointer}
+.load-more-btn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-bg)}
 
-/* ============================================================
-   TODAY BAR
-   ============================================================ */
-.today-bar {
-  background: var(--surface); border-bottom: 1px solid var(--border);
-  padding: 13px 24px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
-}
-.today-label {
-  display: flex; align-items: center; gap: 8px;
-  font-weight: 600; font-size: 14px; color: var(--text); flex-shrink: 0;
-}
-.live-chip {
-  display: inline-flex; align-items: center; gap: 5px;
-  background: #ECFDF5; color: #059669;
-  font-size: 11px; font-weight: 700; letter-spacing: 0.4px;
-  padding: 2px 8px; border-radius: 20px; border: 1px solid rgba(5,150,105,0.2);
-}
-.live-chip::before {
-  content: ''; width: 6px; height: 6px; background: #10B981;
-  border-radius: 50%; animation: livepulse 2s infinite;
-}
-@keyframes livepulse {
-  0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.4)}
-}
-.today-stats { display: flex; align-items: center; flex-wrap: wrap; }
-.today-stat {
-  display: flex; align-items: baseline; gap: 6px;
-  padding: 0 20px; position: relative;
-}
-.today-stat+.today-stat::before {
-  content: '·'; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-  color: var(--text-muted);
-}
-.today-stat:first-child { padding-left: 0; }
-.today-stat-num { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; line-height: 1; }
-.today-stat-label { font-size: 12px; color: var(--text-muted); }
+/* RIGHT PANEL */
+.right-panel{padding:20px 18px;position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));overflow-y:auto;scrollbar-width:none}
+.right-panel::-webkit-scrollbar{display:none}
+.panel-card{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow-card);padding:16px;margin-bottom:14px}
+.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.panel-title{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:var(--text-sec)}
+.view-all{font-size:12px;font-weight:500;color:var(--brand);transition:opacity .15s}
+.view-all:hover{opacity:.75}
+.cal-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.cal-item:last-child{border-bottom:none;padding-bottom:0}
+.cal-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.cal-dot.green{background:var(--green)}
+.cal-dot.amber{background:var(--amber)}
+.cal-dot.brand{background:var(--brand)}
+.cal-dot.muted{background:var(--text-muted)}
+.cal-info{flex:1}
+.cal-when{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:2px}
+.cal-desc{font-size:12px;color:var(--text-sec);line-height:1.4;margin-bottom:4px}
+.cal-count{font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px}
+.cal-emoji{font-size:22px;flex-shrink:0}
+.why-body{font-size:13px;color:var(--text-sec);line-height:1.55;margin-bottom:10px}
+.why-badge{display:inline-flex;align-items:center;gap:5px;background:var(--green-bg);color:var(--green);font-size:12px;font-weight:600;padding:5px 12px;border-radius:20px;border:1px solid var(--green-border)}
+.creator-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.creator-item:last-child{border-bottom:none;padding-bottom:0}
+.creator-rank{font-size:13px;font-weight:700;color:var(--text-muted);width:16px}
+.creator-avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:14px;flex-shrink:0;font-weight:700;color:#fff}
+.creator-info{flex:1}
+.creator-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.creator-sub{font-size:11.5px;color:var(--text-muted)}
+.creator-stamps{font-size:13px;font-weight:700;color:var(--brand)}
 
-/* ============================================================
-   LAYOUT — 3 columns on desktop, 1 on mobile
-   ============================================================ */
-.layout {
-  display: grid;
-  grid-template-columns: var(--sidebar-w) 1fr var(--right-w);
-  max-width: 1440px; margin: 0 auto;
-  min-height: calc(100vh - var(--nav-h) - 54px);
-}
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:var(--surface)}
+.footer-copy{font-size:12.5px;color:var(--text-muted)}
+.footer-links{display:flex;gap:18px;list-style:none}
+.footer-links a{font-size:12.5px;color:var(--text-muted);transition:color .15s}
+.footer-links a:hover{color:var(--text)}
+.footer-socials{display:flex;gap:14px}
+.footer-socials a{color:var(--text-muted);font-size:16px;transition:color .15s}
+.footer-socials a:hover{color:var(--text)}
 
-/* ============================================================
-   LEFT SIDEBAR
-   ============================================================ */
-.sidebar {
-  background: var(--surface); border-right: 1px solid var(--border);
-  padding: 20px 0 40px;
-  position: sticky; top: var(--nav-h);
-  height: calc(100vh - var(--nav-h));
-  overflow-y: auto; scrollbar-width: none;
-}
-.sidebar::-webkit-scrollbar { display: none; }
+/* MOBILE TABS */
+.mobile-tabs{display:none}
 
-.sidebar-section { padding: 0 12px 16px; }
-.sidebar-section+.sidebar-section { border-top: 1px solid var(--border); padding-top: 16px; }
+/* MOBILE BOTTOM NAV */
+.mobile-bottom-nav{display:none}
 
-.sidebar-label {
-  font-size: 10.5px; font-weight: 700; letter-spacing: 1.1px;
-  text-transform: uppercase; color: var(--text-muted);
-  padding: 0 8px; margin-bottom: 4px;
-}
-.sidebar-item {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 7px 10px; border-radius: var(--r-sm); width: 100%; text-align: left;
-  color: var(--text-sec); font-size: 13.5px;
-  transition: background .15s, color .15s;
-}
-.sidebar-item:hover { background: var(--surface-alt); color: var(--text); }
-.sidebar-item.active { background: var(--brand-bg); color: var(--brand); font-weight: 500; }
-.sidebar-item-left { display: flex; align-items: center; gap: 8px; }
-.sidebar-icon { font-size: 14px; }
-.sidebar-count {
-  font-size: 11.5px; font-weight: 600; color: var(--text-muted);
-  background: var(--surface-alt); padding: 1px 7px; border-radius: 20px;
-  min-width: 24px; text-align: center;
-}
-.sidebar-item.active .sidebar-count { background: var(--brand-bg); color: var(--brand); }
+/* FILTER DRAWER */
+.drawer-overlay{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.35);backdrop-filter:blur(2px)}
+.drawer-overlay.open{display:block}
+.filter-drawer{position:fixed;bottom:0;left:0;right:0;z-index:400;background:var(--surface);border-radius:20px 20px 0 0;padding:20px;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,0,.67,0);max-height:80vh;overflow-y:auto}
+.filter-drawer.open{transform:translateY(0)}
+.drawer-handle{width:36px;height:4px;background:var(--border-md);border-radius:2px;margin:0 auto 20px}
+.drawer-close{position:absolute;top:16px;right:20px;background:var(--surface-alt);width:28px;height:28px;border-radius:50%;font-size:14px;display:grid;place-items:center;cursor:pointer;color:var(--text-sec)}
+.drawer-section{margin-bottom:20px}
+.drawer-section-title{font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px}
+.drawer-options{display:flex;flex-direction:column;gap:6px}
+.drawer-option{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--surface-alt);border-radius:var(--r-sm);cursor:pointer;font-size:14px;color:var(--text)}
+.drawer-option-left{display:flex;align-items:center;gap:10px}
+.drawer-check{width:20px;height:20px;border-radius:5px;border:2px solid var(--border-md);display:grid;place-items:center;font-size:11px;color:transparent}
+.drawer-check.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.drawer-apply{display:block;width:100%;background:var(--brand);border:none;color:#fff;font-family:var(--font-sans);font-size:15px;font-weight:600;padding:14px;border-radius:var(--r-md);cursor:pointer;margin-top:4px}
+.drawer-reset{display:block;width:100%;background:none;border:none;color:var(--text-muted);font-family:var(--font-sans);font-size:14px;padding:10px;cursor:pointer}
 
-.sidebar-cta {
-  margin: 16px 12px 0;
-  background: var(--brand); border-radius: var(--r-lg); padding: 14px 16px;
-  color: #fff;
-}
-.sidebar-cta-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
-.sidebar-cta-sub { font-size: 12px; color: rgba(255,255,255,0.78); margin-bottom: 12px; line-height: 1.45; }
-.sidebar-cta-btn {
-  display: block; width: 100%; background: rgba(0,0,0,0.18); color: #fff;
-  font-family: var(--font-sans); font-size: 13px; font-weight: 600;
-  padding: 8px; border-radius: 7px; cursor: pointer; transition: background .15s;
-  border: none;
-}
-.sidebar-cta-btn:hover { background: rgba(0,0,0,0.28); }
-
-/* ============================================================
-   MAIN FEED
-   ============================================================ */
-.feed { padding: 0 0 60px; }
-
-.feed-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 18px 24px 14px;
-  position: sticky; top: var(--nav-h);
-  background: rgba(248,248,245,0.97); backdrop-filter: blur(8px);
-  z-index: 50; border-bottom: 1px solid var(--border);
-}
-.feed-title { font-size: 16px; font-weight: 600; }
-.sort-btn {
-  display: flex; align-items: center; gap: 6px;
-  color: var(--text-sec); font-size: 12.5px; font-weight: 450;
-  padding: 6px 12px; border-radius: var(--r-sm);
-  border: 1px solid var(--border-md);
-  transition: border-color .15s, color .15s;
-}
-.sort-btn:hover { border-color: var(--brand); color: var(--brand); }
-
-/* Filter chips */
-.filter-bar {
-  padding: 12px 24px; display: flex; align-items: center; gap: 8px;
-  overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--border);
-  background: var(--surface);
-}
-.filter-bar::-webkit-scrollbar { display: none; }
-.chip {
-  flex-shrink: 0; padding: 5px 14px; border-radius: 20px;
-  font-size: 12.5px; font-weight: 500;
-  border: 1.5px solid var(--border-md); color: var(--text-sec);
-  cursor: pointer; transition: all .15s; background: var(--surface);
-}
-.chip:hover { border-color: var(--brand); color: var(--brand); }
-.chip.active { background: var(--brand); border-color: var(--brand); color: #fff; }
-
-/* ============================================================
-   STAMP CARDS
-   ============================================================ */
-.stamp-list { padding: 14px 0; }
-
-.stamp-card {
-  margin: 0 20px 10px;
-  background: var(--surface);
-  border-radius: var(--r-lg);
-  padding: 16px 18px;
-  cursor: pointer;
-  box-shadow: var(--shadow-card);
-  transition: box-shadow .2s, transform .15s;
-  position: relative; overflow: hidden;
-  border-left: 3px solid transparent;
-}
-.stamp-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-1px); }
-.stamp-card.public  { border-left-color: var(--green); }
-.stamp-card.sealed  { border-left-color: var(--amber); }
-.stamp-card.revealed{ border-left-color: var(--purple); }
-.stamp-card.url-type{ border-left-color: var(--cyan); }
-
-.stamp-card-top {
-  display: flex; align-items: flex-start;
-  justify-content: space-between; gap: 12px; margin-bottom: 10px;
-}
-.stamp-avatar {
-  width: 36px; height: 36px; border-radius: 50%;
-  display: grid; place-items: center;
-  font-weight: 700; font-size: 14px; color: #fff; flex-shrink: 0;
-}
-.stamp-meta { flex: 1; min-width: 0; }
-.stamp-author { font-size: 13.5px; font-weight: 600; color: var(--text); }
-.stamp-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
-
-.stamp-badges {
-  display: flex; align-items: center; gap: 5px; flex-shrink: 0;
-  flex-wrap: wrap; justify-content: flex-end;
-}
-.badge {
-  display: inline-flex; align-items: center; gap: 3px;
-  padding: 3px 9px; border-radius: 20px;
-  font-size: 11px; font-weight: 600; letter-spacing: 0.1px;
-}
-.badge-type     { background: var(--surface-alt); color: var(--text-sec); }
-.badge-public   { background: var(--green-bg);  color: var(--green); }
-.badge-sealed   { background: var(--amber-bg);  color: var(--amber); }
-.badge-revealed { background: var(--purple-bg); color: var(--purple); }
-.badge-pending  { background: var(--amber-bg);  color: var(--amber); }
-.badge-correct  { background: var(--green-bg);  color: var(--green); }
-.badge-incorrect{ background: var(--red-bg);    color: var(--red); }
-.badge-url      { background: var(--cyan-bg);   color: var(--cyan); }
-
-.stamp-content {
-  font-size: 14.5px; line-height: 1.55; color: var(--text); margin-bottom: 12px;
-}
-
-/* Sealed reveal row */
-.reveal-row {
-  display: flex; align-items: center; gap: 8px;
-  background: var(--amber-fill);
-  border: 1px solid var(--amber-border);
-  border-radius: var(--r-sm);
-  padding: 8px 12px; margin-bottom: 10px;
-  font-size: 12.5px; font-weight: 500; color: var(--amber);
-}
-.stamp-sealed-msg {
-  font-size: 13px; color: var(--text-muted);
-  display: flex; align-items: center; gap: 6px;
-  margin-bottom: 10px;
-}
-
-/* URL link */
-.stamp-url-link {
-  color: var(--brand); font-size: 13px;
-  word-break: break-all;
-  display: flex; align-items: center; gap: 5px;
-  margin-bottom: 10px;
-}
-
-.stamp-footer {
-  display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: 8px;
-}
-.stamp-hash {
-  font-family: var(--font-mono); font-size: 11.5px; color: var(--text-muted);
-  display: flex; align-items: center; gap: 5px;
-}
-.stamp-hash a { color: inherit; transition: color .15s; }
-.stamp-hash a:hover { color: var(--brand); }
-.proof-link {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 12.5px; font-weight: 500; color: var(--brand);
-  padding: 5px 12px; background: var(--brand-bg);
-  border-radius: var(--r-sm); transition: background .15s;
-}
-.proof-link:hover { background: rgba(40,84,232,0.18); }
-.arweave-link {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 12px; color: var(--purple); font-weight: 500; transition: color .15s;
-}
-.arweave-link:hover { color: var(--brand); }
-
-/* ============================================================
-   RIGHT PANEL
-   ============================================================ */
-.right-panel {
-  padding: 20px 18px;
-  position: sticky; top: var(--nav-h);
-  height: calc(100vh - var(--nav-h));
-  overflow-y: auto; scrollbar-width: none;
-}
-.right-panel::-webkit-scrollbar { display: none; }
-
-.panel-card {
-  background: var(--surface); border-radius: var(--r-lg);
-  box-shadow: var(--shadow-card); padding: 16px; margin-bottom: 14px;
-}
-.panel-header {
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
-}
-.panel-title {
-  display: flex; align-items: center; gap: 7px;
-  font-size: 12px; font-weight: 700; letter-spacing: 0.6px;
-  text-transform: uppercase; color: var(--text-sec);
-}
-.view-all { font-size: 12px; font-weight: 500; color: var(--brand); transition: opacity .15s; }
-.view-all:hover { opacity: .75; }
-
-/* Reveal calendar */
-.cal-item {
-  display: flex; align-items: flex-start; gap: 10px;
-  padding: 10px 0; border-bottom: 1px solid var(--border);
-}
-.cal-item:last-child { border-bottom: none; padding-bottom: 0; }
-.cal-dot {
-  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px;
-}
-.cal-dot.green  { background: var(--green); }
-.cal-dot.amber  { background: var(--amber); }
-.cal-dot.brand  { background: var(--brand); }
-.cal-dot.muted  { background: var(--text-muted); }
-.cal-info { flex: 1; }
-.cal-when { font-size: 12.5px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
-.cal-desc { font-size: 12px; color: var(--text-sec); line-height: 1.4; margin-bottom: 4px; }
-.cal-count {
-  font-size: 11px; color: var(--text-muted);
-  display: flex; align-items: center; gap: 4px;
-}
-.cal-emoji { font-size: 22px; flex-shrink: 0; }
-
-/* Why stamp */
-.why-body { font-size: 13px; color: var(--text-sec); line-height: 1.55; margin-bottom: 10px; }
-.why-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  background: var(--green-bg); color: var(--green);
-  font-size: 12px; font-weight: 600;
-  padding: 5px 12px; border-radius: 20px;
-  border: 1px solid var(--green-border);
-}
-
-/* Top creators */
-.creator-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 0; border-bottom: 1px solid var(--border);
-}
-.creator-item:last-child { border-bottom: none; padding-bottom: 0; }
-.creator-rank { font-size: 13px; font-weight: 700; color: var(--text-muted); width: 16px; }
-.creator-avatar {
-  width: 30px; height: 30px; border-radius: 50%;
-  display: grid; place-items: center; font-size: 14px; flex-shrink: 0;
-}
-.creator-info { flex: 1; }
-.creator-name { font-size: 13px; font-weight: 500; }
-.creator-sub  { font-size: 11.5px; color: var(--text-muted); }
-.creator-acc  { font-size: 13px; font-weight: 700; color: var(--green); }
-
-/* ============================================================
-   FOOTER
-   ============================================================ */
-footer {
-  border-top: 1px solid var(--border); padding: 18px 24px;
-  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
-  background: var(--surface);
-}
-.footer-copy { font-size: 12.5px; color: var(--text-muted); }
-.footer-links { display: flex; gap: 18px; list-style: none; }
-.footer-links a { font-size: 12.5px; color: var(--text-muted); transition: color .15s; }
-.footer-links a:hover { color: var(--text); }
-.footer-socials { display: flex; gap: 14px; }
-.footer-socials a { color: var(--text-muted); font-size: 16px; transition: color .15s; }
-.footer-socials a:hover { color: var(--text); }
-
-/* ============================================================
-   MOBILE TABS (hidden on desktop)
-   ============================================================ */
-.mobile-tabs { display: none; }
-
-/* ============================================================
-   MOBILE BOTTOM NAV (hidden on desktop)
-   ============================================================ */
-.mobile-bottom-nav { display: none; }
-
-/* ============================================================
-   FILTER DRAWER
-   ============================================================ */
-.drawer-overlay {
-  display: none; position: fixed; inset: 0; z-index: 300;
-  background: rgba(0,0,0,0.35); backdrop-filter: blur(2px);
-}
-.drawer-overlay.open { display: block; }
-.filter-drawer {
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 400;
-  background: var(--surface); border-radius: 20px 20px 0 0;
-  padding: 20px; transform: translateY(100%);
-  transition: transform .3s cubic-bezier(.32,0,.67,0);
-  max-height: 80vh; overflow-y: auto;
-}
-.filter-drawer.open { transform: translateY(0); }
-.drawer-handle {
-  width: 36px; height: 4px; background: var(--border-md);
-  border-radius: 2px; margin: 0 auto 20px;
-}
-.drawer-close {
-  position: absolute; top: 16px; right: 20px;
-  background: var(--surface-alt); width: 28px; height: 28px;
-  border-radius: 50%; font-size: 14px; display: grid; place-items: center;
-  cursor: pointer; color: var(--text-sec);
-}
-.drawer-section { margin-bottom: 20px; }
-.drawer-section-title {
-  font-size: 11px; font-weight: 700; letter-spacing: 0.8px;
-  text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px;
-}
-.drawer-options { display: flex; flex-direction: column; gap: 6px; }
-.drawer-option {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 11px 14px; background: var(--surface-alt);
-  border-radius: var(--r-sm); cursor: pointer; font-size: 14px; color: var(--text);
-}
-.drawer-option-left { display: flex; align-items: center; gap: 10px; }
-.drawer-check {
-  width: 20px; height: 20px; border-radius: 5px;
-  border: 2px solid var(--border-md);
-  display: grid; place-items: center; font-size: 11px; color: transparent;
-}
-.drawer-check.on { background: var(--brand); border-color: var(--brand); color: #fff; }
-.drawer-apply {
-  display: block; width: 100%; background: var(--brand); border: none; color: #fff;
-  font-family: var(--font-sans); font-size: 15px; font-weight: 600;
-  padding: 14px; border-radius: var(--r-md); cursor: pointer; margin-top: 4px;
-}
-.drawer-reset {
-  display: block; width: 100%; background: none; border: none; color: var(--text-muted);
-  font-family: var(--font-sans); font-size: 14px; padding: 10px; cursor: pointer;
-}
-
-/* ============================================================
-   RESPONSIVE — MOBILE
-   ============================================================ */
-@media (max-width: 900px) {
-  .layout { grid-template-columns: 1fr; }
-  .sidebar { display: none; }
-  .right-panel { display: none; }
-
-  /* Nav: hide links + search bar + sign-in/up text, show icons only */
-  .nav-links { display: none; }
-  .nav-search { display: none; }
-  .btn-ghost { display: none; }
-  .btn-primary { display: none; }
-  .btn-icon { display: none; }
-  .hamburger { display: flex; }
-  .mob-search-btn { display: flex; }
-
-  /* Today bar: 2-row grid on mobile */
-  .today-bar {
-    padding: 12px 16px; gap: 0;
-    flex-direction: column; align-items: flex-start;
-  }
-  .today-stats {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    gap: 0; width: 100%; margin-top: 8px;
-  }
-  .today-stat {
-    display: flex; flex-direction: column; align-items: flex-start;
-    padding: 0 0 0 0; position: static;
-  }
-  .today-stat+.today-stat::before { display: none; }
-  .today-stat-num { font-size: 20px; font-weight: 700; }
-  .today-stat-label { font-size: 11px; color: var(--text-muted); }
-
-  body { padding-bottom: 74px; }
-
-  /* Mobile bottom nav */
-  .mobile-bottom-nav {
-    display: block; position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
-    background: rgba(255,255,255,0.98); backdrop-filter: blur(16px);
-    border-top: 1px solid var(--border);
-    padding: 4px 0 env(safe-area-inset-bottom, 6px);
-  }
-  .mobile-bottom-nav ul { display: flex; justify-content: space-around; list-style: none; }
-  .mob-nav-item {
-    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
-    padding: 6px 4px; font-size: 10px; font-weight: 500; color: var(--text-muted);
-    cursor: pointer; background: none; border: none; transition: color .15s;
-  }
-  .mob-nav-item.active { color: var(--brand); }
-  .mob-nav-icon {
-    width: 22px; height: 22px; display: block;
-  }
-  /* Stamp FAB button in bottom nav */
-  .mob-nav-item.stamp-cta .mob-nav-icon {
-    background: var(--brand); color: #fff;
-    border-radius: 14px; width: 44px; height: 44px;
-    display: grid; place-items: center;
-    margin-top: -16px; box-shadow: 0 4px 14px rgba(40,84,232,0.4);
-    padding: 10px;
-  }
-  .mob-nav-item.stamp-cta { color: var(--text); font-weight: 600; font-size: 10.5px; }
-
-  /* Tab pills */
-  .mobile-tabs {
-    display: flex; overflow-x: auto; scrollbar-width: none;
-    gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border);
-    background: var(--surface); position: sticky; top: var(--nav-h); z-index: 40;
-  }
-  .mobile-tabs::-webkit-scrollbar { display: none; }
-  .mob-tab {
-    flex-shrink: 0; padding: 7px 20px; border-radius: 24px;
-    font-size: 13.5px; font-weight: 500; cursor: pointer;
-    background: var(--surface-alt); color: var(--text-sec);
-    border: 1.5px solid var(--border-md); transition: all .15s;
-  }
-  .mob-tab.active {
-    background: var(--brand); border-color: var(--brand); color: #fff;
+/* ── MOBILE ────────────────────────────────────────────────────────────── */
+@media(max-width:900px){
+  /* Spacing system */
+  :root{
+    --page-pad:16px;
+    --card-radius:16px;
+    --section-gap:0px;
   }
 
-  .feed-header {
-    top: calc(var(--nav-h) + 52px);
-    padding: 14px 16px 12px;
-  }
-  .stamp-card { margin: 0 12px 10px; }
-  .filter-bar { padding: 10px 16px; }
-}
+  .layout{grid-template-columns:1fr}
+  .sidebar,.right-panel{display:none}
 
-/* Mobile search overlay */
-.mob-search-overlay {
-  display: none; position: fixed; inset: 0; z-index: 500;
-  background: var(--surface); padding: 14px 16px;
-  flex-direction: column; gap: 16px;
+  /* Nav — consistent height, centered items */
+  .nav{
+    height:56px;
+    padding:0 var(--page-pad);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .nav-logo{margin-right:0;font-size:15px}
+  .nav-links,.nav-search,.btn-ghost,.btn-primary{display:none}
+  .nav-right{gap:4px;margin-left:auto}
+  .mob-search-btn,.hamburger{
+    display:flex;
+    width:40px;height:40px;
+    align-items:center;justify-content:center;
+    border-radius:var(--r-sm);
+    font-size:18px;
+    flex-shrink:0;
+  }
+
+  /* Stats bar — single rounded card */
+  .today-bar{
+    margin:12px var(--page-pad);
+    padding:14px 16px;
+    border-radius:16px;
+    border:1px solid var(--border-md);
+    background:var(--surface);
+    box-shadow:var(--shadow-card);
+    gap:10px;
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  .today-label{font-size:13px;font-weight:600}
+  .today-stats{
+    display:grid!important;
+    grid-template-columns:1fr 1fr;
+    gap:10px 0;
+    width:100%;
+    margin-top:4px;
+  }
+  .today-stat{
+    display:flex;flex-direction:column;
+    align-items:flex-start;padding:0;position:static;
+  }
+  .today-stat+.today-stat::before{display:none}
+  .today-stat-num{font-size:22px;font-weight:700;letter-spacing:-0.5px}
+  .today-stat-label{font-size:11px;color:var(--text-muted);margin-top:1px}
+
+  /* Tabs — proper breathing room */
+  .mobile-tabs{
+    display:flex;
+    overflow-x:auto;
+    scrollbar-width:none;
+    gap:8px;
+    padding:10px var(--page-pad);
+    border-bottom:1px solid var(--border);
+    background:var(--surface);
+    position:sticky;
+    top:56px;
+    z-index:40;
+    -webkit-overflow-scrolling:touch;
+    /* fade right edge */
+    -webkit-mask-image:linear-gradient(to right,black 85%,transparent);
+    mask-image:linear-gradient(to right,black 85%,transparent);
+  }
+  .mobile-tabs::-webkit-scrollbar{display:none}
+  .mob-tab{
+    flex-shrink:0;
+    padding:6px 16px;
+    border-radius:20px;
+    font-size:13px;font-weight:500;
+    cursor:pointer;
+    background:var(--surface-alt);
+    color:var(--text-sec);
+    border:1.5px solid var(--border-md);
+    transition:all .15s;
+    white-space:nowrap;
+  }
+  .mob-tab.active{background:var(--brand);border-color:var(--brand);color:#fff}
+
+  /* Feed header */
+  .feed-header{
+    top:calc(56px + 45px);
+    padding:12px var(--page-pad) 10px;
+    background:rgba(248,248,245,0.97);
+  }
+  .feed-title{font-size:15px}
+
+  /* Filter chips — fade right edge */
+  .filter-bar{
+    padding:8px var(--page-pad);
+    gap:6px;
+    -webkit-mask-image:linear-gradient(to right,black 85%,transparent);
+    mask-image:linear-gradient(to right,black 85%,transparent);
+  }
+  .chip{padding:5px 12px;font-size:12px}
+
+  /* Feed intro text */
+  .feed-intro{
+    padding:8px var(--page-pad) 0;
+    font-size:12.5px;
+    color:var(--text-muted);
+    line-height:1.5;
+  }
+
+  /* Cards — breathing room from edges */
+  .stamp-card{
+    margin:0 var(--page-pad) 10px;
+    border-radius:var(--card-radius);
+  }
+  .stamp-list{padding:10px 0}
+  .load-more-btn{margin:8px var(--page-pad) 0;width:calc(100% - 32px)}
+
+  /* Safe bottom spacing for iOS Safari */
+  body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+
+  /* Bottom nav — glass blur, safe area */
+  .mobile-bottom-nav{
+    display:block;
+    position:fixed;bottom:0;left:0;right:0;z-index:200;
+    background:rgba(255,255,255,0.92);
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+    border-top:1px solid var(--border);
+    padding-bottom:env(safe-area-inset-bottom,6px);
+  }
+  .mobile-bottom-nav ul{
+    display:flex;justify-content:space-around;list-style:none;
+    height:56px;align-items:center;
+  }
+  .mob-nav-item{
+    flex:1;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:3px;
+    padding:4px;font-size:10px;font-weight:500;color:var(--text-muted);
+    cursor:pointer;background:none;border:none;
+    transition:color .15s;min-height:44px;
+  }
+  .mob-nav-item.active{color:var(--brand)}
+  .mob-nav-icon{width:22px;height:22px;display:block}
+  .mob-nav-item.stamp-cta .mob-nav-icon{
+    background:var(--brand);color:#fff;
+    border-radius:14px;width:44px;height:44px;
+    display:grid;place-items:center;
+    margin-top:-20px;
+    box-shadow:0 4px 14px rgba(40,84,232,0.4);
+    padding:10px;
+  }
+  .mob-nav-item.stamp-cta{color:var(--text);font-weight:600;font-size:10px}
 }
-.mob-search-overlay.open { display: flex; }
-.mob-search-bar {
-  display: flex; align-items: center; gap: 10px;
-}
-.mob-search-bar input {
-  flex: 1; background: var(--bg); border: 1px solid var(--border-md);
-  border-radius: var(--r-md); color: var(--text);
-  font-family: var(--font-sans); font-size: 15px;
-  padding: 10px 14px; outline: none;
-  transition: border .2s, box-shadow .2s;
-}
-.mob-search-bar input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-mid); }
-.mob-search-cancel {
-  color: var(--brand); font-size: 14px; font-weight: 500; white-space: nowrap;
-}
+.mob-search-overlay{display:none;position:fixed;inset:0;z-index:500;background:var(--surface);padding:14px 16px;flex-direction:column;gap:16px}
+.mob-search-overlay.open{display:flex}
+.mob-search-bar{display:flex;align-items:center;gap:10px}
+.mob-search-bar input{flex:1;background:var(--bg);border:1px solid var(--border-md);border-radius:var(--r-md);color:var(--text);font-family:var(--font-sans);font-size:15px;padding:10px 14px;outline:none;transition:border .2s,box-shadow .2s}
+.mob-search-bar input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-mid)}
+.mob-search-cancel{color:var(--brand);font-size:14px;font-weight:500;white-space:nowrap}
 </style>
 </head>
 <body>
 
-<!-- NAV -->
 <nav class="nav">
-  <div class="nav-logo">
+  <a href="index.html" class="nav-logo">
     <div class="nav-logo-icon">T</div>
     TruthStamp
-  </div>
+  </a>
   <ul class="nav-links">
     <li><a href="explorer.html" class="active">Explorer</a></li>
     <li><a href="verify.html">Verify</a></li>
-    <li><a href="#">Use cases</a></li>
-    <li><a href="#">How it works</a></li>
-    <li><a href="#">Docs</a></li>
+    <li><a href="usecases.html">Use cases</a></li>
+    <li><a href="how-it-works.html">How it works</a></li>
   </ul>
   <div class="nav-search">
     <span class="nav-search-icon">🔍</span>
@@ -677,324 +401,148 @@ footer {
     <span class="nav-search-slash">/</span>
   </div>
   <div class="nav-right">
-    <button class="btn-icon" title="Toggle theme">☀</button>
-    <button class="btn-ghost">Sign in</button>
-    <button class="btn-primary">Sign up</button>
+    <a href="auth.html" class="btn-ghost">Sign in</a>
+    <a href="stamp.html" class="btn-primary">+ New stamp</a>
     <button class="mob-search-btn" onclick="openMobSearch()" title="Search">🔍</button>
-    <button class="hamburger" onclick="openDrawer()">☰</button>
+    <button class="hamburger" onclick="openFilterDrawer()">☰</button>
   </div>
 </nav>
 
-<!-- TODAY BAR -->
 <div class="today-bar">
   <div class="today-label">
-    <span>📡</span> Today in TruthStamp
+    📡 TruthStamp Protocol
     <div class="live-chip">LIVE</div>
   </div>
   <div class="today-stats">
     <div class="today-stat">
-      <span class="today-stat-num" id="st-stamps">44</span>
-      <span class="today-stat-label">Stamps created</span>
+      <span class="today-stat-num" id="st-total">—</span>
+      <span class="today-stat-label">Total stamps</span>
     </div>
     <div class="today-stat">
-      <span class="today-stat-num">5</span>
-      <span class="today-stat-label">Reveals unlocked</span>
+      <span class="today-stat-num" id="st-reveals">—</span>
+      <span class="today-stat-label">Revealed</span>
     </div>
     <div class="today-stat">
-      <span class="today-stat-num">8</span>
+      <span class="today-stat-num" id="st-seals">—</span>
       <span class="today-stat-label">Seals ticking</span>
     </div>
     <div class="today-stat">
-      <span class="today-stat-num">12</span>
-      <span class="today-stat-label">Creators active</span>
+      <span class="today-stat-num" id="st-creators">—</span>
+      <span class="today-stat-label">Creators</span>
     </div>
   </div>
 </div>
 
-<!-- MOBILE TABS -->
 <div class="mobile-tabs">
-  <button class="mob-tab active" onclick="setMobTab(this)">Latest</button>
-  <button class="mob-tab" onclick="setMobTab(this)">Trending</button>
-  <button class="mob-tab" onclick="setMobTab(this)">Reveals</button>
-  <button class="mob-tab" onclick="setMobTab(this)">Upcoming</button>
+  <button class="mob-tab active" data-feed="latest">Latest</button>
+  <button class="mob-tab" data-feed="trending">Trending</button>
+  <button class="mob-tab" data-feed="reveals">Reveals</button>
+  <button class="mob-tab" data-feed="upcoming">Upcoming</button>
 </div>
 
-<!-- LAYOUT -->
 <div class="layout">
-
-  <!-- LEFT SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-section">
       <div class="sidebar-label">Feed</div>
-      <button class="sidebar-item active" onclick="setFeed(this,'Latest stamps')">
+      <button class="sidebar-item active" data-feed="latest">
         <div class="sidebar-item-left"><span class="sidebar-icon">⚡</span>Latest</div>
-        <span class="sidebar-count">44</span>
+        <span class="sidebar-count" id="cnt-total">—</span>
       </button>
-      <button class="sidebar-item" onclick="setFeed(this,'Trending')">
+      <button class="sidebar-item" data-feed="trending">
         <div class="sidebar-item-left"><span class="sidebar-icon">🔥</span>Trending</div>
-        <span class="sidebar-count">12</span>
+        <span class="sidebar-count">—</span>
       </button>
-      <button class="sidebar-item" onclick="setFeed(this,'Recent reveals')">
+      <button class="sidebar-item" data-feed="reveals">
         <div class="sidebar-item-left"><span class="sidebar-icon">🔓</span>Reveals</div>
-        <span class="sidebar-count">5</span>
+        <span class="sidebar-count" id="cnt-reveals">—</span>
       </button>
-      <button class="sidebar-item" onclick="setFeed(this,'Upcoming seals')">
+      <button class="sidebar-item" data-feed="upcoming">
         <div class="sidebar-item-left"><span class="sidebar-icon">⏰</span>Upcoming seals</div>
-        <span class="sidebar-count">8</span>
+        <span class="sidebar-count" id="cnt-sealed">—</span>
       </button>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-label">Type</div>
-      <button class="sidebar-item" onclick="this.classList.toggle('active')">
+      <button class="sidebar-item" data-type="text">
         <div class="sidebar-item-left"><span class="sidebar-icon">📝</span>Text</div>
-        <span class="sidebar-count">28</span>
+        <span class="sidebar-count" id="cnt-text">—</span>
       </button>
-      <button class="sidebar-item" onclick="this.classList.toggle('active')">
+      <button class="sidebar-item" data-type="file">
         <div class="sidebar-item-left"><span class="sidebar-icon">📄</span>File</div>
-        <span class="sidebar-count">9</span>
+        <span class="sidebar-count" id="cnt-file">—</span>
       </button>
-      <button class="sidebar-item" onclick="this.classList.toggle('active')">
+      <button class="sidebar-item" data-type="url">
         <div class="sidebar-item-left"><span class="sidebar-icon">🔗</span>URL</div>
-        <span class="sidebar-count">7</span>
+        <span class="sidebar-count" id="cnt-url">—</span>
       </button>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-label">Category</div>
-      <button class="sidebar-item" onclick="this.classList.toggle('active')">
+      <button class="sidebar-item" data-cat="Predictions">
         <div class="sidebar-item-left"><span class="sidebar-icon">🎯</span>Predictions</div>
-        <span class="sidebar-count">19</span>
+        <span class="sidebar-count" id="cnt-pred">—</span>
       </button>
-      <button class="sidebar-item" onclick="this.classList.toggle('active')">
+      <button class="sidebar-item" data-cat="Research">
         <div class="sidebar-item-left"><span class="sidebar-icon">🔬</span>Research</div>
-        <span class="sidebar-count">8</span>
+        <span class="sidebar-count">—</span>
       </button>
-      <button class="sidebar-item" onclick="this.classList.toggle('active')">
+      <button class="sidebar-item" data-cat="Creative">
         <div class="sidebar-item-left"><span class="sidebar-icon">🎨</span>Creative</div>
-        <span class="sidebar-count">6</span>
+        <span class="sidebar-count">—</span>
       </button>
-      <button class="sidebar-item" onclick="this.classList.toggle('active')">
+      <button class="sidebar-item" data-cat="News">
         <div class="sidebar-item-left"><span class="sidebar-icon">📰</span>News</div>
-        <span class="sidebar-count">5</span>
+        <span class="sidebar-count">—</span>
       </button>
-    </div>
-    <div class="sidebar-section">
-      <div class="sidebar-label">Chain</div>
-      <button class="sidebar-item active" onclick="setChain(this)">
-        <div class="sidebar-item-left"><span class="sidebar-icon">⚡</span>MegaETH</div>
-        <span class="sidebar-count">44</span>
-      </button>
-      <button class="sidebar-item" onclick="setChain(this)">
-        <div class="sidebar-item-left"><span class="sidebar-icon">₿</span>Bitcoin</div>
-        <span class="sidebar-count">0</span>
-      </button>
-      <button class="sidebar-item" onclick="setChain(this)">
-        <div class="sidebar-item-left"><span class="sidebar-icon">🌐</span>All chains</div>
-        <span class="sidebar-count">44</span>
+      <button class="sidebar-item" data-cat="Crypto">
+        <div class="sidebar-item-left"><span class="sidebar-icon">₿</span>Crypto</div>
+        <span class="sidebar-count">—</span>
       </button>
     </div>
     <div class="sidebar-cta">
       <div class="sidebar-cta-title">Create your own stamp</div>
       <div class="sidebar-cta-sub">Lock in your ideas, predictions or proofs — permanently.</div>
-      <button class="sidebar-cta-btn">+ New stamp</button>
+      <button class="sidebar-cta-btn" onclick="location.href='stamp.html'">+ New stamp</button>
     </div>
   </aside>
 
-  <!-- MAIN FEED -->
   <main class="feed">
     <div class="feed-header">
-      <div class="feed-title" id="feedTitle">Latest stamps</div>
+      <div>
+        <div class="feed-title" id="feedTitle">Latest stamps</div>
+        <div class="feed-subtitle" id="feedSubtitle"></div>
+      </div>
       <button class="sort-btn" onclick="toggleSort()">⇅ <span id="sortLbl">Newest first</span></button>
     </div>
-
     <div class="filter-bar">
-      <button class="chip active" onclick="setChip(this)">All</button>
-      <button class="chip" onclick="setChip(this)">Predictions</button>
-      <button class="chip" onclick="setChip(this)">Research</button>
-      <button class="chip" onclick="setChip(this)">Creative</button>
-      <button class="chip" onclick="setChip(this)">URLs</button>
-      <button class="chip" onclick="setChip(this)">Files</button>
-      <button class="chip" onclick="openDrawer()">• • •</button>
+      <button class="chip active" data-chip="all">All</button>
+      <button class="chip" data-chip="Predictions">Predictions</button>
+      <button class="chip" data-chip="Research">Research</button>
+      <button class="chip" data-chip="Creative">Creative</button>
+      <button class="chip" data-chip="Crypto">Crypto</button>
+      <button class="chip" data-chip="url">URLs</button>
+      <button class="chip" data-chip="file">Files</button>
+      <button class="chip" onclick="openFilterDrawer()">• • •</button>
     </div>
-
     <div class="stamp-list" id="stampList">
-
-      <!-- Card 1: public text, pending -->
-      <div class="stamp-card public" onclick="location.href='proof.html?id=44'">
-        <div class="stamp-card-top">
-          <div class="stamp-avatar" style="background:linear-gradient(135deg,#6366f1,#818cf8)">R</div>
-          <div class="stamp-meta">
-            <div class="stamp-author">@cryptolady</div>
-            <div class="stamp-sub">2 hours ago · Proof #44</div>
-          </div>
-          <div class="stamp-badges">
-            <span class="badge badge-type">text</span>
-            <span class="badge badge-public">public</span>
-            <span class="badge badge-pending">pending</span>
-          </div>
-        </div>
-        <div class="stamp-content">Bitcoin will break $120K before end of Q3 2026, driven by ETF inflows and halving cycle continuation.</div>
-        <div class="stamp-footer">
-          <div class="stamp-hash">0x2c43…8bc2 <a href="https://megaeth-testnet-v2.blockscout.com" target="_blank" onclick="event.stopPropagation()">↗</a></div>
-          <a class="proof-link" href="proof.html?id=44" onclick="event.stopPropagation()">Proof page →</a>
-        </div>
+      <p class="feed-intro">Live public proofs from creators, researchers, and predictions — permanently on MegaETH.</p>
+      <div class="feed-loading">
+        <div class="feed-spinner"></div>
+        <p>Loading stamps from MegaETH…</p>
       </div>
-
-      <!-- Card 2: sealed text -->
-      <div class="stamp-card sealed" onclick="location.href='proof.html?id=41'">
-        <div class="stamp-card-top">
-          <div class="stamp-avatar" style="background:linear-gradient(135deg,#0ea5e9,#38bdf8)">A</div>
-          <div class="stamp-meta">
-            <div class="stamp-author">@alpha_research</div>
-            <div class="stamp-sub">Stamped 18 May · Proof #41</div>
-          </div>
-          <div class="stamp-badges">
-            <span class="badge badge-type">text</span>
-            <span class="badge badge-sealed">sealed</span>
-          </div>
-        </div>
-        <div class="reveal-row">
-          ⏱ Reveals in <strong>14 hours</strong> · Jun 17, 2026 00:00 UTC &nbsp;🕐
-        </div>
-        <div class="stamp-sealed-msg">🔒 Content sealed. Timestamp locked on-chain — immutable.</div>
-        <div class="stamp-footer">
-          <div class="stamp-hash">0x91a5…e1a <a href="#" target="_blank" onclick="event.stopPropagation()">↗</a></div>
-          <a class="proof-link" href="proof.html?id=41" onclick="event.stopPropagation()">Proof page →</a>
-        </div>
-      </div>
-
-      <!-- Card 3: revealed, correct -->
-      <div class="stamp-card revealed" onclick="location.href='proof.html?id=38'">
-        <div class="stamp-card-top">
-          <div class="stamp-avatar" style="background:linear-gradient(135deg,#a78bfa,#c4b5fd)">D</div>
-          <div class="stamp-meta">
-            <div class="stamp-author">@data_hawk</div>
-            <div class="stamp-sub">Revealed 19 May · Proof #38</div>
-          </div>
-          <div class="stamp-badges">
-            <span class="badge badge-type">text</span>
-            <span class="badge badge-revealed">revealed</span>
-            <span class="badge badge-correct">✓ correct</span>
-          </div>
-        </div>
-        <div class="stamp-content">The Fed will pause rate hikes in June 2026 due to slowing inflation data and banking sector stress signals.</div>
-        <div class="stamp-footer">
-          <div class="stamp-hash">0x43ae…4fa <a href="#" onclick="event.stopPropagation()">↗</a></div>
-          <a class="arweave-link" href="#" onclick="event.stopPropagation()">View on Arweave ↗</a>
-        </div>
-      </div>
-
-      <!-- Card 4: URL public -->
-      <div class="stamp-card url-type" onclick="location.href='proof.html?id=36'">
-        <div class="stamp-card-top">
-          <div class="stamp-avatar" style="background:linear-gradient(135deg,#22d3ee,#67e8f9)">R</div>
-          <div class="stamp-meta">
-            <div class="stamp-author">@web3_builder</div>
-            <div class="stamp-sub">Yesterday · Proof #36</div>
-          </div>
-          <div class="stamp-badges">
-            <span class="badge badge-url">url</span>
-            <span class="badge badge-public">public</span>
-          </div>
-        </div>
-        <div class="stamp-url-link">🔗 https://megaeth-testnet-v2.blockscout.com/tx/0xd70e...358b</div>
-        <div class="stamp-footer">
-          <div class="stamp-hash">0xabd0…e1a <a href="#" onclick="event.stopPropagation()">↗</a></div>
-          <a class="proof-link" href="proof.html?id=36" onclick="event.stopPropagation()">Proof page →</a>
-        </div>
-      </div>
-
-      <!-- Card 5: public, correct -->
-      <div class="stamp-card public" onclick="location.href='proof.html?id=29'">
-        <div class="stamp-card-top">
-          <div class="stamp-avatar" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)">🤖</div>
-          <div class="stamp-meta">
-            <div class="stamp-author">@ai_sage</div>
-            <div class="stamp-sub">6 hours ago · Proof #29</div>
-          </div>
-          <div class="stamp-badges">
-            <span class="badge badge-type">text</span>
-            <span class="badge badge-public">public</span>
-            <span class="badge badge-correct">✓ correct</span>
-          </div>
-        </div>
-        <div class="stamp-content">OpenAI will release open-weight model before end of 2026.</div>
-        <div class="stamp-footer">
-          <div class="stamp-hash">0x55aa…1f90 <a href="#" onclick="event.stopPropagation()">↗</a></div>
-          <a class="proof-link" href="proof.html?id=29" onclick="event.stopPropagation()">Proof page →</a>
-        </div>
-      </div>
-
-      <!-- Card 6: public, incorrect -->
-      <div class="stamp-card public" onclick="location.href='proof.html?id=28'">
-        <div class="stamp-card-top">
-          <div class="stamp-avatar" style="background:linear-gradient(135deg,#ef4444,#f87171)">M</div>
-          <div class="stamp-meta">
-            <div class="stamp-author">@market_mind</div>
-            <div class="stamp-sub">7 hours ago · Proof #28</div>
-          </div>
-          <div class="stamp-badges">
-            <span class="badge badge-type">text</span>
-            <span class="badge badge-public">public</span>
-            <span class="badge badge-incorrect">✗ incorrect</span>
-          </div>
-        </div>
-        <div class="stamp-content">ETH will flip SOL in daily active addresses by mid 2026.</div>
-        <div class="stamp-footer">
-          <div class="stamp-hash">0x8ff1…a9c2 <a href="#" onclick="event.stopPropagation()">↗</a></div>
-          <a class="proof-link" href="proof.html?id=28" onclick="event.stopPropagation()">Proof page →</a>
-        </div>
-      </div>
-
     </div>
+    <button class="load-more-btn" id="loadMoreBtn" style="display:none" onclick="loadMore()">Load more stamps</button>
   </main>
 
-  <!-- RIGHT PANEL -->
   <aside class="right-panel">
-    <!-- Reveal Calendar -->
     <div class="panel-card">
       <div class="panel-header">
-        <div class="panel-title">📅 REVEAL CALENDAR</div>
-        <a href="#" class="view-all">View all</a>
+        <div class="panel-title">📅 Reveal Calendar</div>
       </div>
-      <div class="cal-item">
-        <div class="cal-dot green"></div>
-        <div class="cal-info">
-          <div class="cal-when">Tonight</div>
-          <div class="cal-desc">3 AI predictions unsealing at midnight UTC</div>
-          <div class="cal-count">🔒 3 stamps</div>
-        </div>
-        <div class="cal-emoji">🔮</div>
-      </div>
-      <div class="cal-item">
-        <div class="cal-dot amber"></div>
-        <div class="cal-info">
-          <div class="cal-when">Tomorrow</div>
-          <div class="cal-desc">1 startup manifesto + 2 crypto forecasts</div>
-          <div class="cal-count">🔒 3 stamps</div>
-        </div>
-        <div class="cal-emoji">🚀</div>
-      </div>
-      <div class="cal-item">
-        <div class="cal-dot brand"></div>
-        <div class="cal-info">
-          <div class="cal-when">Friday</div>
-          <div class="cal-desc">12 crypto price predictions from May batch</div>
-          <div class="cal-count">🔒 12 stamps</div>
-        </div>
-        <div class="cal-emoji">📊</div>
-      </div>
-      <div class="cal-item">
-        <div class="cal-dot muted"></div>
-        <div class="cal-info">
-          <div class="cal-when">Jun 30</div>
-          <div class="cal-desc">Research batch — AI safety predictions</div>
-          <div class="cal-count">🔒 7 stamps</div>
-        </div>
-        <div class="cal-emoji">🔒</div>
+      <div id="calendarItems">
+        <div style="text-align:center;color:var(--text-muted);font-size:12px;padding:12px 0">Loading…</div>
       </div>
     </div>
-
-    <!-- Why stamp publicly -->
     <div class="panel-card">
       <div class="panel-header">
         <div class="panel-title">ℹ Why stamp publicly?</div>
@@ -1002,217 +550,649 @@ footer {
       <div class="why-body">Public stamps become independently verifiable permanent records on MegaETH and Arweave — even if TruthStamp disappears.</div>
       <div class="why-badge">🛡 Permanent · Immutable</div>
     </div>
-
-    <!-- Top Creators -->
     <div class="panel-card">
       <div class="panel-header">
-        <div class="panel-title">🏆 TOP CREATORS (30D)</div>
-        <a href="#" class="view-all">View all</a>
+        <div class="panel-title">🏆 Top Creators</div>
       </div>
-      <div class="creator-item">
-        <div class="creator-rank">1</div>
-        <div class="creator-avatar" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)">🔥</div>
-        <div class="creator-info">
-          <div class="creator-name">@macro_vision</div>
-          <div class="creator-sub">24 stamps</div>
-        </div>
-        <div class="creator-acc">92%</div>
-      </div>
-      <div class="creator-item">
-        <div class="creator-rank">2</div>
-        <div class="creator-avatar" style="background:linear-gradient(135deg,#0ea5e9,#38bdf8)">A</div>
-        <div class="creator-info">
-          <div class="creator-name">@alpha_research</div>
-          <div class="creator-sub">18 stamps</div>
-        </div>
-        <div class="creator-acc">88%</div>
-      </div>
-      <div class="creator-item">
-        <div class="creator-rank">3</div>
-        <div class="creator-avatar" style="background:linear-gradient(135deg,#a78bfa,#c4b5fd)">🤖</div>
-        <div class="creator-info">
-          <div class="creator-name">@ai_sage</div>
-          <div class="creator-sub">15 stamps</div>
-        </div>
-        <div class="creator-acc">85%</div>
+      <div id="topCreators">
+        <div style="text-align:center;color:var(--text-muted);font-size:12px;padding:12px 0">Loading…</div>
       </div>
     </div>
   </aside>
 </div>
 
-<!-- FOOTER -->
 <footer>
   <div class="footer-copy">© 2026 TruthStamp · Built on MegaETH &amp; Arweave</div>
   <ul class="footer-links">
-    <li><a href="#">Privacy</a></li>
-    <li><a href="#">Terms</a></li>
-    <li><a href="#">Contact</a></li>
+    <li><a href="privacy.html">Privacy</a></li>
+    <li><a href="terms.html">Terms</a></li>
+    <li><a href="verify.html">Verify stamp</a></li>
+    <li><a href="usecases.html">Use cases</a></li>
   </ul>
   <div class="footer-socials">
-    <a href="#" title="X/Twitter">𝕏</a>
+    <a href="https://x.com/truthstamp" target="_blank" rel="noopener" title="X/Twitter">𝕏</a>
     <a href="#" title="Discord">💬</a>
-    <a href="#" title="GitHub">⌥</a>
   </div>
 </footer>
 
-<!-- MOBILE BOTTOM NAV -->
 <nav class="mobile-bottom-nav">
   <ul>
-    <li>
-      <button class="mob-nav-item" onclick="location.href='index.html'">
-        <svg class="mob-nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Home
-      </button>
-    </li>
-    <li>
-      <button class="mob-nav-item active">
-        <svg class="mob-nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-        Explorer
-      </button>
-    </li>
-    <li>
-      <button class="mob-nav-item stamp-cta" onclick="location.href='index.html#stamp'">
-        <svg class="mob-nav-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Stamp
-      </button>
-    </li>
-    <li>
-      <button class="mob-nav-item" onclick="location.href='verify.html'">
-        <svg class="mob-nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        Verify
-      </button>
-    </li>
-    <li>
-      <button class="mob-nav-item" onclick="location.href='dashboard.html'">
-        <svg class="mob-nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        Profile
-      </button>
-    </li>
+    <li><button class="mob-nav-item" onclick="location.href='index.html'">
+      <svg class="mob-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button></li>
+    <li><button class="mob-nav-item active">
+      <svg class="mob-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Explorer</button></li>
+    <li><button class="mob-nav-item stamp-cta" onclick="location.href='stamp.html'">
+      <svg class="mob-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Stamp</button></li>
+    <li><button class="mob-nav-item" onclick="location.href='verify.html'">
+      <svg class="mob-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Verify</button></li>
+    <li><button class="mob-nav-item" onclick="location.href='dashboard.html'">
+      <svg class="mob-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</button></li>
   </ul>
 </nav>
 
-<!-- FILTER DRAWER -->
-<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeFilterDrawer()"></div>
 <div class="filter-drawer" id="filterDrawer">
   <div class="drawer-handle"></div>
-  <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  <button class="drawer-close" onclick="closeFilterDrawer()">✕</button>
   <div class="drawer-section">
     <div class="drawer-section-title">Type</div>
     <div class="drawer-options">
-      <div class="drawer-option" onclick="toggleOpt(this)"><div class="drawer-option-left"><span>📝</span>Text</div><div class="drawer-check on">✓</div></div>
-      <div class="drawer-option" onclick="toggleOpt(this)"><div class="drawer-option-left"><span>📄</span>File</div><div class="drawer-check on">✓</div></div>
-      <div class="drawer-option" onclick="toggleOpt(this)"><div class="drawer-option-left"><span>🔗</span>URL</div><div class="drawer-check on">✓</div></div>
+      <div class="drawer-option" onclick="toggleOpt(this)" data-filter-type="text"><div class="drawer-option-left"><span>📝</span>Text</div><div class="drawer-check on">✓</div></div>
+      <div class="drawer-option" onclick="toggleOpt(this)" data-filter-type="file"><div class="drawer-option-left"><span>📄</span>File</div><div class="drawer-check on">✓</div></div>
+      <div class="drawer-option" onclick="toggleOpt(this)" data-filter-type="url"><div class="drawer-option-left"><span>🔗</span>URL</div><div class="drawer-check on">✓</div></div>
     </div>
   </div>
   <div class="drawer-section">
     <div class="drawer-section-title">Category</div>
     <div class="drawer-options">
-      <div class="drawer-option" onclick="toggleOpt(this)"><div class="drawer-option-left"><span>🎯</span>Predictions</div><div class="drawer-check on">✓</div></div>
-      <div class="drawer-option" onclick="toggleOpt(this)"><div class="drawer-option-left"><span>🔬</span>Research</div><div class="drawer-check on">✓</div></div>
-      <div class="drawer-option" onclick="toggleOpt(this)"><div class="drawer-option-left"><span>🎨</span>Creative</div><div class="drawer-check on">✓</div></div>
-      <div class="drawer-option" onclick="toggleOpt(this)"><div class="drawer-option-left"><span>📰</span>News</div><div class="drawer-check">✓</div></div>
+      <div class="drawer-option" onclick="toggleOpt(this)" data-filter-cat="Predictions"><div class="drawer-option-left"><span>🎯</span>Predictions</div><div class="drawer-check on">✓</div></div>
+      <div class="drawer-option" onclick="toggleOpt(this)" data-filter-cat="Research"><div class="drawer-option-left"><span>🔬</span>Research</div><div class="drawer-check on">✓</div></div>
+      <div class="drawer-option" onclick="toggleOpt(this)" data-filter-cat="Creative"><div class="drawer-option-left"><span>🎨</span>Creative</div><div class="drawer-check on">✓</div></div>
+      <div class="drawer-option" onclick="toggleOpt(this)" data-filter-cat="News"><div class="drawer-option-left"><span>📰</span>News</div><div class="drawer-check on">✓</div></div>
+      <div class="drawer-option" onclick="toggleOpt(this)" data-filter-cat="Crypto"><div class="drawer-option-left"><span>₿</span>Crypto</div><div class="drawer-check on">✓</div></div>
     </div>
   </div>
-  <div class="drawer-section">
-    <div class="drawer-section-title">Chain</div>
-    <div class="drawer-options">
-      <div class="drawer-option" onclick="toggleOpt(this)"><div class="drawer-option-left"><span>⚡</span>MegaETH</div><div class="drawer-check on">✓</div></div>
-      <div class="drawer-option" onclick="toggleOpt(this)"><div class="drawer-option-left"><span>₿</span>Bitcoin</div><div class="drawer-check">✓</div></div>
-    </div>
-  </div>
-  <button class="drawer-apply" onclick="closeDrawer()">Apply filters</button>
+  <button class="drawer-apply" onclick="applyDrawerFilters()">Apply filters</button>
   <button class="drawer-reset" onclick="resetOpts()">Reset all</button>
 </div>
 
-<!-- MOBILE SEARCH OVERLAY -->
 <div class="mob-search-overlay" id="mobSearchOverlay">
   <div class="mob-search-bar">
-    <input type="text" id="mobSearchInput" placeholder="Search stamps, creators…" autofocus/>
+    <input type="text" id="mobSearchInput" placeholder="Search stamps, creators…"/>
     <button class="mob-search-cancel" onclick="closeMobSearch()">Cancel</button>
   </div>
 </div>
 
+<script src="js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/nav.js"></script>
 <script>
-// Mobile search overlay
+// ── Config ────────────────────────────────────────────────────────────────
+const cfg      = window.TRUTHSTAMP_CONFIG ?? {};
+const EXPLORER = cfg.CONTRACT_EXPLORER ?? 'https://megaeth-testnet-v2.blockscout.com';
+const CONTRACT = cfg.CONTRACT_ADDRESS  ?? '';
+const PAGE_SIZE = 20;
+
+// ── Category mapping (tag-derived, no DB changes needed) ──────────────────
+const CATEGORY_MAP = {
+  prediction:'Predictions', forecast:'Predictions', pricecheck:'Predictions', bet:'Predictions', call:'Predictions',
+  research:'Research', paper:'Research', ai:'Research', study:'Research', data:'Research', science:'Research',
+  creative:'Creative', art:'Creative', design:'Creative', music:'Creative', story:'Creative', poem:'Creative',
+  news:'News', journalism:'News', report:'News', breaking:'News',
+  bitcoin:'Crypto', btc:'Crypto', eth:'Crypto', defi:'Crypto', crypto:'Crypto', nft:'Crypto', web3:'Crypto',
+};
+function getCategories(tags) {
+  if (!tags) return [];
+  const arr  = Array.isArray(tags) ? tags : (typeof tags === 'string' ? JSON.parse(tags || '[]') : []);
+  const cats = new Set();
+  arr.forEach(t => { const c = CATEGORY_MAP[t.toLowerCase()]; if (c) cats.add(c); });
+  return [...cats];
+}
+
+// ── State ─────────────────────────────────────────────────────────────────
+let allStamps    = [];
+let currentFeed  = 'latest';
+let currentChip  = 'all';
+let sortAsc      = false;
+let offset       = 0;
+let hasMore      = false;
+
+// ── Avatar colour from identity string ───────────────────────────────────
+const AVATAR_COLORS = [
+  'linear-gradient(135deg,#6366f1,#818cf8)',
+  'linear-gradient(135deg,#0ea5e9,#38bdf8)',
+  'linear-gradient(135deg,#a78bfa,#c4b5fd)',
+  'linear-gradient(135deg,#22d3ee,#67e8f9)',
+  'linear-gradient(135deg,#f59e0b,#fbbf24)',
+  'linear-gradient(135deg,#ef4444,#f87171)',
+  'linear-gradient(135deg,#10b981,#34d399)',
+  'linear-gradient(135deg,#ec4899,#f472b6)',
+];
+function avatarColor(str) {
+  let h = 0;
+  for (let i = 0; i < (str||'').length; i++) h = (h * 31 + str.charCodeAt(i)) & 0xffffffff;
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+}
+function avatarInitial(identity) {
+  if (!identity) return '?';
+  if (identity.startsWith('0x')) return identity.slice(2,4).toUpperCase();
+  return identity.slice(0,2).toUpperCase();
+}
+function truncateIdentity(identity) {
+  if (!identity) return 'Anonymous';
+  if (identity.startsWith('0x') && identity.length >= 10)
+    return identity.slice(0,6) + '…' + identity.slice(-4);
+  if (identity.includes('-') && identity.length > 20)
+    return identity.slice(0,8) + '…';
+  return identity;
+}
+
+// ── Date helpers ──────────────────────────────────────────────────────────
+function timeAgo(ts) {
+  const d   = new Date(ts);
+  const now = new Date();
+  const s   = Math.floor((now - d) / 1000);
+  if (s < 60)   return 'just now';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  if (s < 604800) return Math.floor(s/86400) + 'd ago';
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+}
+function timeUntil(ts) {
+  const d   = new Date(ts);
+  const now = new Date();
+  const ms  = d - now;
+  if (ms <= 0) return 'now';
+  const m = Math.floor(ms/60000);
+  const h = Math.floor(ms/3600000);
+  const days = Math.floor(ms/86400000);
+  if (m < 60)    return `in ${m}m`;
+  if (h < 24)    return `in ${h}h`;
+  if (days === 1) return 'tomorrow';
+  if (days < 7)  return `in ${days} days`;
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric', timeZone:'UTC'}) + ' UTC';
+}
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Build stamp card HTML ─────────────────────────────────────────────────
+function buildCard(s) {
+  const categories = getCategories(s.tags);
+  const isSealed   = s.visibility === 'sealed' && !s.revealed;
+  const isRevealed = s.visibility === 'sealed' && s.revealed;
+  const isPublic   = s.visibility === 'public';
+  const isUrl      = s.content_type === 'url';
+  const isFile     = s.content_type === 'file';
+  const isHashOnly = s.visibility === 'hash_only' || s.visibility === 'none';
+
+  const sealedUntil   = s.sealed_until ? new Date(s.sealed_until) : null;
+  const isOverdue     = isSealed && sealedUntil && sealedUntil <= new Date();
+  const cardClass     = isRevealed ? 'revealed' : isSealed ? 'sealed' : isUrl ? 'url-type' : isHashOnly ? 'hash-only' : 'public';
+  const identity      = s.creator_identity || s.creator_address || '';
+  const truncIdent    = truncateIdentity(identity);
+  const timeStr       = s.block_timestamp ? timeAgo(s.block_timestamp) : '';
+  const txLink        = s.tx_hash ? `<a href="${EXPLORER}/tx/${escHtml(s.tx_hash)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗</a>` : '';
+  const hashDisplay   = s.content_hash
+    ? '0x' + s.content_hash.replace(/^\\x/,'').replace(/^0x/,'').slice(0,4) + '…' + s.content_hash.replace(/^\\x/,'').replace(/^0x/,'').slice(-4)
+    : '';
+
+  // Content section
+  let contentHtml = '';
+  if (isSealed && !isOverdue) {
+    const revealStr = sealedUntil ? timeUntil(sealedUntil) + ' · ' + sealedUntil.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'}) + ' UTC' : '';
+    contentHtml = `
+      <div class="reveal-row">⏱ Reveals ${escHtml(revealStr)}</div>
+      <div class="stamp-sealed-msg">🔒 Content sealed. Timestamp locked on-chain — immutable.</div>`;
+  } else if (isSealed && isOverdue) {
+    contentHtml = `
+      <div class="reveal-row" style="background:rgba(248,220,255,0.4);border-color:rgba(83,74,183,0.2);color:var(--purple)">⚡ Seal date passed — awaiting on-chain reveal</div>
+      <div class="stamp-sealed-msg">🔒 Content sealed. Timestamp locked on-chain — immutable.</div>`;
+  } else if (isHashOnly) {
+    contentHtml = `<div class="stamp-sealed-msg">🔐 Hash-only stamp — maximum privacy. Content never stored.</div>`;
+  } else if (isUrl && s.text_content) {
+    let url = s.text_content;
+    try { const p = JSON.parse(url); url = p.url ?? url; } catch {}
+    contentHtml = `<div class="stamp-url-link">🔗 <span>${escHtml(url.length > 80 ? url.slice(0,80)+'…' : url)}</span></div>`;
+  } else if (isFile) {
+    contentHtml = `<div class="stamp-sealed-msg">📄 ${escHtml(s.file_name || 'File stamp')} ${s.file_size_bytes ? '(' + (s.file_size_bytes/1024).toFixed(1) + ' KB)' : ''}</div>`;
+  } else if (s.text_content) {
+    const text = s.text_content.length > 200 ? s.text_content.slice(0,200) + '…' : s.text_content;
+    contentHtml = `<div class="stamp-content">${escHtml(text)}</div>`;
+  } else if (s.display_title && s.display_title !== 'Sealed stamp') {
+    contentHtml = `<div class="stamp-content">${escHtml(s.display_title)}</div>`;
+  }
+
+  // Footer right side
+  let footerRight = `<a class="proof-link" href="proof.html?id=${s.proof_id}" onclick="event.stopPropagation()">Proof page →</a>`;
+  if (isRevealed && s.storage_uri) {
+    const txId = s.storage_uri.replace('ar://','');
+    footerRight = `<a class="arweave-link" href="https://arweave.net/${txId}" target="_blank" rel="noopener" onclick="event.stopPropagation()">View on Arweave ↗</a>`;
+  }
+
+  // Badges
+  let badges = `<span class="badge badge-type">${escHtml(s.content_type||'text')}</span>`;
+  if (isPublic)   badges += `<span class="badge badge-public">public</span>`;
+  if (isSealed)   badges += `<span class="badge badge-sealed">sealed</span>`;
+  if (isRevealed) badges += `<span class="badge badge-revealed">revealed</span>`;
+  if (isHashOnly) badges += `<span class="badge badge-hash">private</span>`;
+  categories.forEach(cat => {
+    badges += `<span class="badge" style="background:var(--brand-bg);color:var(--brand)">${escHtml(cat)}</span>`;
+  });
+
+  return `
+    <div class="stamp-card ${cardClass}" onclick="location.href='proof.html?id=${s.proof_id}'"
+         data-type="${escHtml(s.content_type||'')}"
+         data-visibility="${escHtml(s.visibility||'')}"
+         data-cats="${escHtml(categories.join(','))}">
+      <div class="stamp-card-top">
+        <div class="stamp-avatar" style="background:${avatarColor(identity)}">${avatarInitial(identity)}</div>
+        <div class="stamp-meta">
+          <div class="stamp-author">${escHtml(truncIdent)}</div>
+          <div class="stamp-sub">${timeStr}${timeStr && s.proof_id ? ' · ' : ''}${s.proof_id ? 'Proof #'+s.proof_id : ''}</div>
+        </div>
+        <div class="stamp-badges">${badges}</div>
+      </div>
+      ${contentHtml}
+      <div class="stamp-footer">
+        <div class="stamp-hash">${hashDisplay} ${txLink}</div>
+        ${footerRight}
+      </div>
+    </div>`;
+}
+
+// ── Load stamps from Supabase ─────────────────────────────────────────────
+async function loadStamps(reset = true) {
+  if (reset) { offset = 0; allStamps = []; }
+  const list = document.getElementById('stampList');
+  if (reset) list.innerHTML = '<div class="feed-loading"><div class="feed-spinner"></div><p>Loading stamps…</p></div>';
+
+  try {
+    let query = window.tsDB
+      .from('stamps_with_creator')
+      .select('proof_id, content_type, visibility, display_title, text_content, file_name, file_size_bytes, tags, block_timestamp, status, storage_uri, sealed_until, revealed, content_hash, tx_hash, creator_identity, creator_address')
+      .eq('status', 'confirmed')
+      .in('visibility', ['public','sealed','hash_only'])
+      .eq('is_hidden', false)
+      .eq('contract_address', CONTRACT);
+
+    // Feed filter
+    if (currentFeed === 'reveals') {
+      query = query.eq('visibility','sealed').eq('revealed', true);
+    } else if (currentFeed === 'upcoming') {
+      query = query.eq('visibility','sealed').eq('revealed', false);
+    } else if (currentFeed === 'trending') {
+      query = query.order('view_count', {ascending:false});
+    }
+
+    // Sort
+    if (currentFeed !== 'trending') {
+      query = query.order('block_timestamp', {ascending: sortAsc});
+    }
+
+    query = query.range(offset, offset + PAGE_SIZE - 1);
+
+    const { data: stamps, error } = await query;
+    if (error) throw error;
+
+    hasMore = stamps && stamps.length === PAGE_SIZE;
+    document.getElementById('loadMoreBtn').style.display = hasMore ? 'block' : 'none';
+
+    if (reset) allStamps = stamps || [];
+    else allStamps = allStamps.concat(stamps || []);
+
+    renderFeed();
+  } catch(e) {
+    console.error('[Explorer] loadStamps error:', e);
+    list.innerHTML = `<div class="feed-empty"><div class="feed-empty-icon">⚠️</div><h3>Failed to load stamps</h3><p style="font-size:13px">${escHtml(e.message)}</p></div>`;
+  }
+}
+
+function renderFeed() {
+  const list = document.getElementById('stampList');
+  // Remove intro text once we have real content
+  const intro = list.querySelector('.feed-intro');
+  if (intro) intro.remove();
+
+  // Apply chip filter client-side
+  let filtered = allStamps;
+  if (currentChip !== 'all') {
+    filtered = allStamps.filter(s => {
+      if (currentChip === 'url')  return s.content_type === 'url';
+      if (currentChip === 'file') return s.content_type === 'file';
+      // category chip
+      const cats = getCategories(s.tags);
+      return cats.includes(currentChip);
+    });
+  }
+
+  // Apply search filter
+  const q = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+  if (q) {
+    filtered = filtered.filter(s =>
+      (s.text_content    || '').toLowerCase().includes(q) ||
+      (s.display_title   || '').toLowerCase().includes(q) ||
+      (s.file_name       || '').toLowerCase().includes(q) ||
+      (s.creator_identity|| '').toLowerCase().includes(q) ||
+      (s.creator_address || '').toLowerCase().includes(q) ||
+      String(s.proof_id || '').includes(q) ||
+      getCategories(s.tags).some(c => c.toLowerCase().includes(q))
+    );
+  }
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="feed-empty"><div class="feed-empty-icon">🔍</div><h3>No stamps found</h3><p style="font-size:13px;color:var(--text-muted)">Try a different filter or search term.</p></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(s => buildCard(s)).join('');
+  document.getElementById('feedSubtitle').textContent = `${filtered.length} stamp${filtered.length !== 1 ? 's' : ''}`;
+}
+
+async function loadMore() {
+  offset += PAGE_SIZE;
+  const btn = document.getElementById('loadMoreBtn');
+  btn.textContent = 'Loading…';
+  btn.disabled = true;
+  await loadStamps(false);
+  btn.textContent = 'Load more stamps';
+  btn.disabled = false;
+}
+
+// ── Load today stats ──────────────────────────────────────────────────────
+async function loadTodayStats() {
+  try {
+    const [{ count: total }, { count: reveals }, { count: sealed }, { data: creatorsData }] = await Promise.all([
+      // All-time total confirmed stamps
+      window.tsDB.from('stamps').select('*',{count:'exact',head:true})
+        .eq('status','confirmed').eq('contract_address',CONTRACT),
+      // Revealed sealed stamps
+      window.tsDB.from('stamps').select('*',{count:'exact',head:true})
+        .eq('visibility','sealed').eq('revealed',true)
+        .eq('contract_address',CONTRACT),
+      // Pending sealed stamps (seals still ticking)
+      window.tsDB.from('stamps').select('*',{count:'exact',head:true})
+        .eq('visibility','sealed').eq('revealed',false)
+        .eq('contract_address',CONTRACT),
+      // Unique creators
+      window.tsDB.from('stamps').select('creator_identity')
+        .eq('status','confirmed').eq('contract_address',CONTRACT),
+    ]);
+
+    const uniqueCreators = new Set((creatorsData||[]).map(r => r.creator_identity).filter(Boolean)).size;
+
+    animateCount('st-total',    total          ?? 0);
+    animateCount('st-reveals',  reveals        ?? 0);
+    animateCount('st-seals',    sealed         ?? 0);
+    animateCount('st-creators', uniqueCreators);
+
+    // Sidebar counts
+    const setEl = (id,v) => { const e=el(id); if(e) e.textContent=v; };
+    setEl('cnt-total',   total   ?? 0);
+    setEl('cnt-reveals', reveals ?? 0);
+    setEl('cnt-sealed',  sealed  ?? 0);
+
+  } catch(e) { console.warn('[Explorer] stats error:', e); }
+}
+
+function animateCount(id, target) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  let n = 0;
+  const step = Math.max(1, Math.floor(target / 20));
+  const t = setInterval(() => {
+    n = Math.min(n + step, target);
+    el.textContent = n;
+    if (n >= target) clearInterval(t);
+  }, 40);
+}
+function el(id) { return document.getElementById(id); }
+
+// ── Reveal calendar ───────────────────────────────────────────────────────
+async function loadRevealCalendar() {
+  try {
+    const now = new Date();
+    const { data: sealed } = await window.tsDB
+      .from('stamps')
+      .select('sealed_until, tags')
+      .eq('visibility','sealed').eq('revealed',false)
+      .eq('contract_address',CONTRACT)
+      .gte('sealed_until', now.toISOString())
+      .order('sealed_until', {ascending:true})
+      .limit(50);
+
+    if (!sealed?.length) {
+      document.getElementById('calendarItems').innerHTML =
+        '<p style="color:var(--text-muted);font-size:12px;text-align:center;padding:8px 0">No upcoming seals yet.</p>';
+      return;
+    }
+
+    // Group by date bucket
+    const groups = {};
+    sealed.forEach(s => {
+      const d   = new Date(s.sealed_until);
+      const key = d.toISOString().split('T')[0];
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(s);
+    });
+
+    const dotColors = ['green','amber','brand','muted','muted','muted'];
+    const emojis    = ['🔮','🚀','📊','🔒','🔒','🔒'];
+    const keys      = Object.keys(groups).slice(0,5);
+
+    document.getElementById('calendarItems').innerHTML = keys.map((k,i) => {
+      const items    = groups[k];
+      const date     = new Date(k + 'T00:00:00Z');
+      const now2     = new Date();
+      const diffDays = Math.floor((date - now2) / 86400000);
+      let label;
+      if (diffDays < 0)  label = 'Overdue';
+      else if (diffDays === 0) label = 'Tonight';
+      else if (diffDays === 1) label = 'Tomorrow';
+      else if (diffDays < 7)  label = date.toLocaleDateString('en-US',{weekday:'long'});
+      else label = date.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+
+      return `<div class="cal-item">
+        <div class="cal-dot ${dotColors[i]||'muted'}"></div>
+        <div class="cal-info">
+          <div class="cal-when">${escHtml(label)}</div>
+          <div class="cal-desc">${items.length} stamp${items.length!==1?'s':''} unsealing</div>
+          <div class="cal-count">🔒 ${items.length} seal${items.length!==1?'s':''}</div>
+        </div>
+        <div class="cal-emoji">${emojis[i]||'🔒'}</div>
+      </div>`;
+    }).join('');
+  } catch(e) { console.warn('[Explorer] calendar error:', e); }
+}
+
+// ── Top creators ──────────────────────────────────────────────────────────
+async function loadTopCreators() {
+  try {
+    const { data } = await window.tsDB
+      .from('stamps')
+      .select('creator_identity')
+      .eq('status','confirmed')
+      .eq('contract_address',CONTRACT)
+      .neq('creator_identity',null)
+      .limit(200);
+
+    if (!data?.length) {
+      document.getElementById('topCreators').innerHTML =
+        '<p style="color:var(--text-muted);font-size:12px;text-align:center;padding:8px 0">No creators yet.</p>';
+      return;
+    }
+
+    // Count per creator
+    const counts = {};
+    data.forEach(r => { counts[r.creator_identity] = (counts[r.creator_identity]||0) + 1; });
+    const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,5);
+
+    document.getElementById('topCreators').innerHTML = sorted.map(([ident,cnt],i) => `
+      <div class="creator-item">
+        <div class="creator-rank">${i+1}</div>
+        <div class="creator-avatar" style="background:${avatarColor(ident)}">${avatarInitial(ident)}</div>
+        <div class="creator-info">
+          <div class="creator-name">${escHtml(truncateIdentity(ident))}</div>
+          <div class="creator-sub">${cnt} stamp${cnt!==1?'s':''}</div>
+        </div>
+        <div class="creator-stamps">${cnt}</div>
+      </div>`).join('');
+  } catch(e) { console.warn('[Explorer] creators error:', e); }
+}
+
+// ── Sidebar counts ────────────────────────────────────────────────────────
+async function loadSidebarCounts() {
+  try {
+    const { data } = await window.tsDB
+      .from('stamps')
+      .select('content_type, tags')
+      .eq('status','confirmed')
+      .eq('contract_address',CONTRACT)
+      .in('visibility', ['public','sealed','hash_only'])
+      .limit(1000);
+
+    if (!data) return;
+    let text=0, file=0, url=0, pred=0, research=0, creative=0, news=0, crypto=0;
+    data.forEach(s => {
+      if (s.content_type==='text') text++;
+      else if (s.content_type==='file') file++;
+      else if (s.content_type==='url') url++;
+      const cats = getCategories(s.tags);
+      if (cats.includes('Predictions')) pred++;
+      if (cats.includes('Research'))   research++;
+      if (cats.includes('Creative'))   creative++;
+      if (cats.includes('News'))       news++;
+      if (cats.includes('Crypto'))     crypto++;
+    });
+    const set = (id,v) => { const e=el(id); if(e) e.textContent=v; };
+    set('cnt-text',text); set('cnt-file',file); set('cnt-url',url);
+    set('cnt-pred',pred);
+    // Update all category sidebar counts by finding buttons with data-cat
+    document.querySelectorAll('[data-cat]').forEach(btn => {
+      const counts = {Predictions:pred,Research:research,Creative:creative,News:news,Crypto:crypto};
+      const span = btn.querySelector('.sidebar-count');
+      if (span) span.textContent = counts[btn.dataset.cat] ?? 0;
+    });
+  } catch(e) { console.warn('[Explorer] sidebar counts error:', e); }
+}
+
+// ── Sidebar & chip interaction ────────────────────────────────────────────
+document.querySelectorAll('[data-feed]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    // Sidebar feed items
+    document.querySelectorAll('[data-feed]').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll(`[data-feed="${btn.dataset.feed}"]`).forEach(b => b.classList.add('active'));
+    currentFeed = btn.dataset.feed;
+    const titles = {latest:'Latest stamps',trending:'Trending',reveals:'Recent reveals',upcoming:'Upcoming seals'};
+    document.getElementById('feedTitle').textContent = titles[currentFeed] || 'Latest stamps';
+    loadStamps();
+  });
+});
+
+document.querySelectorAll('[data-chip]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-chip]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentChip = btn.dataset.chip;
+    renderFeed();
+  });
+});
+
+document.querySelectorAll('[data-type]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-type]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentChip = btn.dataset.type;
+    renderFeed();
+  });
+});
+
+document.querySelectorAll('[data-cat]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-cat]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentChip = btn.dataset.cat;
+    renderFeed();
+  });
+});
+
+// ── Sort ──────────────────────────────────────────────────────────────────
+function toggleSort() {
+  sortAsc = !sortAsc;
+  document.getElementById('sortLbl').textContent = sortAsc ? 'Oldest first' : 'Newest first';
+  loadStamps();
+}
+
+// ── Search ────────────────────────────────────────────────────────────────
+document.getElementById('searchInput').addEventListener('input', renderFeed);
+document.addEventListener('keydown', e => {
+  if (e.key==='/' && document.activeElement.tagName!=='INPUT') {
+    e.preventDefault(); document.getElementById('searchInput').focus();
+  }
+});
+
+// ── Mobile search ─────────────────────────────────────────────────────────
 function openMobSearch() {
-  const overlay = document.getElementById('mobSearchOverlay');
-  overlay.classList.add('open');
+  document.getElementById('mobSearchOverlay').classList.add('open');
   setTimeout(() => document.getElementById('mobSearchInput').focus(), 100);
 }
 function closeMobSearch() {
   document.getElementById('mobSearchOverlay').classList.remove('open');
   document.getElementById('mobSearchInput').value = '';
-  document.querySelectorAll('.stamp-card').forEach(c => c.style.display = '');
+  renderFeed();
 }
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('mobSearchInput')?.addEventListener('input', function() {
-    const q = this.value.toLowerCase();
-    document.querySelectorAll('.stamp-card').forEach(card => {
-      card.style.display = (!q || card.textContent.toLowerCase().includes(q)) ? '' : 'none';
-    });
-  });
+document.getElementById('mobSearchInput').addEventListener('input', function() {
+  document.getElementById('searchInput').value = this.value;
+  renderFeed();
 });
-// Feed switching
-function setFeed(el, title) {
-  document.querySelectorAll('.sidebar-section:first-of-type .sidebar-item').forEach(i => i.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('feedTitle').textContent = title;
-}
-function setChain(el) {
-  el.closest('.sidebar-section').querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-  el.classList.add('active');
-}
-// Chips
-function setChip(el) {
-  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-}
-// Mobile tabs
-function setMobTab(el) {
-  document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('feedTitle').textContent = el.textContent === 'Latest' ? 'Latest stamps' : el.textContent;
-}
-// Sort
-let newestFirst = true;
-function toggleSort() {
-  newestFirst = !newestFirst;
-  document.getElementById('sortLbl').textContent = newestFirst ? 'Newest first' : 'Oldest first';
-  const list = document.getElementById('stampList');
-  [...list.children].reverse().forEach(c => list.appendChild(c));
-}
-// Drawer
-function openDrawer() {
+
+// ── Filter drawer ─────────────────────────────────────────────────────────
+function openFilterDrawer() {
   document.getElementById('filterDrawer').classList.add('open');
   document.getElementById('drawerOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
-function closeDrawer() {
+function closeFilterDrawer() {
   document.getElementById('filterDrawer').classList.remove('open');
   document.getElementById('drawerOverlay').classList.remove('open');
   document.body.style.overflow = '';
 }
 function toggleOpt(el) { el.querySelector('.drawer-check').classList.toggle('on'); }
 function resetOpts() { document.querySelectorAll('.drawer-check').forEach(c => c.classList.add('on')); }
-// Search
-document.getElementById('searchInput').addEventListener('input', function() {
-  const q = this.value.toLowerCase();
-  document.querySelectorAll('.stamp-card').forEach(card => {
-    card.style.display = (!q || card.textContent.toLowerCase().includes(q)) ? '' : 'none';
+function applyDrawerFilters() { closeFilterDrawer(); renderFeed(); }
+
+// ── Init ──────────────────────────────────────────────────────────────────
+function waitForDB(cb, tries = 0) {
+  // If tsDB already set by supabase-client.js — use it
+  if (window.tsDB) { cb(); return; }
+  // If supabase lib loaded but tsDB not set — init directly
+  if (window.supabase && cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY) {
+    window.tsDB = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+    console.log('[Explorer] Initialised tsDB directly');
+    cb();
+    return;
+  }
+  if (tries > 30) {
+    console.error('[Explorer] Could not initialise Supabase client');
+    document.getElementById('stampList').innerHTML =
+      '<div class="feed-empty"><div class="feed-empty-icon">⚠️</div>' +
+      '<h3>Connection failed</h3>' +
+      '<p style="font-size:13px;color:var(--text-muted)">Could not connect to TruthStamp database. Please refresh the page.</p></div>';
+    return;
+  }
+  setTimeout(() => waitForDB(cb, tries + 1), 150);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  waitForDB(() => {
+    loadStamps();
+    loadTodayStats();
+    loadRevealCalendar();
+    loadTopCreators();
+    loadSidebarCounts();
   });
 });
-// / shortcut
-document.addEventListener('keydown', e => {
-  if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
-    e.preventDefault(); document.getElementById('searchInput').focus();
-  }
-});
-// Stat counter animation
-(function animateStats() {
-  const el = document.getElementById('st-stamps');
-  let n = 0;
-  const t = setInterval(() => { n = Math.min(n+3, 44); el.textContent = n; if(n>=44) clearInterval(t); }, 35);
-})();
 </script>
 </body>
 </html>
