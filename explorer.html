@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Explorer — TruthStamp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ============================================================
+   DESIGN TOKENS — matches TruthStamp system
+   ============================================================ */
+:root {
+  --bg:            #0f0f13;
+  --bg-card:       #16161d;
+  --bg-card-hover: #1c1c26;
+  --bg-sidebar:    #13131a;
+  --border:        rgba(255,255,255,0.07);
+  --border-accent: rgba(99,102,241,0.35);
+
+  --text-primary:  #f0f0f5;
+  --text-secondary:#9898b0;
+  --text-muted:    #5a5a72;
+
+  --brand:         #6366f1;
+  --brand-soft:    rgba(99,102,241,0.12);
+  --brand-glow:    rgba(99,102,241,0.25);
+
+  --green:         #22c55e;
+  --green-soft:    rgba(34,197,94,0.12);
+  --amber:         #f59e0b;
+  --amber-soft:    rgba(245,158,11,0.12);
+  --red:           #ef4444;
+  --red-soft:      rgba(239,68,68,0.12);
+  --purple:        #a78bfa;
+  --purple-soft:   rgba(167,139,250,0.12);
+  --cyan:          #22d3ee;
+  --cyan-soft:     rgba(34,211,238,0.12);
+
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  16px;
+  --radius-xl:  22px;
+
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'DM Mono', 'Fira Code', monospace;
+
+  --nav-h: 60px;
+  --sidebar-w: 240px;
+  --right-w: 300px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; font-family: var(--font-sans); }
+
+/* ============================================================
+   TOP NAV
+   ============================================================ */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  height: var(--nav-h);
+  background: rgba(15,15,19,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 20px;
+  gap: 32px;
+}
+
+.nav-logo {
+  display: flex; align-items: center; gap: 9px;
+  font-weight: 600; font-size: 17px; letter-spacing: -0.3px;
+  flex-shrink: 0;
+}
+.nav-logo-icon {
+  width: 32px; height: 32px;
+  background: var(--brand);
+  border-radius: 8px;
+  display: grid; place-items: center;
+  font-weight: 700; font-size: 14px; color: #fff;
+}
+
+.nav-links {
+  display: flex; align-items: center; gap: 4px;
+  list-style: none;
+}
+.nav-links a {
+  padding: 6px 12px;
+  font-size: 14px; font-weight: 450; color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  transition: color .15s, background .15s;
+}
+.nav-links a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+.nav-links a.active {
+  color: var(--brand);
+  border-bottom: 2px solid var(--brand);
+  border-radius: 0;
+  padding-bottom: 4px;
+}
+
+.nav-search {
+  flex: 1; max-width: 380px;
+  position: relative;
+}
+.nav-search input {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  padding: 8px 36px 8px 14px;
+  outline: none;
+  transition: border .2s, background .2s;
+}
+.nav-search input::placeholder { color: var(--text-muted); }
+.nav-search input:focus {
+  border-color: var(--border-accent);
+  background: rgba(99,102,241,0.06);
+}
+.nav-search-icon {
+  position: absolute; right: 11px; top: 50%; transform: translateY(-50%);
+  color: var(--text-muted); font-size: 14px; pointer-events: none;
+}
+.nav-search-slash {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: rgba(255,255,255,0.08);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.nav-right {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 10px;
+}
+.btn-ghost {
+  background: none; border: none;
+  color: var(--text-secondary); font-size: 13.5px; font-weight: 450;
+  padding: 7px 14px; border-radius: var(--radius-sm);
+  transition: color .15s, background .15s;
+}
+.btn-ghost:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+
+.btn-primary {
+  background: var(--brand); border: none;
+  color: #fff; font-size: 13.5px; font-weight: 600;
+  padding: 7px 18px; border-radius: var(--radius-md);
+  transition: opacity .15s, transform .1s;
+}
+.btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+
+.nav-theme-btn {
+  background: none; border: 1px solid var(--border);
+  color: var(--text-secondary);
+  width: 34px; height: 34px;
+  border-radius: var(--radius-sm);
+  display: grid; place-items: center; font-size: 15px;
+  transition: border-color .15s, color .15s;
+}
+.nav-theme-btn:hover { border-color: var(--border-accent); color: var(--brand); }
+
+.hamburger {
+  display: none;
+  background: none; border: none;
+  color: var(--text-secondary);
+  font-size: 22px;
+  padding: 4px;
+}
+
+/* ============================================================
+   TODAY BAR
+   ============================================================ */
+.today-bar {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  display: flex; align-items: center; gap: 20px;
+  flex-wrap: wrap;
+}
+
+.today-label {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 600; font-size: 14px;
+  flex-shrink: 0;
+}
+.live-dot {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 500; color: var(--green);
+}
+.live-dot::before {
+  content: '';
+  width: 7px; height: 7px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .6; transform: scale(1.3); }
+}
+
+.today-stats {
+  display: flex; align-items: center; gap: 28px;
+  flex-wrap: wrap;
+}
+.today-stat {
+  text-align: center;
+  position: relative;
+}
+.today-stat + .today-stat::before {
+  content: '·';
+  position: absolute; left: -16px; top: 0;
+  color: var(--text-muted);
+}
+.today-stat-num {
+  font-size: 20px; font-weight: 700; letter-spacing: -0.5px;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+.today-stat-label {
+  font-size: 11.5px; color: var(--text-muted); margin-top: 1px;
+}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr var(--right-w);
+  min-height: calc(100vh - var(--nav-h) - 53px);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ============================================================
+   LEFT SIDEBAR
+   ============================================================ */
+.sidebar {
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  padding: 20px 0;
+  position: sticky;
+  top: var(--nav-h);
+  height: calc(100vh - var(--nav-h));
+  overflow-y: auto;
+}
+
+.sidebar-section {
+  padding: 0 14px 18px;
+}
+.sidebar-section + .sidebar-section {
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+}
+
+.sidebar-label {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 1.1px;
+  text-transform: uppercase; color: var(--text-muted);
+  padding: 0 6px;
+  margin-bottom: 6px;
+}
+
+.sidebar-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  border: none; background: none; width: 100%;
+  text-align: left;
+}
+.sidebar-item:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
+.sidebar-item.active {
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 500;
+}
+
+.sidebar-item-left { display: flex; align-items: center; gap: 9px; }
+.sidebar-icon { font-size: 15px; opacity: 0.8; }
+.sidebar-count {
+  font-size: 11.5px; font-weight: 600;
+  background: rgba(255,255,255,0.07);
+  color: var(--text-muted);
+  padding: 1px 7px; border-radius: 20px;
+  min-width: 26px; text-align: center;
+}
+.sidebar-item.active .sidebar-count {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.sidebar-cta {
+  margin: 18px 14px 0;
+  background: linear-gradient(135deg, var(--brand) 0%, #818cf8 100%);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+}
+.sidebar-cta-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.sidebar-cta-sub { font-size: 12px; color: rgba(255,255,255,0.75); margin-bottom: 12px; line-height: 1.4; }
+.sidebar-cta-btn {
+  display: block; width: 100%;
+  background: rgba(0,0,0,0.25);
+  border: none; color: #fff;
+  font-family: var(--font-sans);
+  font-size: 13px; font-weight: 600;
+  padding: 8px; border-radius: 8px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.sidebar-cta-btn:hover { background: rgba(0,0,0,0.4); }
+
+/* ============================================================
+   MAIN FEED
+   ============================================================ */
+.feed {
+  padding: 0 0 40px;
+  border-right: 1px solid var(--border);
+}
+
+.feed-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 14px;
+  position: sticky;
+  top: calc(var(--nav-h));
+  background: rgba(15,15,19,0.95);
+  backdrop-filter: blur(12px);
+  z-index: 50;
+  border-bottom: 1px solid var(--border);
+}
+
+.feed-title { font-size: 16px; font-weight: 600; }
+
+.sort-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: 1px solid var(--border);
+  color: var(--text-secondary); font-family: var(--font-sans);
+  font-size: 12.5px; padding: 6px 12px; border-radius: var(--radius-sm);
+  cursor: pointer; transition: border-color .15s, color .15s;
+}
+.sort-btn:hover { border-color: var(--border-accent); color: var(--text-primary); }
+
+/* Filter chips */
+.filter-bar {
+  padding: 12px 24px;
+  display: flex; align-items: center; gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--border);
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+
+.chip {
+  flex-shrink: 0;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12.5px; font-weight: 500;
+  border: 1.5px solid var(--border);
+  background: none; color: var(--text-secondary);
+  cursor: pointer; transition: all .15s;
+}
+.chip:hover { border-color: rgba(255,255,255,0.18); color: var(--text-primary); }
+.chip.active {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+/* Stamp cards */
+.stamp-list { padding: 16px 0; }
+
+.stamp-card {
+  margin: 0 16px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  cursor: pointer;
+  transition: border-color .2s, background .2s, transform .15s;
+  position: relative;
+  overflow: hidden;
+}
+.stamp-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px;
+  border-radius: 3px 0 0 3px;
+  background: transparent;
+  transition: background .2s;
+}
+.stamp-card.public::before   { background: var(--green); }
+.stamp-card.sealed::before   { background: var(--amber); }
+.stamp-card.revealed::before { background: var(--purple); }
+.stamp-card.url::before      { background: var(--cyan); }
+
+.stamp-card:hover {
+  border-color: rgba(255,255,255,0.12);
+  background: var(--bg-card-hover);
+  transform: translateY(-1px);
+}
+
+.stamp-card-top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px; margin-bottom: 10px;
+}
+
+.stamp-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-weight: 700; font-size: 14px; color: #fff;
+  flex-shrink: 0;
+}
+
+.stamp-meta {
+  flex: 1;
+}
+.stamp-author {
+  font-size: 13.5px; font-weight: 600;
+  color: var(--text-primary);
+}
+.stamp-sub {
+  font-size: 12px; color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.stamp-badges {
+  display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+  flex-wrap: wrap; justify-content: flex-end;
+}
+
+.badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 3px 9px; border-radius: 20px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.2px;
+}
+.badge-type   { background: rgba(255,255,255,0.07); color: var(--text-secondary); }
+.badge-public { background: var(--green-soft);  color: var(--green); }
+.badge-sealed { background: var(--amber-soft);  color: var(--amber); }
+.badge-revealed { background: var(--purple-soft); color: var(--purple); }
+.badge-pending  { background: var(--amber-soft);  color: var(--amber); }
+.badge-correct  { background: var(--green-soft);  color: var(--green); }
+.badge-incorrect { background: var(--red-soft); color: var(--red); }
+.badge-url    { background: var(--cyan-soft);   color: var(--cyan); }
+
+.stamp-content {
+  font-size: 14.5px; line-height: 1.55;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.stamp-url-link {
+  color: var(--brand); font-size: 13px;
+  word-break: break-all;
+  display: flex; align-items: center; gap: 5px;
+  margin-bottom: 10px;
+}
+
+/* Sealed reveal countdown */
+.reveal-countdown {
+  background: rgba(245,158,11,0.08);
+  border: 1px solid rgba(245,158,11,0.2);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12.5px; color: var(--amber);
+  font-weight: 500;
+}
+.reveal-countdown-icon { font-size: 13px; }
+
+.stamp-sealed-msg {
+  font-size: 13px; color: var(--text-muted);
+  font-style: italic;
+  margin-bottom: 10px;
+}
+
+.stamp-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 8px;
+}
+
+.stamp-hash {
+  font-family: var(--font-mono);
+  font-size: 11.5px; color: var(--text-muted);
+  display: flex; align-items: center; gap: 5px;
+}
+.stamp-hash a {
+  color: inherit; transition: color .15s;
+}
+.stamp-hash a:hover { color: var(--brand); }
+
+.proof-link {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12.5px; font-weight: 500; color: var(--brand);
+  padding: 5px 10px;
+  background: var(--brand-soft);
+  border-radius: var(--radius-sm);
+  transition: background .15s;
+}
+.proof-link:hover { background: rgba(99,102,241,0.2); }
+
+.arweave-link {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12px; color: var(--purple);
+  font-weight: 500;
+  transition: color .15s;
+}
+.arweave-link:hover { color: #c4b5fd; }
+
+/* ============================================================
+   RIGHT PANEL
+   ============================================================ */
+.right-panel {
+  padding: 20px 18px;
+  position: sticky;
+  top: var(--nav-h);
+  height: calc(100vh - var(--nav-h));
+  overflow-y: auto;
+}
+
+.panel-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.panel-title {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 0.3px; text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.panel-title-icon { font-size: 14px; }
+.view-all-link {
+  font-size: 12px; font-weight: 500;
+  color: var(--brand); opacity: 0.8;
+  transition: opacity .15s;
+}
+.view-all-link:hover { opacity: 1; }
+
+/* Reveal calendar items */
+.calendar-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.calendar-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+.cal-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0; margin-top: 5px;
+}
+.cal-dot.tonight { background: var(--green); }
+.cal-dot.tomorrow { background: var(--amber); }
+.cal-dot.friday  { background: var(--brand); }
+.cal-dot.future  { background: var(--text-muted); }
+
+.cal-info { flex: 1; }
+.cal-when { font-size: 12.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+.cal-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 4px; }
+.cal-count {
+  font-size: 11px; color: var(--text-muted);
+  display: flex; align-items: center; gap: 4px;
+}
+
+.cal-emoji { font-size: 22px; flex-shrink: 0; line-height: 1; }
+
+/* Why stamp publicly */
+.why-stamp-card { margin-bottom: 14px; }
+.why-stamp-body {
+  font-size: 13px; color: var(--text-secondary); line-height: 1.55;
+  margin-bottom: 10px;
+}
+.why-stamp-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--green-soft); color: var(--green);
+  font-size: 12px; font-weight: 600;
+  padding: 5px 12px; border-radius: 20px;
+}
+
+/* Top creators */
+.creator-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.creator-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+.creator-rank {
+  font-size: 13px; font-weight: 700; color: var(--text-muted);
+  width: 18px; flex-shrink: 0;
+}
+.creator-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.creator-name {
+  flex: 1;
+  font-size: 13px; font-weight: 500; color: var(--text-primary);
+}
+.creator-sub { font-size: 11.5px; color: var(--text-muted); }
+.creator-accuracy {
+  font-size: 13px; font-weight: 700;
+  color: var(--green);
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 10px;
+}
+.footer-left { font-size: 12.5px; color: var(--text-muted); }
+.footer-links {
+  display: flex; gap: 18px; list-style: none;
+}
+.footer-links a { font-size: 12.5px; color: var(--text-muted); transition: color .15s; }
+.footer-links a:hover { color: var(--text-primary); }
+.footer-icons { display: flex; gap: 14px; }
+.footer-icons a { color: var(--text-muted); font-size: 16px; transition: color .15s; }
+.footer-icons a:hover { color: var(--text-primary); }
+
+/* ============================================================
+   MOBILE BOTTOM NAV
+   ============================================================ */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+  background: rgba(22,22,29,0.97);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+  padding: 8px 0 env(safe-area-inset-bottom, 8px);
+}
+.mobile-bottom-nav ul {
+  display: flex; justify-content: space-around;
+  list-style: none; margin: 0; padding: 0;
+}
+.mobile-nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 6px 4px;
+  font-size: 10px; font-weight: 500; color: var(--text-muted);
+  cursor: pointer; transition: color .15s;
+  background: none; border: none;
+}
+.mobile-nav-item.active { color: var(--brand); }
+.mobile-nav-item:hover { color: var(--text-primary); }
+.mobile-nav-icon {
+  font-size: 19px;
+  position: relative;
+}
+.mobile-nav-item.stamp-btn .mobile-nav-icon {
+  background: var(--brand);
+  border-radius: 14px;
+  width: 42px; height: 42px;
+  display: grid; place-items: center;
+  font-size: 22px;
+  margin-top: -14px;
+  box-shadow: 0 4px 16px var(--brand-glow);
+}
+
+/* ============================================================
+   MOBILE DRAWER
+   ============================================================ */
+.drawer-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+}
+.drawer-overlay.open { display: block; }
+
+.filter-drawer {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 400;
+  background: #1a1a24;
+  border-radius: 20px 20px 0 0;
+  padding: 20px;
+  transform: translateY(100%);
+  transition: transform .3s cubic-bezier(.32,0,.67,0);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.filter-drawer.open { transform: translateY(0); }
+
+.drawer-handle {
+  width: 36px; height: 4px;
+  background: rgba(255,255,255,0.15); border-radius: 2px;
+  margin: 0 auto 20px;
+}
+.drawer-close {
+  position: absolute; top: 16px; right: 20px;
+  background: rgba(255,255,255,0.07); border: none;
+  color: var(--text-secondary);
+  width: 28px; height: 28px; border-radius: 50%;
+  font-size: 15px; display: grid; place-items: center;
+  cursor: pointer;
+}
+
+.drawer-section { margin-bottom: 20px; }
+.drawer-section-title {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.8px;
+  text-transform: uppercase; color: var(--text-muted);
+  margin-bottom: 12px;
+}
+.drawer-options { display: flex; flex-direction: column; gap: 6px; }
+.drawer-option {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 14px;
+  background: rgba(255,255,255,0.04);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+}
+.drawer-option-left { display: flex; align-items: center; gap: 10px; }
+.drawer-check {
+  width: 20px; height: 20px; border-radius: 5px;
+  border: 2px solid rgba(255,255,255,0.15);
+  background: none;
+  display: grid; place-items: center; font-size: 12px;
+}
+.drawer-check.checked {
+  background: var(--brand); border-color: var(--brand); color: #fff;
+}
+
+.drawer-apply {
+  display: block; width: 100%;
+  background: var(--brand); border: none; color: #fff;
+  font-family: var(--font-sans); font-size: 15px; font-weight: 600;
+  padding: 14px; border-radius: var(--radius-md);
+  cursor: pointer; margin-top: 6px;
+}
+.drawer-reset {
+  display: block; width: 100%;
+  background: none; border: none; color: var(--text-muted);
+  font-family: var(--font-sans); font-size: 14px;
+  padding: 10px; margin-top: 6px; cursor: pointer;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1100px) {
+  :root { --right-w: 260px; }
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .sidebar { display: none; }
+  .right-panel { display: none; }
+  .feed { border-right: none; }
+
+  .nav-links { display: none; }
+  .hamburger { display: flex; }
+
+  .mobile-bottom-nav { display: block; }
+  body { padding-bottom: 70px; }
+
+  .today-bar { padding: 12px 16px; gap: 14px; }
+  .today-stats { gap: 16px; }
+  .today-stat-num { font-size: 16px; }
+
+  /* Horizontal scroll tab bar on mobile */
+  .mobile-tabs {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 4px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    position: sticky;
+    top: var(--nav-h);
+    z-index: 40;
+  }
+  .mobile-tabs::-webkit-scrollbar { display: none; }
+  .mobile-tab {
+    flex-shrink: 0;
+    padding: 7px 16px;
+    border-radius: 20px; font-size: 13px; font-weight: 500;
+    background: rgba(255,255,255,0.05);
+    border: none; color: var(--text-secondary); cursor: pointer;
+    transition: all .15s;
+  }
+  .mobile-tab.active {
+    background: var(--brand); color: #fff;
+  }
+
+  .feed-header { top: calc(var(--nav-h) + 51px); }
+
+  .stamp-card { margin: 0 12px 10px; }
+
+  .nav-search { max-width: 200px; }
+}
+
+@media (max-width: 480px) {
+  .nav-search { display: none; }
+  .today-stats { gap: 10px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     TOP NAV
+     ============================================================ -->
+<nav class="nav">
+  <div class="nav-logo">
+    <div class="nav-logo-icon">T</div>
+    TruthStamp
+  </div>
+
+  <ul class="nav-links">
+    <li><a href="explorer.html" class="active">Explorer</a></li>
+    <li><a href="verify.html">Verify</a></li>
+    <li><a href="#">Use cases</a></li>
+    <li><a href="#">How it works</a></li>
+    <li><a href="#">Docs</a></li>
+  </ul>
+
+  <div class="nav-search">
+    <input type="text" placeholder="Search stamps, creators, keywords…" id="searchInput"/>
+    <span class="nav-search-slash">/</span>
+  </div>
+
+  <div class="nav-right">
+    <button class="nav-theme-btn" title="Toggle theme">☀</button>
+    <button class="btn-ghost" onclick="window.location='index.html'">Sign in</button>
+    <button class="btn-primary">Sign up</button>
+    <button class="hamburger" onclick="toggleMobileMenu()">☰</button>
+  </div>
+</nav>
+
+<!-- ============================================================
+     TODAY BAR
+     ============================================================ -->
+<div class="today-bar">
+  <div class="today-label">
+    <span>📡</span>
+    <span>Today in TruthStamp</span>
+    <div class="live-dot">LIVE</div>
+  </div>
+  <div class="today-stats">
+    <div class="today-stat">
+      <div class="today-stat-num" id="stat-stamps">44</div>
+      <div class="today-stat-label">Stamps created</div>
+    </div>
+    <div class="today-stat">
+      <div class="today-stat-num" id="stat-reveals">5</div>
+      <div class="today-stat-label">Reveals unlocked</div>
+    </div>
+    <div class="today-stat">
+      <div class="today-stat-num" id="stat-seals">8</div>
+      <div class="today-stat-label">Seals ticking</div>
+    </div>
+    <div class="today-stat">
+      <div class="today-stat-num" id="stat-creators">12</div>
+      <div class="today-stat-label">Creators active</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MOBILE TABS (visible on mobile only)
+     ============================================================ -->
+<div class="mobile-tabs" id="mobileTabs">
+  <button class="mobile-tab active" onclick="setMobileTab(this,'latest')">Latest</button>
+  <button class="mobile-tab" onclick="setMobileTab(this,'trending')">Trending</button>
+  <button class="mobile-tab" onclick="setMobileTab(this,'reveals')">Reveals</button>
+  <button class="mobile-tab" onclick="setMobileTab(this,'upcoming')">Upcoming</button>
+</div>
+
+<!-- ============================================================
+     MAIN LAYOUT
+     ============================================================ -->
+<div class="layout">
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Feed</div>
+      <button class="sidebar-item active" onclick="setFeed(this,'latest')">
+        <div class="sidebar-item-left"><span class="sidebar-icon">⚡</span>Latest</div>
+        <span class="sidebar-count" id="cnt-latest">44</span>
+      </button>
+      <button class="sidebar-item" onclick="setFeed(this,'trending')">
+        <div class="sidebar-item-left"><span class="sidebar-icon">🔥</span>Trending</div>
+        <span class="sidebar-count" id="cnt-trending">12</span>
+      </button>
+      <button class="sidebar-item" onclick="setFeed(this,'reveals')">
+        <div class="sidebar-item-left"><span class="sidebar-icon">🔓</span>Reveals</div>
+        <span class="sidebar-count" id="cnt-reveals">5</span>
+      </button>
+      <button class="sidebar-item" onclick="setFeed(this,'upcoming')">
+        <div class="sidebar-item-left"><span class="sidebar-icon">⏰</span>Upcoming seals</div>
+        <span class="sidebar-count" id="cnt-upcoming">8</span>
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Type</div>
+      <button class="sidebar-item" onclick="filterType(this,'text')">
+        <div class="sidebar-item-left"><span class="sidebar-icon">📝</span>Text</div>
+        <span class="sidebar-count">28</span>
+      </button>
+      <button class="sidebar-item" onclick="filterType(this,'file')">
+        <div class="sidebar-item-left"><span class="sidebar-icon">📄</span>File</div>
+        <span class="sidebar-count">9</span>
+      </button>
+      <button class="sidebar-item" onclick="filterType(this,'url')">
+        <div class="sidebar-item-left"><span class="sidebar-icon">🔗</span>URL</div>
+        <span class="sidebar-count">7</span>
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Category</div>
+      <button class="sidebar-item" onclick="filterCat(this,'predictions')">
+        <div class="sidebar-item-left"><span class="sidebar-icon">🎯</span>Predictions</div>
+        <span class="sidebar-count">19</span>
+      </button>
+      <button class="sidebar-item" onclick="filterCat(this,'research')">
+        <div class="sidebar-item-left"><span class="sidebar-icon">🔬</span>Research</div>
+        <span class="sidebar-count">8</span>
+      </button>
+      <button class="sidebar-item" onclick="filterCat(this,'creative')">
+        <div class="sidebar-item-left"><span class="sidebar-icon">🎨</span>Creative</div>
+        <span class="sidebar-count">6</span>
+      </button>
+      <button class="sidebar-item" onclick="filterCat(this,'news')">
+        <div class="sidebar-item-left"><span class="sidebar-icon">📰</span>News</div>
+        <span class="sidebar-count">5</span>
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Chain</div>
+      <button class="sidebar-item active" onclick="filterChain(this,'megaeth')">
+        <div class="sidebar-item-left"><span class="sidebar-icon">⚡</span>MegaETH</div>
+        <span class="sidebar-count">44</span>
+      </button>
+      <button class="sidebar-item" onclick="filterChain(this,'bitcoin')">
+        <div class="sidebar-item-left"><span class="sidebar-icon">₿</span>Bitcoin</div>
+        <span class="sidebar-count">0</span>
+      </button>
+      <button class="sidebar-item" onclick="filterChain(this,'all')">
+        <div class="sidebar-item-left"><span class="sidebar-icon">🌐</span>All chains</div>
+        <span class="sidebar-count">44</span>
+      </button>
+    </div>
+
+    <div class="sidebar-cta">
+      <div class="sidebar-cta-title">Create your own stamp</div>
+      <div class="sidebar-cta-sub">Lock in your ideas, predictions or proofs — permanently.</div>
+      <button class="sidebar-cta-btn" onclick="window.location='index.html'">+ New stamp</button>
+    </div>
+  </aside>
+
+  <!-- MAIN FEED -->
+  <main class="feed">
+    <div class="feed-header">
+      <div class="feed-title">Latest stamps</div>
+      <button class="sort-btn" id="sortBtn" onclick="toggleSort()">
+        <span>⇅</span>
+        <span id="sortLabel">Newest first</span>
+      </button>
+    </div>
+
+    <div class="filter-bar">
+      <button class="chip active" onclick="setChip(this,'all')">All</button>
+      <button class="chip" onclick="setChip(this,'predictions')">Predictions</button>
+      <button class="chip" onclick="setChip(this,'research')">Research</button>
+      <button class="chip" onclick="setChip(this,'creative')">Creative</button>
+      <button class="chip" onclick="setChip(this,'urls')">URLs</button>
+      <button class="chip" onclick="setChip(this,'files')">Files</button>
+      <button class="chip" onclick="openFilterDrawer()">• • •</button>
+    </div>
+
+    <div class="stamp-list" id="stampList">
+
+      <!-- Card 1: Public text, pending -->
+      <div class="stamp-card public" onclick="window.location='proof.html?id=44'">
+        <div class="stamp-card-top">
+          <div class="stamp-avatar" style="background:linear-gradient(135deg,#6366f1,#818cf8)">R</div>
+          <div class="stamp-meta">
+            <div class="stamp-author">@cryptolady</div>
+            <div class="stamp-sub">2 hours ago · Proof #44</div>
+          </div>
+          <div class="stamp-badges">
+            <span class="badge badge-type">text</span>
+            <span class="badge badge-public">public</span>
+            <span class="badge badge-pending">pending</span>
+          </div>
+        </div>
+        <div class="stamp-content">
+          Bitcoin will break $120K before end of Q3 2026, driven by ETF inflows and halving cycle continuation.
+        </div>
+        <div class="stamp-footer">
+          <div class="stamp-hash">
+            0x2c43…8bc2
+            <a href="https://megaeth-testnet-v2.blockscout.com" target="_blank" onclick="event.stopPropagation()">↗</a>
+          </div>
+          <a href="proof.html?id=44" class="proof-link" onclick="event.stopPropagation()">Proof page →</a>
+        </div>
+      </div>
+
+      <!-- Card 2: Sealed text -->
+      <div class="stamp-card sealed" onclick="window.location='proof.html?id=41'">
+        <div class="stamp-card-top">
+          <div class="stamp-avatar" style="background:linear-gradient(135deg,#0ea5e9,#38bdf8)">A</div>
+          <div class="stamp-meta">
+            <div class="stamp-author">@alpha_research</div>
+            <div class="stamp-sub">Stamped 18 May · Proof #41</div>
+          </div>
+          <div class="stamp-badges">
+            <span class="badge badge-type">text</span>
+            <span class="badge badge-sealed">sealed</span>
+          </div>
+        </div>
+        <div class="reveal-countdown">
+          <span class="reveal-countdown-icon">⏱</span>
+          <span>Reveals in <strong id="countdown-41">14 hours</strong> · Jun 17, 2026 00:00 UTC</span>
+        </div>
+        <div class="stamp-sealed-msg">
+          🔒 Content sealed. Timestamp locked on-chain — immutable.
+        </div>
+        <div class="stamp-footer">
+          <div class="stamp-hash">
+            0x91a5…e1a
+            <a href="#" target="_blank" onclick="event.stopPropagation()">↗</a>
+          </div>
+          <a href="proof.html?id=41" class="proof-link" onclick="event.stopPropagation()">Proof page →</a>
+        </div>
+      </div>
+
+      <!-- Card 3: Revealed text, correct -->
+      <div class="stamp-card revealed" onclick="window.location='proof.html?id=38'">
+        <div class="stamp-card-top">
+          <div class="stamp-avatar" style="background:linear-gradient(135deg,#a78bfa,#c4b5fd)">D</div>
+          <div class="stamp-meta">
+            <div class="stamp-author">@data_hawk</div>
+            <div class="stamp-sub">Revealed 19 May · Proof #38</div>
+          </div>
+          <div class="stamp-badges">
+            <span class="badge badge-type">text</span>
+            <span class="badge badge-revealed">revealed</span>
+            <span class="badge badge-correct">✓ correct</span>
+          </div>
+        </div>
+        <div class="stamp-content">
+          The Fed will pause rate hikes in June 2026 due to slowing inflation data and banking sector stress signals.
+        </div>
+        <div class="stamp-footer">
+          <div class="stamp-hash">0x43ae…4fa <a href="#" onclick="event.stopPropagation()">↗</a></div>
+          <a href="#" class="arweave-link" onclick="event.stopPropagation()">View on Arweave ↗</a>
+        </div>
+      </div>
+
+      <!-- Card 4: URL public -->
+      <div class="stamp-card url" onclick="window.location='proof.html?id=36'">
+        <div class="stamp-card-top">
+          <div class="stamp-avatar" style="background:linear-gradient(135deg,#22d3ee,#67e8f9)">R</div>
+          <div class="stamp-meta">
+            <div class="stamp-author">@web3_builder</div>
+            <div class="stamp-sub">Yesterday · Proof #36</div>
+          </div>
+          <div class="stamp-badges">
+            <span class="badge badge-type">url</span>
+            <span class="badge badge-public">public</span>
+          </div>
+        </div>
+        <div class="stamp-url-link">
+          🔗 <span>https://megaeth-testnet-v2.blockscout.com/tx/0xd70e...358b</span>
+        </div>
+        <div class="stamp-footer">
+          <div class="stamp-hash">0xabd0…e1a <a href="#" onclick="event.stopPropagation()">↗</a></div>
+          <a href="proof.html?id=36" class="proof-link" onclick="event.stopPropagation()">Proof page →</a>
+        </div>
+      </div>
+
+      <!-- Card 5: Public text, correct prediction -->
+      <div class="stamp-card public" onclick="window.location='proof.html?id=29'">
+        <div class="stamp-card-top">
+          <div class="stamp-avatar" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)">🤖</div>
+          <div class="stamp-meta">
+            <div class="stamp-author">@ai_sage</div>
+            <div class="stamp-sub">6 hours ago · Proof #29</div>
+          </div>
+          <div class="stamp-badges">
+            <span class="badge badge-type">text</span>
+            <span class="badge badge-public">public</span>
+            <span class="badge badge-correct">✓ correct</span>
+          </div>
+        </div>
+        <div class="stamp-content">
+          OpenAI will release open-weight model before end of 2026.
+        </div>
+        <div class="stamp-footer">
+          <div class="stamp-hash">0x55aa…1f90 <a href="#" onclick="event.stopPropagation()">↗</a></div>
+          <a href="proof.html?id=29" class="proof-link" onclick="event.stopPropagation()">Proof page →</a>
+        </div>
+      </div>
+
+      <!-- Card 6: Public text, incorrect prediction -->
+      <div class="stamp-card public" onclick="window.location='proof.html?id=28'">
+        <div class="stamp-card-top">
+          <div class="stamp-avatar" style="background:linear-gradient(135deg,#ef4444,#f87171)">M</div>
+          <div class="stamp-meta">
+            <div class="stamp-author">@market_mind</div>
+            <div class="stamp-sub">7 hours ago · Proof #28</div>
+          </div>
+          <div class="stamp-badges">
+            <span class="badge badge-type">text</span>
+            <span class="badge badge-public">public</span>
+            <span class="badge badge-incorrect">✗ incorrect</span>
+          </div>
+        </div>
+        <div class="stamp-content">
+          ETH will flip SOL in daily active addresses by mid 2026.
+        </div>
+        <div class="stamp-footer">
+          <div class="stamp-hash">0x8ff1…a9c2 <a href="#" onclick="event.stopPropagation()">↗</a></div>
+          <a href="proof.html?id=28" class="proof-link" onclick="event.stopPropagation()">Proof page →</a>
+        </div>
+      </div>
+
+    </div><!-- /stamp-list -->
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="right-panel">
+
+    <!-- Reveal Calendar -->
+    <div class="panel-card">
+      <div class="panel-header">
+        <div class="panel-title"><span class="panel-title-icon">📅</span> Reveal Calendar</div>
+        <a href="#" class="view-all-link">View all</a>
+      </div>
+
+      <div class="calendar-item">
+        <div class="cal-dot tonight"></div>
+        <div class="cal-info">
+          <div class="cal-when">Tonight</div>
+          <div class="cal-desc">3 AI predictions unsealing at midnight UTC</div>
+          <div class="cal-count">🔒 3 stamps</div>
+        </div>
+        <div class="cal-emoji">🔮</div>
+      </div>
+
+      <div class="calendar-item">
+        <div class="cal-dot tomorrow"></div>
+        <div class="cal-info">
+          <div class="cal-when">Tomorrow</div>
+          <div class="cal-desc">1 startup manifesto + 2 crypto forecasts</div>
+          <div class="cal-count">🔒 3 stamps</div>
+        </div>
+        <div class="cal-emoji">🚀</div>
+      </div>
+
+      <div class="calendar-item">
+        <div class="cal-dot friday"></div>
+        <div class="cal-info">
+          <div class="cal-when">Friday</div>
+          <div class="cal-desc">12 crypto price predictions from May batch</div>
+          <div class="cal-count">🔒 12 stamps</div>
+        </div>
+        <div class="cal-emoji">📊</div>
+      </div>
+
+      <div class="calendar-item">
+        <div class="cal-dot future"></div>
+        <div class="cal-info">
+          <div class="cal-when">Jun 30</div>
+          <div class="cal-desc">Research batch — AI safety predictions</div>
+          <div class="cal-count">🔒 7 stamps</div>
+        </div>
+        <div class="cal-emoji">🔒</div>
+      </div>
+    </div>
+
+    <!-- Why stamp publicly -->
+    <div class="panel-card why-stamp-card">
+      <div class="panel-header">
+        <div class="panel-title"><span>ℹ</span> Why stamp publicly?</div>
+      </div>
+      <div class="why-stamp-body">
+        Public stamps become independently verifiable permanent records on MegaETH and Arweave — even if TruthStamp disappears.
+      </div>
+      <div class="why-stamp-badge">🛡 Permanent · Immutable</div>
+    </div>
+
+    <!-- Top Creators -->
+    <div class="panel-card">
+      <div class="panel-header">
+        <div class="panel-title">🏆 Top Creators (30d)</div>
+        <a href="#" class="view-all-link">View all</a>
+      </div>
+
+      <div class="creator-item">
+        <div class="creator-rank">1</div>
+        <div class="creator-avatar" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)">🔥</div>
+        <div>
+          <div class="creator-name">@macro_vision</div>
+          <div class="creator-sub">24 stamps</div>
+        </div>
+        <div class="creator-accuracy">92%</div>
+      </div>
+
+      <div class="creator-item">
+        <div class="creator-rank">2</div>
+        <div class="creator-avatar" style="background:linear-gradient(135deg,#0ea5e9,#38bdf8)">A</div>
+        <div>
+          <div class="creator-name">@alpha_research</div>
+          <div class="creator-sub">18 stamps</div>
+        </div>
+        <div class="creator-accuracy">88%</div>
+      </div>
+
+      <div class="creator-item">
+        <div class="creator-rank">3</div>
+        <div class="creator-avatar" style="background:linear-gradient(135deg,#a78bfa,#c4b5fd)">🤖</div>
+        <div>
+          <div class="creator-name">@ai_sage</div>
+          <div class="creator-sub">15 stamps</div>
+        </div>
+        <div class="creator-accuracy">85%</div>
+      </div>
+    </div>
+
+  </aside>
+</div><!-- /layout -->
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-left">© 2026 TruthStamp · Built on MegaETH &amp; Arweave</div>
+  <ul class="footer-links">
+    <li><a href="#">Privacy</a></li>
+    <li><a href="#">Terms</a></li>
+    <li><a href="#">Contact</a></li>
+  </ul>
+  <div class="footer-icons">
+    <a href="#" title="X/Twitter">𝕏</a>
+    <a href="#" title="Discord">💬</a>
+    <a href="#" title="GitHub">⌥</a>
+  </div>
+</footer>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-bottom-nav">
+  <ul>
+    <li>
+      <button class="mobile-nav-item" onclick="window.location='index.html'">
+        <span class="mobile-nav-icon">🏠</span>Home
+      </button>
+    </li>
+    <li>
+      <button class="mobile-nav-item active">
+        <span class="mobile-nav-icon">🔭</span>Explorer
+      </button>
+    </li>
+    <li>
+      <button class="mobile-nav-item stamp-btn" onclick="window.location='index.html#stamp'">
+        <span class="mobile-nav-icon">＋</span>Stamp
+      </button>
+    </li>
+    <li>
+      <button class="mobile-nav-item" onclick="window.location='verify.html'">
+        <span class="mobile-nav-icon">✅</span>Verify
+      </button>
+    </li>
+    <li>
+      <button class="mobile-nav-item" onclick="window.location='dashboard.html'">
+        <span class="mobile-nav-icon">👤</span>Profile
+      </button>
+    </li>
+  </ul>
+</nav>
+
+<!-- FILTER DRAWER (mobile) -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeFilterDrawer()"></div>
+<div class="filter-drawer" id="filterDrawer">
+  <div class="drawer-handle"></div>
+  <button class="drawer-close" onclick="closeFilterDrawer()">✕</button>
+
+  <div class="drawer-section">
+    <div class="drawer-section-title">Type</div>
+    <div class="drawer-options">
+      <div class="drawer-option" onclick="toggleDrawerOpt(this)">
+        <div class="drawer-option-left"><span>📝</span> Text</div>
+        <div class="drawer-check checked">✓</div>
+      </div>
+      <div class="drawer-option" onclick="toggleDrawerOpt(this)">
+        <div class="drawer-option-left"><span>📄</span> File</div>
+        <div class="drawer-check checked">✓</div>
+      </div>
+      <div class="drawer-option" onclick="toggleDrawerOpt(this)">
+        <div class="drawer-option-left"><span>🔗</span> URL</div>
+        <div class="drawer-check checked">✓</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="drawer-section">
+    <div class="drawer-section-title">Category</div>
+    <div class="drawer-options">
+      <div class="drawer-option" onclick="toggleDrawerOpt(this)">
+        <div class="drawer-option-left"><span>🎯</span> Predictions</div>
+        <div class="drawer-check checked">✓</div>
+      </div>
+      <div class="drawer-option" onclick="toggleDrawerOpt(this)">
+        <div class="drawer-option-left"><span>🔬</span> Research</div>
+        <div class="drawer-check checked">✓</div>
+      </div>
+      <div class="drawer-option" onclick="toggleDrawerOpt(this)">
+        <div class="drawer-option-left"><span>🎨</span> Creative</div>
+        <div class="drawer-check checked">✓</div>
+      </div>
+      <div class="drawer-option" onclick="toggleDrawerOpt(this)">
+        <div class="drawer-option-left"><span>📰</span> News</div>
+        <div class="drawer-check">✓</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="drawer-section">
+    <div class="drawer-section-title">Chain</div>
+    <div class="drawer-options">
+      <div class="drawer-option" onclick="toggleDrawerOpt(this)">
+        <div class="drawer-option-left"><span>⚡</span> MegaETH</div>
+        <div class="drawer-check checked">✓</div>
+      </div>
+      <div class="drawer-option" onclick="toggleDrawerOpt(this)">
+        <div class="drawer-option-left"><span>₿</span> Bitcoin</div>
+        <div class="drawer-check">✓</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="drawer-apply" onclick="closeFilterDrawer()">Apply filters</button>
+  <button class="drawer-reset" onclick="resetFilters()">Reset</button>
+</div>
+
+<script>
+// ============================================================
+// INTERACTIONS
+// ============================================================
+
+// Feed switching
+function setFeed(el, feed) {
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelector('.feed-title').textContent =
+    feed === 'latest'   ? 'Latest stamps' :
+    feed === 'trending' ? 'Trending' :
+    feed === 'reveals'  ? 'Recent reveals' : 'Upcoming seals';
+}
+
+// Filter chips
+function setChip(el, cat) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Mobile tabs
+function setMobileTab(el, tab) {
+  document.querySelectorAll('.mobile-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelector('.feed-title').textContent =
+    tab === 'latest'   ? 'Latest stamps' :
+    tab === 'trending' ? 'Trending' :
+    tab === 'reveals'  ? 'Recent reveals' : 'Upcoming seals';
+}
+
+function filterType(el, type) {
+  document.querySelectorAll('.sidebar-section').forEach(() => {});
+  // Visual only for now
+  el.classList.toggle('active');
+}
+function filterCat(el) { el.classList.toggle('active'); }
+function filterChain(el) {
+  document.querySelectorAll('.sidebar-section:last-of-type .sidebar-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Sort toggle
+let sortNewest = true;
+function toggleSort() {
+  sortNewest = !sortNewest;
+  document.getElementById('sortLabel').textContent = sortNewest ? 'Newest first' : 'Oldest first';
+  const list = document.getElementById('stampList');
+  const cards = [...list.querySelectorAll('.stamp-card')];
+  cards.reverse().forEach(c => list.appendChild(c));
+}
+
+// Filter drawer
+function openFilterDrawer() {
+  document.getElementById('filterDrawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeFilterDrawer() {
+  document.getElementById('filterDrawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function toggleDrawerOpt(el) {
+  const check = el.querySelector('.drawer-check');
+  check.classList.toggle('checked');
+}
+function resetFilters() {
+  document.querySelectorAll('.drawer-check').forEach(c => c.classList.add('checked'));
+}
+
+// Mobile menu
+function toggleMobileMenu() {
+  openFilterDrawer(); // reuse drawer for mobile menu for now
+}
+
+// Keyboard shortcut: / focuses search
+document.addEventListener('keydown', e => {
+  if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+    e.preventDefault();
+    document.getElementById('searchInput')?.focus();
+  }
+});
+
+// Live stat animation on load
+function animateStats() {
+  const targets = { 'stat-stamps': 44, 'stat-reveals': 5, 'stat-seals': 8, 'stat-creators': 12 };
+  Object.entries(targets).forEach(([id, target]) => {
+    let current = 0;
+    const el = document.getElementById(id);
+    const step = Math.ceil(target / 20);
+    const timer = setInterval(() => {
+      current = Math.min(current + step, target);
+      el.textContent = current;
+      if (current >= target) clearInterval(timer);
+    }, 40);
+  });
+}
+window.addEventListener('DOMContentLoaded', animateStats);
+
+// Simulate live counter incrementing
+setInterval(() => {
+  const el = document.getElementById('stat-stamps');
+  if (el) {
+    const cur = parseInt(el.textContent);
+    if (Math.random() > 0.7) el.textContent = cur + 1;
+  }
+}, 8000);
+
+// Search input — filter cards
+document.getElementById('searchInput')?.addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('.stamp-card').forEach(card => {
+    const text = card.textContent.toLowerCase();
+    card.style.display = (!q || text.includes(q)) ? '' : 'none';
+  });
+});
+</script>
+</body>
+</html>
