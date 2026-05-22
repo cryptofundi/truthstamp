@@ -721,30 +721,66 @@
     window.handleSwitchAccount = async function handleSwitchAccount(e) {
       if (e) e.preventDefault();
 
-      // Detect MetaMask / injected wallet environment
       const hasEthereum = typeof window.ethereum !== 'undefined';
       const isMetaMask  = hasEthereum && (window.ethereum.isMetaMask || window.ethereum.isBraveWallet);
 
       if (isMetaMask) {
         try {
-          // wallet_requestPermissions forces MetaMask to show the account switcher
-          // Works in both desktop Chrome extension AND MetaMask mobile in-app browser
+          // Listen for the actual account change BEFORE requesting permissions
+          // MetaMask mobile fires accountsChanged when the user confirms the switch
+          let resolved = false;
+
+          const onAccountsChanged = (accounts) => {
+            if (resolved) return;
+            resolved = true;
+            window.ethereum.removeListener('accountsChanged', onAccountsChanged);
+
+            if (!accounts || accounts.length === 0) {
+              // User disconnected all accounts — sign out
+              window.tsAuth.signOut().then(() => { window.location.href = 'auth.html'; });
+              return;
+            }
+
+            const newAddress = accounts[0].toLowerCase();
+            // Get current address from the displayed identity
+            const currentIdentityEl = document.getElementById('account-menu-identity');
+            const currentShown = (currentIdentityEl?.textContent || '').toLowerCase();
+
+            // Always sign out the Supabase session so the new wallet gets a fresh auth
+            // then redirect to auth page to re-authenticate with new wallet
+            window.tsAuth.signOut().then(() => {
+              window.location.href = 'auth.html';
+            });
+          };
+
+          window.ethereum.on('accountsChanged', onAccountsChanged);
+
+          // Request permissions — opens MetaMask account picker
           await window.ethereum.request({
             method: 'wallet_requestPermissions',
             params: [{ eth_accounts: {} }],
           });
-          // After user picks account, reload so dashboard reflects new wallet
-          window.location.reload();
+
+          // wallet_requestPermissions resolved — on desktop this means account selected.
+          // On mobile, accountsChanged fires separately so we wait for that.
+          // Safety timeout: if accountsChanged never fires within 10s, clean up listener.
+          setTimeout(() => {
+            if (!resolved) {
+              resolved = true;
+              window.ethereum.removeListener('accountsChanged', onAccountsChanged);
+              // On desktop, requestPermissions resolving IS the confirmation — reload
+              window.location.reload();
+            }
+          }, 1000);
+
           return;
         } catch(err) {
-          // User cancelled the switcher — do nothing, stay on page
-          if (err.code === 4001) return;
-          // Other error — fall through to sign out + redirect
-          console.warn('[Dashboard] wallet_requestPermissions failed:', err.message);
+          if (err.code === 4001) return; // User cancelled
+          console.warn('[Dashboard] wallet switch failed:', err.message);
         }
       }
 
-      // Email users or fallback: sign out and go to auth page
+      // Email users or fallback
       await window.tsAuth.signOut();
       window.location.href = 'auth.html';
     }
