@@ -488,13 +488,22 @@ function creatorTag(uuid) {
 
 // Resolve display name from a stamp row (uses view columns, zero extra queries)
 function resolveNameFromStamp(s) {
-  const identity = s.creator_identity || s.creator_address || '';
-  // Wallet: public_handle if set, else truncated address
+  // Wallet address comes from creator_address (stamp col) or creator_wallet_address (view col)
+  const wallet   = s.creator_wallet_address || s.creator_address || '';
+  const identity = s.creator_identity || '';
+
+  // If identity itself is a wallet address
   if (identity.startsWith('0x') && identity.length >= 10)
     return s.creator_public_handle || (identity.slice(0, 6) + '…' + identity.slice(-4));
+
+  // Wallet user: has a wallet address on record (even if identity is a UUID)
+  if (wallet && wallet.startsWith('0x') && wallet.length >= 10)
+    return s.creator_public_handle || (wallet.slice(0, 6) + '…' + wallet.slice(-4));
+
   // Email user: public_handle if set, else Creator_XXXX
   if (isUUID(identity))
     return s.creator_public_handle || creatorTag(identity);
+
   return identity || 'Creator';
 }
 
@@ -525,11 +534,14 @@ async function prefetchHandles(identities) {
 }
 
 // Resolve display name when only identity string is available (Top Creators, drawer)
-function resolveNameFromIdentity(identity) {
+function resolveNameFromIdentity(identity, walletAddress) {
   if (!identity) return 'Creator';
-  // Wallet: public_handle if set, else truncated address
+  // Identity itself is a wallet address
   if (identity.startsWith('0x') && identity.length >= 10)
     return _handleCache[identity] || (identity.slice(0, 6) + '…' + identity.slice(-4));
+  // UUID identity — check if they have a wallet (wallet user with UUID identity)
+  if (walletAddress && walletAddress.startsWith('0x') && walletAddress.length >= 10)
+    return _handleCache[identity] || (walletAddress.slice(0, 6) + '…' + walletAddress.slice(-4));
   // Email UUID: public_handle if set, else Creator_XXXX
   if (isUUID(identity))
     return _handleCache[identity] || creatorTag(identity);
@@ -537,13 +549,14 @@ function resolveNameFromIdentity(identity) {
 }
 
 // Avatar initials — derived from public-facing name
-function getAvatarInitial(identity, displayName) {
-  if (!displayName) {
-    if (identity && identity.startsWith('0x')) return identity.slice(2, 4).toUpperCase();
-    return 'CR';
-  }
-  // "Creator_4a2f" → "CR", "@cryptolady" → "CR" or "CL", "Alice" → "AL"
-  if (displayName.startsWith('Creator_')) return 'CR';
+function getAvatarInitial(identity, displayName, walletAddress) {
+  // If the resolved display name is a truncated wallet (0x...) use wallet hex
+  if (walletAddress && walletAddress.startsWith('0x'))
+    return walletAddress.slice(2, 4).toUpperCase();
+  if (identity && identity.startsWith('0x'))
+    return identity.slice(2, 4).toUpperCase();
+  if (!displayName || displayName.startsWith('Creator_')) return 'CR';
+  // Custom handle: strip @ and take first 2 letters
   const clean = displayName.replace(/^@/, '').replace(/[^A-Za-z0-9]/g, '');
   return (clean.slice(0, 2) || displayName.slice(0, 2)).toUpperCase();
 }
@@ -604,9 +617,10 @@ function buildCard(s) {
   const isOverdue   = isSealed && sealedUntil && sealedUntil <= new Date();
   const cardClass   = isRevealed ? 'revealed' : isSealed ? 'sealed' : isUrl ? 'url-type' : isHashOnly ? 'hash-only' : 'public';
   const identity    = s.creator_identity || s.creator_address || '';
+  const walletAddr  = s.creator_wallet_address || s.creator_address || '';
   // Privacy-first: read public_handle from view column — no UUID ever shown
   const displayName = resolveNameFromStamp(s);
-  const avatarInit  = getAvatarInitial(identity, displayName);
+  const avatarInit  = getAvatarInitial(identity, displayName, walletAddr);
   const timeStr     = s.block_timestamp ? timeAgo(s.block_timestamp) : '';
   const txLink      = s.tx_hash ? `<a href="${EXPLORER}/tx/${escHtml(s.tx_hash)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗</a>` : '';
   const hashDisplay = s.content_hash
@@ -673,7 +687,7 @@ async function loadStamps(reset = true) {
   try {
     let query = window.tsDB
       .from('stamps_with_creator')
-      .select('proof_id, content_type, visibility, display_title, text_content, file_name, file_size_bytes, tags, block_timestamp, status, storage_uri, sealed_until, revealed, content_hash, tx_hash, creator_identity, creator_address, creator_public_handle')
+      .select('proof_id, content_type, visibility, display_title, text_content, file_name, file_size_bytes, tags, block_timestamp, status, storage_uri, sealed_until, revealed, content_hash, tx_hash, creator_identity, creator_address, creator_public_handle, creator_wallet_address')
       .eq('status', 'confirmed').in('visibility', ['public','sealed','hash_only'])
       .eq('is_hidden', false).eq('contract_address', CONTRACT);
     if (currentFeed === 'reveals') query = query.eq('visibility','sealed').eq('revealed', true);
@@ -794,20 +808,27 @@ async function loadRevealCalendar() {
 
 async function loadTopCreators() {
   try {
-    const { data } = await window.tsDB.from('stamps').select('creator_identity')
+    // Fetch both identity and address — wallet users have UUID as identity but 0x as address
+    const { data } = await window.tsDB.from('stamps')
+      .select('creator_identity, creator_address')
       .eq('status','confirmed').eq('contract_address',CONTRACT).neq('creator_identity',null).limit(200);
     if (!data?.length) { document.getElementById('topCreators').innerHTML = '<p style="color:var(--text-muted);font-size:12px;text-align:center;padding:8px 0">No creators yet.</p>'; return; }
-    const counts = {};
-    data.forEach(r => { counts[r.creator_identity] = (counts[r.creator_identity]||0)+1; });
+    // Count by identity; also store associated wallet for each identity
+    const counts = {}, walletFor = {};
+    data.forEach(r => {
+      counts[r.creator_identity] = (counts[r.creator_identity]||0)+1;
+      if (r.creator_address && !walletFor[r.creator_identity])
+        walletFor[r.creator_identity] = r.creator_address;
+    });
     const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
-    // Prefetch display names for top creators
     await prefetchHandles(sorted.map(([id]) => id));
     document.getElementById('topCreators').innerHTML = sorted.map(([ident,cnt],i) => {
-      const name = resolveNameFromIdentity(ident);
+      const wallet = walletFor[ident] || '';
+      const name   = resolveNameFromIdentity(ident, wallet);
       return `
       <div class="creator-item">
         <div class="creator-rank">${i+1}</div>
-        <div class="creator-avatar" style="background:${avatarColor(ident)}">${escHtml(getAvatarInitial(ident,name))}</div>
+        <div class="creator-avatar" style="background:${avatarColor(ident)}">${escHtml(getAvatarInitial(ident,name,wallet))}</div>
         <div class="creator-info">
           <div class="creator-name">${escHtml(name)}</div>
           <div class="creator-sub">${cnt} stamp${cnt!==1?'s':''}</div>
@@ -941,17 +962,21 @@ async function renderDrawerCreators() {
     .eq('status','confirmed').eq('contract_address',CONTRACT)
     .then(async ({data}) => {
       if (!data?.length) { el.innerHTML = '<div style="text-align:center;padding:12px 0;color:var(--text-muted);font-size:13px">No creators yet</div>'; return; }
-      const counts = {};
-      data.forEach(r => { const id = r.creator_identity||r.creator_address||'Anonymous'; counts[id]=(counts[id]||0)+1; });
+      const counts = {}, walletFor = {};
+      data.forEach(r => {
+        const id = r.creator_identity || r.creator_address || 'Anonymous';
+        counts[id] = (counts[id]||0)+1;
+        if (r.creator_address && !walletFor[id]) walletFor[id] = r.creator_address;
+      });
       const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,3);
-      // Prefetch display names for drawer creators too
       await prefetchHandles(sorted.map(([id]) => id));
       let html = '';
       sorted.forEach(([id,count],idx) => {
-        const name = resolveNameFromIdentity(id);
+        const wallet = walletFor[id] || '';
+        const name   = resolveNameFromIdentity(id, wallet);
         html += `<div class="drawer-creator-item">
           <div class="drawer-creator-rank">${idx+1}</div>
-          <div class="drawer-creator-avatar" style="background:${avatarColor(id)}">${escHtml(getAvatarInitial(id,name))}</div>
+          <div class="drawer-creator-avatar" style="background:${avatarColor(id)}">${escHtml(getAvatarInitial(id,name,wallet))}</div>
           <div class="drawer-creator-info">
             <div class="drawer-creator-name">${escHtml(name)}</div>
             <div class="drawer-creator-sub">${count} stamp${count>1?'s':''}</div>
