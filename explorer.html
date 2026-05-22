@@ -479,15 +479,22 @@ function isUUID(id) {
   return id && id.includes('-') && !id.startsWith('0x') && id.length > 20;
 }
 
+// Friendly fallback for email users — "Creator_4a2f" from first 4 chars of UUID
+// Unique enough to distinguish in Top Creators, readable, never exposes real identity
+function creatorTag(uuid) {
+  const suffix = uuid.replace(/-/g, '').slice(0, 4).toLowerCase();
+  return 'Creator_' + suffix;
+}
+
 // Resolve display name from a stamp row (uses view columns, zero extra queries)
 function resolveNameFromStamp(s) {
   const identity = s.creator_identity || s.creator_address || '';
-  // Wallet: always show truncated address
+  // Wallet: public_handle if set, else truncated address
   if (identity.startsWith('0x') && identity.length >= 10)
-    return identity.slice(0, 6) + '…' + identity.slice(-4);
-  // Email user: only show public_handle if they explicitly set one
+    return s.creator_public_handle || (identity.slice(0, 6) + '…' + identity.slice(-4));
+  // Email user: public_handle if set, else Creator_XXXX
   if (isUUID(identity))
-    return s.creator_public_handle || 'Creator';
+    return s.creator_public_handle || creatorTag(identity);
   return identity || 'Creator';
 }
 
@@ -495,35 +502,49 @@ function resolveNameFromStamp(s) {
 const _handleCache = {}; // { uuid: public_handle | null }
 
 async function prefetchHandles(identities) {
-  const uuids = [...new Set(
-    identities.filter(id => isUUID(id) && !(id in _handleCache))
-  )];
-  if (!uuids.length) return;
+  // Fetch handles for UUIDs AND wallet addresses (wallet users may have set a handle too)
+  const ids = [...new Set(identities.filter(id => id && !(id in _handleCache)))];
+  if (!ids.length) return;
   try {
-    const { data } = await window.tsDB
-      .from('profiles').select('id, public_handle').in('id', uuids);
-    (data || []).forEach(p => { _handleCache[p.id] = p.public_handle || null; });
-    uuids.forEach(u => { if (!(u in _handleCache)) _handleCache[u] = null; });
+    // Look up by profile id (UUID) or wallet_address
+    const uuids   = ids.filter(id => isUUID(id));
+    const wallets = ids.filter(id => id.startsWith('0x'));
+    const results = {};
+    if (uuids.length) {
+      const { data } = await window.tsDB
+        .from('profiles').select('id, public_handle').in('id', uuids);
+      (data || []).forEach(p => { results[p.id] = p.public_handle || null; });
+    }
+    if (wallets.length) {
+      const { data } = await window.tsDB
+        .from('profiles').select('wallet_address, public_handle').in('wallet_address', wallets);
+      (data || []).forEach(p => { if (p.wallet_address) results[p.wallet_address] = p.public_handle || null; });
+    }
+    ids.forEach(id => { _handleCache[id] = results[id] ?? null; });
   } catch(e) { console.warn('[Explorer] prefetchHandles:', e.message); }
 }
 
 // Resolve display name when only identity string is available (Top Creators, drawer)
 function resolveNameFromIdentity(identity) {
   if (!identity) return 'Creator';
+  // Wallet: public_handle if set, else truncated address
   if (identity.startsWith('0x') && identity.length >= 10)
-    return identity.slice(0, 6) + '…' + identity.slice(-4);
+    return _handleCache[identity] || (identity.slice(0, 6) + '…' + identity.slice(-4));
+  // Email UUID: public_handle if set, else Creator_XXXX
   if (isUUID(identity))
-    return _handleCache[identity] || 'Creator';
+    return _handleCache[identity] || creatorTag(identity);
   return identity;
 }
 
-// Avatar initials — derived from public-facing name, not raw identity
+// Avatar initials — derived from public-facing name
 function getAvatarInitial(identity, displayName) {
-  if (!displayName || displayName === 'Creator') {
+  if (!displayName) {
     if (identity && identity.startsWith('0x')) return identity.slice(2, 4).toUpperCase();
     return 'CR';
   }
-  const clean = displayName.replace(/[^A-Za-z0-9]/g, '');
+  // "Creator_4a2f" → "CR", "@cryptolady" → "CR" or "CL", "Alice" → "AL"
+  if (displayName.startsWith('Creator_')) return 'CR';
+  const clean = displayName.replace(/^@/, '').replace(/[^A-Za-z0-9]/g, '');
   return (clean.slice(0, 2) || displayName.slice(0, 2)).toUpperCase();
 }
 
