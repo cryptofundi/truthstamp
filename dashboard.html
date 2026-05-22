@@ -291,9 +291,8 @@
           <h3 style="font-size:14px;font-weight:600;color:var(--color-text);margin-bottom:4px">
             🌐 Public handle
           </h3>
-          <p style="font-size:13px;color:var(--color-text-muted);line-height:1.5;max-width:480px">
-            This is what others see on the public Explorer next to your stamps.
-            Leave blank to appear as <strong>"Creator"</strong> — your email is never shown.
+          <p id="handle-desc" style="font-size:13px;color:var(--color-text-muted);line-height:1.5;max-width:480px">
+            Shown on the public Explorer next to your stamps. Leave blank to appear as "Creator" publicly.
           </p>
         </div>
         <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
@@ -420,22 +419,34 @@
         menuCredits.textContent = `${profile.credits_balance ?? 0} credits remaining`;
       }
 
-      // Update switch account label for wallet users
+      // Update switch account label based on user type
       const switchLabel = document.getElementById('switch-account-label');
-      if (switchLabel && isWallet) {
-        switchLabel.textContent = 'Switch account / wallet';
+      if (switchLabel) {
+        switchLabel.textContent = isWallet ? 'Switch wallet' : 'Switch account';
       }
+      // Show switch wallet option for all users (always visible)
+      const switchBtn = document.getElementById('switch-account-btn');
+      if (switchBtn) switchBtn.style.display = 'flex';
 
       // Update credit balance
       const creditsEl = document.getElementById('stat-credits');
 
-      // Show public handle card for email users; pre-fill current handle
-      const handleCard = document.getElementById('public-handle-card');
+      // Show public handle card for ALL users (wallet + email)
+      // Wallet users: can optionally set a handle instead of showing truncated address
+      // Email users: can set a handle instead of showing Creator_XXXX
+      const handleCard  = document.getElementById('public-handle-card');
       const handleInput = document.getElementById('public-handle-input');
-      if (handleCard && !isWallet) {
+      const handleDesc  = document.getElementById('handle-desc');
+      if (handleCard) {
         handleCard.style.display = 'block';
         if (handleInput && profile.public_handle) {
           handleInput.value = profile.public_handle;
+        }
+        // Update description based on user type
+        if (handleDesc) {
+          handleDesc.textContent = isWallet
+            ? 'Shown on the public Explorer next to your stamps. Leave blank to show your wallet address.'
+            : 'Shown on the public Explorer next to your stamps. Leave blank to appear as "Creator_' + (user.id || '').replace(/-/g,'').slice(0,4) + '".';
         }
       }
       if (creditsEl) {
@@ -704,6 +715,31 @@
 
     async function handleSwitchAccount(e) {
       if (e) e.preventDefault();
+
+      // Detect MetaMask / injected wallet environment
+      const hasEthereum = typeof window.ethereum !== 'undefined';
+      const isMetaMask  = hasEthereum && (window.ethereum.isMetaMask || window.ethereum.isBraveWallet);
+
+      if (isMetaMask) {
+        try {
+          // wallet_requestPermissions forces MetaMask to show the account switcher
+          // Works in both desktop Chrome extension AND MetaMask mobile in-app browser
+          await window.ethereum.request({
+            method: 'wallet_requestPermissions',
+            params: [{ eth_accounts: {} }],
+          });
+          // After user picks account, reload so dashboard reflects new wallet
+          window.location.reload();
+          return;
+        } catch(err) {
+          // User cancelled the switcher — do nothing, stay on page
+          if (err.code === 4001) return;
+          // Other error — fall through to sign out + redirect
+          console.warn('[Dashboard] wallet_requestPermissions failed:', err.message);
+        }
+      }
+
+      // Email users or fallback: sign out and go to auth page
       await window.tsAuth.signOut();
       window.location.href = 'auth.html';
     }
