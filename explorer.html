@@ -106,7 +106,6 @@ button{cursor:pointer;font-family:var(--font-sans);border:none;background:none}
 /* STAMP CARDS */
 .stamp-list{padding:10px 0;overflow:visible}
 .feed-intro{padding:8px 24px 4px;font-size:13px;color:var(--text-muted);line-height:1.5}
-/* Card: NO explicit width, NO overflow:hidden — margin handles the inset */
 .stamp-card{margin:0 20px 10px;background:var(--surface);border-radius:var(--r-lg);padding:16px 18px;cursor:pointer;box-shadow:var(--shadow-card);transition:box-shadow .2s,transform .15s;position:relative;border-left:3px solid transparent;word-break:break-word;overflow-wrap:break-word}
 .stamp-card:hover{box-shadow:var(--shadow-hover);transform:translateY(-1px)}
 .stamp-card.public{border-left-color:var(--green)}
@@ -114,10 +113,8 @@ button{cursor:pointer;font-family:var(--font-sans);border:none;background:none}
 .stamp-card.revealed{border-left-color:var(--purple)}
 .stamp-card.url-type{border-left-color:var(--cyan)}
 .stamp-card.hash-only{border-left-color:var(--text-muted)}
-/* card-top: flex row — meta must shrink */
 .stamp-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;min-width:0}
 .stamp-avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0}
-/* min-width:0 is the key fix — lets flex child shrink below text width */
 .stamp-meta{flex:1;min-width:0}
 .stamp-author{font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stamp-sub{font-size:12px;color:var(--text-muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -127,17 +124,11 @@ button{cursor:pointer;font-family:var(--font-sans);border:none;background:none}
 .badge-public{background:var(--green-bg);color:var(--green)}
 .badge-sealed{background:var(--amber-bg);color:var(--amber)}
 .badge-revealed{background:var(--purple-bg);color:var(--purple)}
-.badge-pending{background:var(--amber-bg);color:var(--amber)}
 .badge-hash{background:var(--surface-alt);color:var(--text-muted)}
-/* content text: allow wrap, prevent overflow */
 .stamp-content{font-size:14.5px;line-height:1.55;color:var(--text);margin-bottom:12px;overflow-wrap:break-word;word-break:break-word}
-/* reveal row: wrap on mobile, shorter copy handled in JS */
 .reveal-row{display:flex;align-items:flex-start;gap:8px;background:var(--amber-fill);border:1px solid var(--amber-border);border-radius:var(--r-sm);padding:8px 12px;margin-bottom:10px;font-size:12.5px;font-weight:500;color:var(--amber);flex-wrap:wrap;overflow-wrap:break-word;word-break:break-word}
 .stamp-sealed-msg{font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:6px;margin-bottom:10px;overflow-wrap:break-word;word-break:break-word;min-width:0}
-.stamp-sealed-msg span{min-width:0;overflow:hidden;text-overflow:ellipsis}
-/* url link: truncate long URLs */
 .stamp-url-link{color:var(--brand);font-size:13px;word-break:break-all;overflow-wrap:anywhere;display:flex;align-items:flex-start;gap:5px;margin-bottom:10px;min-width:0}
-/* footer: hash truncates, link stays right */
 .stamp-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;min-width:0}
 .stamp-hash{font-family:var(--font-mono);font-size:11.5px;color:var(--text-muted);display:flex;align-items:center;gap:5px;min-width:0;overflow:hidden}
 .stamp-hash-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px}
@@ -147,19 +138,16 @@ button{cursor:pointer;font-family:var(--font-sans);border:none;background:none}
 .proof-link:hover{background:rgba(40,84,232,0.18)}
 .arweave-link{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--purple);font-weight:500;transition:color .15s;white-space:nowrap;flex-shrink:0}
 .arweave-link:hover{color:var(--brand)}
-/* infinite scroll sentinel */
-.scroll-sentinel{height:1px;margin-top:8px}
-.scroll-loading{padding:20px 24px;text-align:center;color:var(--text-muted);font-size:13px;display:none}
-.scroll-loading.show{display:block}
 
-/* LOADING / EMPTY STATES */
+/* LOADING / EMPTY */
 .feed-loading{padding:48px 24px;text-align:center;color:var(--text-muted)}
 .feed-spinner{width:32px;height:32px;border:3px solid var(--border-md);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .feed-empty{padding:48px 24px;text-align:center;color:var(--text-muted)}
 .feed-empty-icon{font-size:2.5rem;margin-bottom:12px}
 .feed-empty h3{font-size:15px;color:var(--text-sec);margin-bottom:6px}
-.load-more-btn{display:block;margin:8px 20px 0;padding:12px;border:1.5px dashed var(--border-md);border-radius:var(--r-lg);color:var(--text-muted);font-size:13.5px;font-weight:500;transition:all .15s;background:none;cursor:pointer}
+/* LOAD MORE button (replacing infinite scroll) */
+.load-more-btn{display:none;margin:8px 20px 20px;width:calc(100% - 40px);padding:12px;border:1.5px dashed var(--border-md);border-radius:var(--r-lg);color:var(--text-muted);font-size:13.5px;font-weight:500;transition:all .15s;background:none;cursor:pointer}
 .load-more-btn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-bg)}
 
 /* RIGHT PANEL */
@@ -168,19 +156,14 @@ button{cursor:pointer;font-family:var(--font-sans);border:none;background:none}
 .panel-card{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow-card);padding:16px;margin-bottom:14px}
 .panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .panel-title{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:var(--text-sec)}
-.view-all{font-size:12px;font-weight:500;color:var(--brand);transition:opacity .15s}
-.view-all:hover{opacity:.75}
 .cal-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
 .cal-item:last-child{border-bottom:none;padding-bottom:0}
 .cal-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
-.cal-dot.green{background:var(--green)}
-.cal-dot.amber{background:var(--amber)}
-.cal-dot.brand{background:var(--brand)}
-.cal-dot.muted{background:var(--text-muted)}
+.cal-dot.green{background:var(--green)}.cal-dot.amber{background:var(--amber)}.cal-dot.brand{background:var(--brand)}.cal-dot.muted{background:var(--text-muted)}
 .cal-info{flex:1}
 .cal-when{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:2px}
 .cal-desc{font-size:12px;color:var(--text-sec);line-height:1.4;margin-bottom:4px}
-.cal-count{font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px}
+.cal-count{font-size:11px;color:var(--text-muted)}
 .cal-emoji{font-size:22px;flex-shrink:0}
 .why-body{font-size:13px;color:var(--text-sec);line-height:1.55;margin-bottom:10px}
 .why-badge{display:inline-flex;align-items:center;gap:5px;background:var(--green-bg);color:var(--green);font-size:12px;font-weight:600;padding:5px 12px;border-radius:20px;border:1px solid var(--green-border)}
@@ -188,7 +171,7 @@ button{cursor:pointer;font-family:var(--font-sans);border:none;background:none}
 .creator-item:last-child{border-bottom:none;padding-bottom:0}
 .creator-rank{font-size:13px;font-weight:700;color:var(--text-muted);width:16px}
 .creator-avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:14px;flex-shrink:0;font-weight:700;color:#fff}
-.creator-info{flex:1}
+.creator-info{flex:1;min-width:0}
 .creator-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
 .creator-sub{font-size:11.5px;color:var(--text-muted)}
 .creator-stamps{font-size:13px;font-weight:700;color:var(--brand)}
@@ -203,16 +186,14 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
 .footer-socials a{color:var(--text-muted);font-size:16px;transition:color .15s}
 .footer-socials a:hover{color:var(--text)}
 
-/* MOBILE TABS */
+/* MOBILE TABS / BOTTOM NAV — hidden desktop */
 .mobile-tabs{display:none}
-
-/* MOBILE BOTTOM NAV */
 .mobile-bottom-nav{display:none}
 
 /* FILTER DRAWER */
 .drawer-overlay{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.35);backdrop-filter:blur(2px)}
 .drawer-overlay.open{display:block}
-.filter-drawer{position:fixed;bottom:0;left:0;right:0;z-index:400;background:var(--surface);border-radius:20px 20px 0 0;padding:20px;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,0,.67,0);max-height:80vh;overflow-y:auto}
+.filter-drawer{position:fixed;bottom:0;left:0;right:0;z-index:400;background:var(--surface);border-radius:20px 20px 0 0;padding:20px;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,0,.67,0);max-height:85vh;overflow-y:auto}
 .filter-drawer.open{transform:translateY(0)}
 .drawer-handle{width:36px;height:4px;background:var(--border-md);border-radius:2px;margin:0 auto 20px}
 .drawer-close{position:absolute;top:16px;right:20px;background:var(--surface-alt);width:28px;height:28px;border-radius:50%;font-size:14px;display:grid;place-items:center;cursor:pointer;color:var(--text-sec)}
@@ -225,255 +206,86 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
 .drawer-check.on{background:var(--brand);border-color:var(--brand);color:#fff}
 .drawer-apply{display:block;width:100%;background:var(--brand);border:none;color:#fff;font-family:var(--font-sans);font-size:15px;font-weight:600;padding:14px;border-radius:var(--r-md);cursor:pointer;margin-top:4px}
 .drawer-reset{display:block;width:100%;background:none;border:none;color:var(--text-muted);font-family:var(--font-sans);font-size:14px;padding:10px;cursor:pointer}
-/* Drawer info panels */
 .drawer-divider{height:1px;background:var(--border-md);margin:8px 0 20px}
 .drawer-panel{background:var(--surface-alt);border-radius:var(--r-lg);padding:14px;margin-bottom:14px}
-.drawer-panel-title{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:0.7px;text-transform:uppercase;color:var(--text-sec);margin-bottom:12px}
+.drawer-panel-title{font-size:11px;font-weight:700;letter-spacing:0.7px;text-transform:uppercase;color:var(--text-sec);margin-bottom:12px}
 .drawer-cal-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
 .drawer-cal-item:last-child{border-bottom:none;padding-bottom:0}
-.drawer-cal-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
-.drawer-cal-info{flex:1}
+.drawer-cal-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}
 .drawer-cal-when{font-size:13px;font-weight:600;color:var(--text)}
-.drawer-cal-desc{font-size:12px;color:var(--text-sec);margin-top:2px;line-height:1.4}
-.drawer-cal-count{font-size:11px;color:var(--text-muted);margin-top:3px}
-.drawer-cal-emoji{font-size:20px;flex-shrink:0}
-.drawer-view-all{display:flex;align-items:center;justify-content:center;gap:5px;width:100%;margin-top:10px;padding:8px;font-size:13px;font-weight:500;color:var(--brand);border:1.5px solid var(--brand-bg);border-radius:var(--r-sm);background:var(--brand-bg);transition:background .15s}
-.drawer-view-all:hover{background:rgba(40,84,232,0.15)}
+.drawer-cal-count{font-size:11px;color:var(--text-muted);margin-top:2px}
 .drawer-creator-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
 .drawer-creator-item:last-child{border-bottom:none;padding-bottom:0}
 .drawer-creator-rank{font-size:13px;font-weight:700;color:var(--text-muted);width:16px;flex-shrink:0}
-.drawer-creator-avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.drawer-creator-avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
 .drawer-creator-info{flex:1;min-width:0}
 .drawer-creator-name{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .drawer-creator-sub{font-size:11.5px;color:var(--text-muted)}
-.drawer-creator-count{font-size:14px;font-weight:700;color:var(--brand);flex-shrink:0}
+.drawer-creator-count{font-size:13px;font-weight:700;color:var(--brand);flex-shrink:0}
 
-/* ── MOBILE ────────────────────────────────────────────────────────────── */
+/* ── MOBILE ── */
 @media(max-width:900px){
-
-  /* Spacing tokens */
-  :root{
-    --page-pad:16px;
-    --card-radius:16px;
-    --nav-h:56px;
-  }
-
+  :root{--page-pad:16px;--card-radius:16px;--nav-h:56px}
   .layout{grid-template-columns:1fr;width:100%;overflow-x:hidden}
   .sidebar,.right-panel{display:none}
   .feed{width:100%;min-width:0;overflow-x:hidden}
-
-  /* Nav: fixed height, true flex-center alignment */
-  .nav{
-    height:var(--nav-h);
-    padding:0 var(--page-pad);
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:0;
-  }
-  .nav-logo{
-    margin-right:0;font-size:15px;
-    line-height:1;
-    display:flex;align-items:center;gap:8px;
-  }
+  .nav{height:var(--nav-h);padding:0 var(--page-pad);display:flex;align-items:center;justify-content:space-between;gap:0}
+  .nav-logo{margin-right:0;font-size:15px;line-height:1;display:flex;align-items:center;gap:8px}
   .nav-links,.nav-search,.btn-ghost,.btn-primary{display:none!important}
   .nav-right{margin-left:auto;display:flex;align-items:center;gap:4px}
-
-  /* Icon buttons: container-aligned, 44px touch targets */
-  .mob-search-btn,.hamburger{
-    display:flex!important;
-    align-items:center;
-    justify-content:center;
-    width:40px;height:40px;
-    border-radius:var(--r-sm);
-    font-size:18px;
-    line-height:1;
-    color:var(--text-sec);
-    flex-shrink:0;
-    padding:0;
-  }
-
-  /* Stats: contained card, inline "51 stamps" format */
-  .today-bar{
-    margin:12px var(--page-pad) 0;
-    padding:14px 16px;
-    border-radius:16px;
-    border:1px solid var(--border-md);
-    background:var(--surface);
-    box-shadow:var(--shadow-card);
-    flex-direction:column;
-    align-items:flex-start;
-    gap:10px;
-  }
+  .mob-search-btn,.hamburger{display:flex!important;align-items:center;justify-content:center;width:40px;height:40px;border-radius:var(--r-sm);font-size:18px;line-height:1;color:var(--text-sec);flex-shrink:0;padding:0}
+  .today-bar{margin:12px var(--page-pad) 0;padding:14px 16px;border-radius:16px;border:1px solid var(--border-md);background:var(--surface);box-shadow:var(--shadow-card);flex-direction:column;align-items:flex-start;gap:10px}
   .today-label{font-size:13px;font-weight:600;line-height:1}
-  .today-stats{
-    display:grid!important;
-    grid-template-columns:1fr 1fr;
-    gap:8px;
-    width:100%;margin-top:0;
-  }
-  .today-stat{
-    display:flex;flex-direction:row;
-    align-items:baseline;gap:5px;
-    padding:0;position:static;
-  }
+  .today-stats{display:grid!important;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin-top:0}
+  .today-stat{display:flex;flex-direction:row;align-items:baseline;gap:5px;padding:0;position:static}
   .today-stat+.today-stat::before{display:none}
   .today-stat-num{font-size:20px;font-weight:700;letter-spacing:-0.5px;line-height:1}
   .today-stat-label{font-size:11px;color:var(--text-muted);line-height:1}
-
-  /* Tabs: sticky, scrollable, fade-right */
-  .mobile-tabs{
-    display:flex;
-    overflow-x:auto;scrollbar-width:none;
-    gap:8px;
-    padding:12px var(--page-pad);
-    border-bottom:1px solid var(--border);
-    background:var(--surface);
-    position:sticky;top:var(--nav-h);z-index:40;
-    -webkit-overflow-scrolling:touch;
-    -webkit-mask-image:linear-gradient(to right,black 88%,transparent);
-    mask-image:linear-gradient(to right,black 88%,transparent);
-  }
+  .mobile-tabs{display:flex;overflow-x:auto;scrollbar-width:none;gap:8px;padding:12px var(--page-pad);border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:var(--nav-h);z-index:40;-webkit-overflow-scrolling:touch;-webkit-mask-image:linear-gradient(to right,black 88%,transparent);mask-image:linear-gradient(to right,black 88%,transparent)}
   .mobile-tabs::-webkit-scrollbar{display:none}
-  .mob-tab{
-    flex-shrink:0;padding:7px 16px;border-radius:20px;
-    font-size:13px;font-weight:500;cursor:pointer;
-    background:var(--surface-alt);color:var(--text-sec);
-    border:1.5px solid var(--border-md);
-    transition:all .15s;white-space:nowrap;line-height:1.2;
-  }
+  .mob-tab{flex-shrink:0;padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;background:var(--surface-alt);color:var(--text-sec);border:1.5px solid var(--border-md);transition:all .15s;white-space:nowrap;line-height:1.2}
   .mob-tab.active{background:var(--brand);border-color:var(--brand);color:#fff}
-
-  /* Feed header: NOT sticky on mobile — scrolls naturally with content */
-  .feed-header{
-    position:static;
-    padding:14px var(--page-pad) 10px;
-    background:var(--bg);
-  }
+  .feed-header{position:static;padding:14px var(--page-pad) 10px;background:var(--bg)}
   .feed-title{font-size:15px}
-
-  /* Filter chips: NOT sticky on mobile — scrolls naturally, fade right */
-  .filter-bar{
-    position:static;
-    padding:8px var(--page-pad);gap:6px;
-    -webkit-mask-image:linear-gradient(to right,black 88%,transparent);
-    mask-image:linear-gradient(to right,black 88%,transparent);
-  }
+  .filter-bar{position:static;padding:8px var(--page-pad);gap:6px;-webkit-mask-image:linear-gradient(to right,black 88%,transparent);mask-image:linear-gradient(to right,black 88%,transparent)}
   .chip{padding:5px 12px;font-size:12px}
-
   .feed-intro{padding:8px var(--page-pad) 0;font-size:12.5px;color:var(--text-muted);line-height:1.5}
-
-  /* Cards: margin only, NO width property */
-  .stamp-list{padding:10px 0 10px;overflow:visible;min-width:0;width:100%;scroll-margin-top:8px}
-  .stamp-card{
-    margin:0 var(--page-pad) 10px;
-    border-radius:var(--card-radius);
-    padding:14px 14px;
-    box-sizing:border-box;
-    min-width:0;
-  }
-  /* Card top row: ensure badges don't overflow */
+  .stamp-list{padding:10px 0;overflow:visible;min-width:0;width:100%}
+  .stamp-card{margin:0 var(--page-pad) 10px;border-radius:var(--card-radius);padding:14px;box-sizing:border-box;min-width:0}
   .stamp-card-top{gap:8px}
   .stamp-meta{min-width:0;flex:1}
   .stamp-author{font-size:13px}
   .stamp-sub{font-size:11.5px}
-
-  /* Badge row: wrap on small screens, don't overflow */
   .stamp-badges{max-width:55%;flex-wrap:wrap;gap:4px}
   .badge{font-size:10.5px;padding:2px 8px}
-  /* Footer: stack if needed */
   .stamp-footer{flex-wrap:wrap;gap:6px}
-  .stamp-hash-text{max-width:120px}
-  /* Content text sizing */
+  .stamp-hash-text{max-width:110px}
   .stamp-content{font-size:14px}
-  .load-more-btn{margin:8px var(--page-pad) 0;width:auto}
-
-  /* Body: clear bottom nav + iOS home bar */
+  /* Load more button on mobile */
+  .load-more-btn{margin:8px var(--page-pad) 20px;width:calc(100% - 32px)}
   body{padding-bottom:calc(78px + env(safe-area-inset-bottom,12px))}
-
-  /* Bottom nav: glass blur, full safe-area support */
-  .mobile-bottom-nav{
-    display:block;
-    position:fixed;bottom:0;left:0;right:0;z-index:200;
-    background:rgba(255,255,255,0.92);
-    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-    border-top:1px solid var(--border);
-    padding-bottom:env(safe-area-inset-bottom,8px);
-  }
-  .mobile-bottom-nav ul{
-    display:flex;justify-content:space-around;align-items:center;
-    list-style:none;height:56px;padding:0;margin:0;
-  }
-  .mob-nav-item{
-    flex:1;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;
-    gap:3px;min-height:44px;padding:4px 2px;
-    font-size:10px;font-weight:500;color:var(--text-muted);
-    cursor:pointer;background:none;border:none;
-    transition:color .15s;line-height:1;
-  }
+  .mobile-bottom-nav{display:block;position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(255,255,255,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom,8px)}
+  .mobile-bottom-nav ul{display:flex;justify-content:space-around;align-items:center;list-style:none;height:56px;padding:0;margin:0}
+  .mob-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:44px;padding:4px 2px;font-size:10px;font-weight:500;color:var(--text-muted);cursor:pointer;background:none;border:none;transition:color .15s;line-height:1}
   .mob-nav-item.active{color:var(--brand)}
   .mob-nav-icon{width:22px;height:22px;display:block;flex-shrink:0}
-
-  /* Stamp FAB: elevated, stronger shadow */
-  .mob-nav-item.stamp-cta .mob-nav-icon{
-    background:var(--brand);color:#fff;
-    border-radius:14px;width:46px;height:46px;
-    display:grid;place-items:center;
-    margin-top:-22px;
-    box-shadow:0 8px 24px rgba(40,84,232,0.35),0 2px 6px rgba(40,84,232,0.2);
-    padding:10px;
-  }
+  .mob-nav-item.stamp-cta .mob-nav-icon{background:var(--brand);color:#fff;border-radius:14px;width:46px;height:46px;display:grid;place-items:center;margin-top:-22px;box-shadow:0 8px 24px rgba(40,84,232,0.35),0 2px 6px rgba(40,84,232,0.2);padding:10px}
   .mob-nav-item.stamp-cta{color:var(--brand);font-weight:600;font-size:10px}
-
-  /* Footer: minimal */
   footer{flex-direction:column;align-items:center;gap:8px;padding:16px var(--page-pad);text-align:center}
   .footer-copy{display:none}
   .footer-links{gap:16px}
   .footer-links li:nth-child(n+4){display:none}
   .footer-socials{gap:20px}
+}
 
-}
-/* ── Mobile inline search bar (Etherscan-style) ────────────────────────── */
-.mob-search-overlay{display:none} /* disabled — no longer used */
-
-/* Search bar that expands inside the nav on mobile */
-.mob-search-expanded{
-  display:none;
-  position:sticky;top:var(--nav-h);z-index:99;
-  background:var(--surface);
-  border-bottom:2px solid var(--brand);
-  padding:10px var(--page-pad);
-  gap:10px;
-  align-items:center;
-  box-shadow:0 2px 8px rgba(0,0,0,0.08);
-}
-.mob-search-expanded.open{display:flex}
-.mob-search-expanded input{
-  flex:1;
-  background:var(--bg);
-  border:1.5px solid var(--border-md);
-  border-radius:var(--r-md);
-  color:var(--text);
-  font-family:var(--font-sans);
-  font-size:15px;
-  padding:10px 14px;
-  outline:none;
-  transition:border .15s,box-shadow .15s;
-  /* Prevent iOS zoom on focus (font-size >= 16 prevents zoom) */
-  font-size:16px;
-}
-.mob-search-expanded input:focus{
-  border-color:var(--brand);
-  box-shadow:0 0 0 3px var(--brand-mid);
-  background:#fff;
-}
-.mob-search-cancel-btn{
-  color:var(--brand);font-size:14px;font-weight:600;
-  white-space:nowrap;flex-shrink:0;
-  padding:8px 4px;
-  background:none;border:none;cursor:pointer;
-}
+/* Mobile search overlay */
+.mob-search-overlay{display:none;position:fixed;inset:0;z-index:500;background:var(--surface);padding:14px 16px;flex-direction:column;gap:16px}
+.mob-search-overlay.open{display:flex}
+.mob-search-bar{display:flex;align-items:center;gap:10px}
+.mob-search-bar input{flex:1;background:var(--bg);border:1px solid var(--border-md);border-radius:var(--r-md);color:var(--text);font-family:var(--font-sans);font-size:15px;padding:10px 14px;outline:none;transition:border .2s,box-shadow .2s}
+.mob-search-bar input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-mid)}
+.mob-search-cancel{color:var(--brand);font-size:14px;font-weight:500;white-space:nowrap}
+.mob-search-results-note{font-size:13px;color:var(--text-muted);padding:4px 0}
 </style>
 </head>
 <body>
@@ -502,43 +314,13 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
   </div>
 </nav>
 
-<!-- MOBILE INLINE SEARCH BAR — must be immediately after nav for sticky to work -->
-<div class="mob-search-expanded" id="mobSearchExpanded">
-  <input
-    type="search"
-    id="mobSearchInput"
-    placeholder="Search stamps, creators, hash…"
-    autocomplete="off"
-    autocorrect="off"
-    autocapitalize="off"
-    spellcheck="false"
-    enterkeyhint="search"
-  />
-  <button class="mob-search-cancel-btn" onclick="closeMobSearch()">Cancel</button>
-</div>
-
 <div class="today-bar">
-  <div class="today-label">
-    📡 TruthStamp Protocol
-    <div class="live-chip">LIVE</div>
-  </div>
+  <div class="today-label">📡 TruthStamp Protocol <div class="live-chip">LIVE</div></div>
   <div class="today-stats">
-    <div class="today-stat">
-      <span class="today-stat-num" id="st-total">—</span>
-      <span class="today-stat-label">Total stamps</span>
-    </div>
-    <div class="today-stat">
-      <span class="today-stat-num" id="st-reveals">—</span>
-      <span class="today-stat-label">Revealed</span>
-    </div>
-    <div class="today-stat">
-      <span class="today-stat-num" id="st-seals">—</span>
-      <span class="today-stat-label">Seals ticking</span>
-    </div>
-    <div class="today-stat">
-      <span class="today-stat-num" id="st-creators">—</span>
-      <span class="today-stat-label">Creators</span>
-    </div>
+    <div class="today-stat"><span class="today-stat-num" id="st-total">—</span><span class="today-stat-label">Total stamps</span></div>
+    <div class="today-stat"><span class="today-stat-num" id="st-reveals">—</span><span class="today-stat-label">Revealed</span></div>
+    <div class="today-stat"><span class="today-stat-num" id="st-seals">—</span><span class="today-stat-label">Seals ticking</span></div>
+    <div class="today-stat"><span class="today-stat-num" id="st-creators">—</span><span class="today-stat-label">Creators</span></div>
   </div>
 </div>
 
@@ -553,60 +335,24 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
   <aside class="sidebar">
     <div class="sidebar-section">
       <div class="sidebar-label">Feed</div>
-      <button class="sidebar-item active" data-feed="latest">
-        <div class="sidebar-item-left"><span class="sidebar-icon">⚡</span>Latest</div>
-        <span class="sidebar-count" id="cnt-total">—</span>
-      </button>
-      <button class="sidebar-item" data-feed="trending">
-        <div class="sidebar-item-left"><span class="sidebar-icon">🔥</span>Trending</div>
-        <span class="sidebar-count">—</span>
-      </button>
-      <button class="sidebar-item" data-feed="reveals">
-        <div class="sidebar-item-left"><span class="sidebar-icon">🔓</span>Reveals</div>
-        <span class="sidebar-count" id="cnt-reveals">—</span>
-      </button>
-      <button class="sidebar-item" data-feed="upcoming">
-        <div class="sidebar-item-left"><span class="sidebar-icon">⏰</span>Upcoming seals</div>
-        <span class="sidebar-count" id="cnt-sealed">—</span>
-      </button>
+      <button class="sidebar-item active" data-feed="latest"><div class="sidebar-item-left"><span class="sidebar-icon">⚡</span>Latest</div><span class="sidebar-count" id="cnt-total">—</span></button>
+      <button class="sidebar-item" data-feed="trending"><div class="sidebar-item-left"><span class="sidebar-icon">🔥</span>Trending</div><span class="sidebar-count" id="cnt-trending">—</span></button>
+      <button class="sidebar-item" data-feed="reveals"><div class="sidebar-item-left"><span class="sidebar-icon">🔓</span>Reveals</div><span class="sidebar-count" id="cnt-reveals">—</span></button>
+      <button class="sidebar-item" data-feed="upcoming"><div class="sidebar-item-left"><span class="sidebar-icon">⏰</span>Upcoming seals</div><span class="sidebar-count" id="cnt-sealed">—</span></button>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-label">Type</div>
-      <button class="sidebar-item" data-type="text">
-        <div class="sidebar-item-left"><span class="sidebar-icon">📝</span>Text</div>
-        <span class="sidebar-count" id="cnt-text">—</span>
-      </button>
-      <button class="sidebar-item" data-type="file">
-        <div class="sidebar-item-left"><span class="sidebar-icon">📄</span>File</div>
-        <span class="sidebar-count" id="cnt-file">—</span>
-      </button>
-      <button class="sidebar-item" data-type="url">
-        <div class="sidebar-item-left"><span class="sidebar-icon">🔗</span>URL</div>
-        <span class="sidebar-count" id="cnt-url">—</span>
-      </button>
+      <button class="sidebar-item" data-type="text"><div class="sidebar-item-left"><span class="sidebar-icon">📝</span>Text</div><span class="sidebar-count" id="cnt-text">—</span></button>
+      <button class="sidebar-item" data-type="file"><div class="sidebar-item-left"><span class="sidebar-icon">📄</span>File</div><span class="sidebar-count" id="cnt-file">—</span></button>
+      <button class="sidebar-item" data-type="url"><div class="sidebar-item-left"><span class="sidebar-icon">🔗</span>URL</div><span class="sidebar-count" id="cnt-url">—</span></button>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-label">Category</div>
-      <button class="sidebar-item" data-cat="Predictions">
-        <div class="sidebar-item-left"><span class="sidebar-icon">🎯</span>Predictions</div>
-        <span class="sidebar-count" id="cnt-pred">—</span>
-      </button>
-      <button class="sidebar-item" data-cat="Research">
-        <div class="sidebar-item-left"><span class="sidebar-icon">🔬</span>Research</div>
-        <span class="sidebar-count">—</span>
-      </button>
-      <button class="sidebar-item" data-cat="Creative">
-        <div class="sidebar-item-left"><span class="sidebar-icon">🎨</span>Creative</div>
-        <span class="sidebar-count">—</span>
-      </button>
-      <button class="sidebar-item" data-cat="News">
-        <div class="sidebar-item-left"><span class="sidebar-icon">📰</span>News</div>
-        <span class="sidebar-count">—</span>
-      </button>
-      <button class="sidebar-item" data-cat="Crypto">
-        <div class="sidebar-item-left"><span class="sidebar-icon">₿</span>Crypto</div>
-        <span class="sidebar-count">—</span>
-      </button>
+      <button class="sidebar-item" data-cat="Predictions"><div class="sidebar-item-left"><span class="sidebar-icon">🎯</span>Predictions</div><span class="sidebar-count" id="cnt-pred">—</span></button>
+      <button class="sidebar-item" data-cat="Research"><div class="sidebar-item-left"><span class="sidebar-icon">🔬</span>Research</div><span class="sidebar-count">—</span></button>
+      <button class="sidebar-item" data-cat="Creative"><div class="sidebar-item-left"><span class="sidebar-icon">🎨</span>Creative</div><span class="sidebar-count">—</span></button>
+      <button class="sidebar-item" data-cat="News"><div class="sidebar-item-left"><span class="sidebar-icon">📰</span>News</div><span class="sidebar-count">—</span></button>
+      <button class="sidebar-item" data-cat="Crypto"><div class="sidebar-item-left"><span class="sidebar-icon">₿</span>Crypto</div><span class="sidebar-count">—</span></button>
     </div>
     <div class="sidebar-cta">
       <div class="sidebar-cta-title">Create your own stamp</div>
@@ -635,39 +381,24 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
     </div>
     <div class="stamp-list" id="stampList">
       <p class="feed-intro">Live public proofs from creators, researchers, and predictions — permanently on MegaETH.</p>
-      <div class="feed-loading">
-        <div class="feed-spinner"></div>
-        <p>Loading stamps from MegaETH…</p>
-      </div>
+      <div class="feed-loading"><div class="feed-spinner"></div><p>Loading stamps from MegaETH…</p></div>
     </div>
-    <button class="load-more-btn" id="loadMoreBtn" style="display:none" onclick="loadMore()">Load more stamps</button>
-    <div class="scroll-sentinel" id="scrollSentinel"></div>
-    <div class="scroll-loading" id="scrollLoading">Loading more stamps…</div>
+    <button class="load-more-btn" id="loadMoreBtn" onclick="loadMore()">Load more stamps</button>
   </main>
 
   <aside class="right-panel">
     <div class="panel-card">
-      <div class="panel-header">
-        <div class="panel-title">📅 Reveal Calendar</div>
-      </div>
-      <div id="calendarItems">
-        <div style="text-align:center;color:var(--text-muted);font-size:12px;padding:12px 0">Loading…</div>
-      </div>
+      <div class="panel-header"><div class="panel-title">📅 Reveal Calendar</div></div>
+      <div id="calendarItems"><div style="text-align:center;color:var(--text-muted);font-size:12px;padding:12px 0">Loading…</div></div>
     </div>
     <div class="panel-card">
-      <div class="panel-header">
-        <div class="panel-title">ℹ Why stamp publicly?</div>
-      </div>
+      <div class="panel-header"><div class="panel-title">ℹ Why stamp publicly?</div></div>
       <div class="why-body">Public stamps become independently verifiable permanent records on MegaETH and Arweave — even if TruthStamp disappears.</div>
       <div class="why-badge">🛡 Permanent · Immutable</div>
     </div>
     <div class="panel-card">
-      <div class="panel-header">
-        <div class="panel-title">🏆 Top Creators</div>
-      </div>
-      <div id="topCreators">
-        <div style="text-align:center;color:var(--text-muted);font-size:12px;padding:12px 0">Loading…</div>
-      </div>
+      <div class="panel-header"><div class="panel-title">🏆 Top Creators</div></div>
+      <div id="topCreators"><div style="text-align:center;color:var(--text-muted);font-size:12px;padding:12px 0">Loading…</div></div>
     </div>
   </aside>
 </div>
@@ -688,16 +419,11 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
 
 <nav class="mobile-bottom-nav">
   <ul>
-    <li><button class="mob-nav-item" onclick="location.href='index.html'">
-      <svg class="mob-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button></li>
-    <li><button class="mob-nav-item active">
-      <svg class="mob-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Explorer</button></li>
-    <li><button class="mob-nav-item stamp-cta" onclick="location.href='stamp.html'">
-      <svg class="mob-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Stamp</button></li>
-    <li><button class="mob-nav-item" onclick="location.href='verify.html'">
-      <svg class="mob-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Verify</button></li>
-    <li><button class="mob-nav-item" onclick="location.href='dashboard.html'">
-      <svg class="mob-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</button></li>
+    <li><button class="mob-nav-item" onclick="location.href='index.html'"><svg class="mob-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button></li>
+    <li><button class="mob-nav-item active"><svg class="mob-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Explorer</button></li>
+    <li><button class="mob-nav-item stamp-cta" onclick="location.href='stamp.html'"><svg class="mob-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Stamp</button></li>
+    <li><button class="mob-nav-item" onclick="location.href='verify.html'"><svg class="mob-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Verify</button></li>
+    <li><button class="mob-nav-item" onclick="location.href='dashboard.html'"><svg class="mob-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</button></li>
   </ul>
 </nav>
 
@@ -725,251 +451,277 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
   </div>
   <button class="drawer-apply" onclick="applyDrawerFilters()">Apply filters</button>
   <button class="drawer-reset" onclick="resetOpts()">Reset all</button>
-
   <div class="drawer-divider"></div>
-
-  <!-- Reveal Calendar -->
   <div class="drawer-panel">
     <div class="drawer-panel-title">📅 Reveal Calendar</div>
-    <div id="drawerCalendar">
-      <div style="text-align:center;padding:12px 0;color:var(--text-muted);font-size:13px">Loading…</div>
-    </div>
-    <button class="drawer-view-all" onclick="closeFilterDrawer()">View full calendar →</button>
+    <div id="drawerCalendar"><div style="text-align:center;padding:12px 0;color:var(--text-muted);font-size:13px">Loading…</div></div>
   </div>
-
-  <!-- Top Creators -->
   <div class="drawer-panel">
     <div class="drawer-panel-title">🏆 Top Creators</div>
-    <div id="drawerCreators">
-      <div style="text-align:center;padding:12px 0;color:var(--text-muted);font-size:13px">Loading…</div>
-    </div>
-    <button class="drawer-view-all" onclick="closeFilterDrawer()">View all creators →</button>
+    <div id="drawerCreators"><div style="text-align:center;padding:12px 0;color:var(--text-muted);font-size:13px">Loading…</div></div>
   </div>
 </div>
 
+<!-- Mobile search overlay -->
+<div class="mob-search-overlay" id="mobSearchOverlay">
+  <div class="mob-search-bar">
+    <input type="text" id="mobSearchInput" placeholder="Search stamps, creators…" autocomplete="off"/>
+    <button class="mob-search-cancel" onclick="closeMobSearch()">Cancel</button>
+  </div>
+  <p class="mob-search-results-note" id="mobSearchNote"></p>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/nav.js"></script>
 <script>
-// ── Config ────────────────────────────────────────────────────────────────
 const cfg      = window.TRUTHSTAMP_CONFIG ?? {};
-const EXPLORER = cfg.CONTRACT_EXPLORER ?? 'https://megaeth-testnet-v2.blockscout.com';
-const CONTRACT = cfg.CONTRACT_ADDRESS  ?? '';
+const EXPLORER_URL = cfg.CONTRACT_EXPLORER ?? 'https://megaeth-testnet-v2.blockscout.com';
+const CONTRACT = cfg.CONTRACT_ADDRESS ?? '';
 const PAGE_SIZE = 20;
 
-// ── Category mapping (tag-derived, no DB changes needed) ──────────────────
+// ── Category map — tag-derived, no DB changes ─────────────────────────────
+// Stamps without tags get auto-categorised by content keywords below
 const CATEGORY_MAP = {
-  prediction:'Predictions', forecast:'Predictions', pricecheck:'Predictions', bet:'Predictions', call:'Predictions',
-  research:'Research', paper:'Research', ai:'Research', study:'Research', data:'Research', science:'Research',
-  creative:'Creative', art:'Creative', design:'Creative', music:'Creative', story:'Creative', poem:'Creative',
-  news:'News', journalism:'News', report:'News', breaking:'News',
-  bitcoin:'Crypto', btc:'Crypto', eth:'Crypto', defi:'Crypto', crypto:'Crypto', nft:'Crypto', web3:'Crypto',
+  prediction:'Predictions',forecast:'Predictions',pricecheck:'Predictions',bet:'Predictions',call:'Predictions',
+  research:'Research',paper:'Research',ai:'Research',study:'Research',data:'Research',science:'Research',
+  creative:'Creative',art:'Creative',design:'Creative',music:'Creative',story:'Creative',poem:'Creative',
+  news:'News',journalism:'News',report:'News',breaking:'News',
+  bitcoin:'Crypto',btc:'Crypto',eth:'Crypto',defi:'Crypto',crypto:'Crypto',nft:'Crypto',web3:'Crypto',
 };
-function getCategories(tags) {
-  if (!tags) return [];
-  const arr  = Array.isArray(tags) ? tags : (typeof tags === 'string' ? JSON.parse(tags || '[]') : []);
+
+// Auto-category from text content when no tags given
+// Looks for keywords in the stamp text itself
+const KEYWORD_CATS = [
+  { cat:'Predictions', words:['predict','will hit','will reach','will break','forecast','expect','by 20','price target','$','target'] },
+  { cat:'Crypto',      words:['bitcoin','btc','eth','ethereum','solana','crypto','defi','nft','blockchain','web3','token','coin','wallet'] },
+  { cat:'Research',    words:['research','paper','study','analysis','model','data','ai ','gpt','llm','machine learning','neural'] },
+  { cat:'News',        words:['announces','breaking','confirmed','report','says','according to','news','update'] },
+  { cat:'Creative',    words:['poem','story','art','design','creative','wrote','chapter','song','lyrics'] },
+];
+
+function getCategories(tags, text) {
   const cats = new Set();
-  arr.forEach(t => { const c = CATEGORY_MAP[t.toLowerCase()]; if (c) cats.add(c); });
+  // Tag-based
+  if (tags) {
+    const arr = Array.isArray(tags) ? tags : (typeof tags === 'string' ? (() => { try { return JSON.parse(tags||'[]'); } catch { return []; } })() : []);
+    arr.forEach(t => { const c = CATEGORY_MAP[(t||'').toLowerCase()]; if (c) cats.add(c); });
+  }
+  // If no category found from tags, auto-detect from text content
+  if (cats.size === 0 && text) {
+    const lower = text.toLowerCase();
+    for (const { cat, words } of KEYWORD_CATS) {
+      if (words.some(w => lower.includes(w))) { cats.add(cat); break; }
+    }
+  }
   return [...cats];
 }
 
-// ── State ─────────────────────────────────────────────────────────────────
-let allStamps    = [];
-let currentFeed  = 'latest';
-let currentChip  = 'all';
-let sortAsc      = false;
-let offset       = 0;
-let hasMore      = false;
+// ── State ──────────────────────────────────────────────────────────────────
+let allStamps   = [];
+let currentFeed = 'latest';
+let currentChip = 'all';
+let sortAsc     = false;
+let offset      = 0;
+let hasMore     = false;
+// Shared search query — updated by both desktop input and mobile overlay
+let searchQuery = '';
 
-// ── Avatar colour from identity string ───────────────────────────────────
+// ── Avatar helpers ─────────────────────────────────────────────────────────
 const AVATAR_COLORS = [
-  'linear-gradient(135deg,#6366f1,#818cf8)',
-  'linear-gradient(135deg,#0ea5e9,#38bdf8)',
-  'linear-gradient(135deg,#a78bfa,#c4b5fd)',
-  'linear-gradient(135deg,#22d3ee,#67e8f9)',
-  'linear-gradient(135deg,#f59e0b,#fbbf24)',
-  'linear-gradient(135deg,#ef4444,#f87171)',
-  'linear-gradient(135deg,#10b981,#34d399)',
-  'linear-gradient(135deg,#ec4899,#f472b6)',
+  'linear-gradient(135deg,#6366f1,#818cf8)','linear-gradient(135deg,#0ea5e9,#38bdf8)',
+  'linear-gradient(135deg,#a78bfa,#c4b5fd)','linear-gradient(135deg,#22d3ee,#67e8f9)',
+  'linear-gradient(135deg,#f59e0b,#fbbf24)','linear-gradient(135deg,#ef4444,#f87171)',
+  'linear-gradient(135deg,#10b981,#34d399)','linear-gradient(135deg,#ec4899,#f472b6)',
 ];
 function avatarColor(str) {
   let h = 0;
-  for (let i = 0; i < (str||'').length; i++) h = (h * 31 + str.charCodeAt(i)) & 0xffffffff;
+  for (let i = 0; i < (str||'').length; i++) h = (h*31 + str.charCodeAt(i)) & 0xffffffff;
   return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
 }
-function avatarInitial(identity) {
-  if (!identity) return '?';
-  if (identity.startsWith('0x')) return identity.slice(2,4).toUpperCase();
-  return identity.slice(0,2).toUpperCase();
+function avatarInitial(id) {
+  if (!id) return '?';
+  if (id.startsWith('0x')) return id.slice(2,4).toUpperCase();
+  // For UUID/email users try cached display name
+  const cached = displayNameCache[id];
+  if (cached) return cached.replace(/[^A-Za-z]/g,'').slice(0,2).toUpperCase() || cached.slice(0,2).toUpperCase() || '??';
+  return id.slice(0,2).toUpperCase();
 }
-function truncateIdentity(identity) {
+
+// ── Display name cache ─────────────────────────────────────────────────────
+const displayNameCache = {}; // { uuid: 'Name' | null }
+
+function getDisplayName(identity) {
   if (!identity) return 'Anonymous';
+  // Wallet address — always truncate, looks good
   if (identity.startsWith('0x') && identity.length >= 10)
     return identity.slice(0,6) + '…' + identity.slice(-4);
-  if (identity.includes('-') && identity.length > 20)
-    return identity.slice(0,8) + '…';
+  // UUID — use cached display name
+  if (identity.includes('-') && identity.length > 20) {
+    const cached = displayNameCache[identity];
+    if (cached) return cached;
+    // Still loading — show "Creator" not ugly UUID
+    return 'Creator';
+  }
   return identity;
 }
 
-// ── Date helpers ──────────────────────────────────────────────────────────
-function timeAgo(ts) {
-  const d   = new Date(ts);
-  const now = new Date();
-  const s   = Math.floor((now - d) / 1000);
-  if (s < 60)   return 'just now';
-  if (s < 3600) return Math.floor(s/60) + 'm ago';
-  if (s < 86400) return Math.floor(s/3600) + 'h ago';
-  if (s < 604800) return Math.floor(s/86400) + 'd ago';
-  return d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+// Prefetch display names for all email users in a stamp batch
+async function prefetchDisplayNames(stamps) {
+  const uuids = [...new Set(
+    stamps.map(s => s.creator_identity)
+          .filter(id => id && id.includes('-') && !id.startsWith('0x') && !(id in displayNameCache))
+  )];
+  if (!uuids.length) return;
+  try {
+    const { data } = await window.tsDB
+      .from('profiles')
+      .select('id, display_name')
+      .in('id', uuids);
+    (data || []).forEach(p => {
+      displayNameCache[p.id] = p.display_name || null;
+    });
+  } catch(e) { console.warn('[Explorer] prefetchDisplayNames error:', e); }
 }
-function timeUntil(ts) {
-  const d   = new Date(ts);
-  const now = new Date();
-  const ms  = d - now;
+
+function truncateIdentity(id) {
+  return getDisplayName(id);
+}
+
+// ── Date helpers ───────────────────────────────────────────────────────────
+function timeAgo(ts) {
+  const s = Math.floor((Date.now() - new Date(ts)) / 1000);
+  if (s < 60)    return 'just now';
+  if (s < 3600)  return Math.floor(s/60)+'m ago';
+  if (s < 86400) return Math.floor(s/3600)+'h ago';
+  if (s < 604800) return Math.floor(s/86400)+'d ago';
+  return new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function timeUntil(d) {
+  const ms = new Date(d) - Date.now();
   if (ms <= 0) return 'now';
-  const m = Math.floor(ms/60000);
-  const h = Math.floor(ms/3600000);
-  const days = Math.floor(ms/86400000);
-  if (m < 60)    return `in ${m}m`;
-  if (h < 24)    return `in ${h}h`;
-  if (days === 1) return 'tomorrow';
-  if (days < 7)  return `in ${days} days`;
-  return d.toLocaleDateString('en-US', {month:'short', day:'numeric', timeZone:'UTC'}) + ' UTC';
+  const m = Math.floor(ms/60000), h = Math.floor(ms/3600000), days = Math.floor(ms/86400000);
+  if (m < 60)   return 'in '+m+'m';
+  if (h < 24)   return 'in '+h+'h';
+  if (days===1) return 'tomorrow';
+  if (days < 7) return 'in '+days+' days';
+  return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'})+' UTC';
 }
 function escHtml(s) {
   return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── Build stamp card HTML ─────────────────────────────────────────────────
+// ── Build card ─────────────────────────────────────────────────────────────
 function buildCard(s) {
-  const categories = getCategories(s.tags);
+  const textForCat = s.text_content || s.display_title || '';
+  const categories = getCategories(s.tags, textForCat);
   const isSealed   = s.visibility === 'sealed' && !s.revealed;
   const isRevealed = s.visibility === 'sealed' && s.revealed;
   const isPublic   = s.visibility === 'public';
   const isUrl      = s.content_type === 'url';
   const isFile     = s.content_type === 'file';
-  const isHashOnly = s.visibility === 'hash_only' || s.visibility === 'none';
+  const isHashOnly = s.visibility === 'hash_only';
+  const sealedUntil = s.sealed_until ? new Date(s.sealed_until) : null;
+  const isOverdue   = isSealed && sealedUntil && sealedUntil <= new Date();
+  const cardClass   = isRevealed ? 'revealed' : isSealed ? 'sealed' : isUrl ? 'url-type' : isHashOnly ? 'hash-only' : 'public';
+  const identity    = s.creator_identity || s.creator_address || '';
+  const txLink      = s.tx_hash ? `<a href="${EXPLORER_URL}/tx/${escHtml(s.tx_hash)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗</a>` : '';
+  const hashStr     = s.content_hash ? '0x'+s.content_hash.replace(/^\\x/,'').replace(/^0x/,'').slice(0,4)+'…'+s.content_hash.replace(/^\\x/,'').replace(/^0x/,'').slice(-4) : '';
 
-  const sealedUntil   = s.sealed_until ? new Date(s.sealed_until) : null;
-  const isOverdue     = isSealed && sealedUntil && sealedUntil <= new Date();
-  const cardClass     = isRevealed ? 'revealed' : isSealed ? 'sealed' : isUrl ? 'url-type' : isHashOnly ? 'hash-only' : 'public';
-  const identity      = s.creator_identity || s.creator_address || '';
-  const truncIdent    = truncateIdentity(identity);
-  const timeStr       = s.block_timestamp ? timeAgo(s.block_timestamp) : '';
-  const txLink        = s.tx_hash ? `<a href="${EXPLORER}/tx/${escHtml(s.tx_hash)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗</a>` : '';
-  const hashDisplay   = s.content_hash
-    ? '0x' + s.content_hash.replace(/^\\x/,'').replace(/^0x/,'').slice(0,4) + '…' + s.content_hash.replace(/^\\x/,'').replace(/^0x/,'').slice(-4)
-    : '';
-
-  // Content section
   let contentHtml = '';
   if (isSealed && !isOverdue) {
-    const revealStr = sealedUntil
-      ? timeUntil(sealedUntil) + ' · '
-        + sealedUntil.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'})
-      : '';
-    contentHtml = `
-      <div class="reveal-row">⏱ Reveals ${escHtml(revealStr)}</div>
-      <div class="stamp-sealed-msg">🔒 Sealed. Timestamp locked on-chain.</div>`;
+    const rv = sealedUntil ? timeUntil(sealedUntil)+' · '+sealedUntil.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'}) : '';
+    contentHtml = `<div class="reveal-row">⏱ Reveals ${escHtml(rv)}</div><div class="stamp-sealed-msg">🔒 Sealed. Timestamp locked on-chain.</div>`;
   } else if (isSealed && isOverdue) {
-    contentHtml = `
-      <div class="reveal-row" style="background:rgba(248,220,255,0.4);border-color:rgba(83,74,183,0.2);color:var(--purple)">⚡ Awaiting on-chain reveal</div>
-      <div class="stamp-sealed-msg">🔒 Sealed. Timestamp locked on-chain.</div>`;
+    contentHtml = `<div class="reveal-row" style="background:rgba(248,220,255,0.4);border-color:rgba(83,74,183,0.2);color:var(--purple)">⚡ Awaiting on-chain reveal</div><div class="stamp-sealed-msg">🔒 Sealed. Timestamp locked on-chain.</div>`;
   } else if (isHashOnly) {
     contentHtml = `<div class="stamp-sealed-msg">🔐 Hash-only · maximum privacy</div>`;
   } else if (isUrl && s.text_content) {
     let url = s.text_content;
     try { const p = JSON.parse(url); url = p.url ?? url; } catch {}
-    contentHtml = `<div class="stamp-url-link">🔗 <span>${escHtml(url.length > 80 ? url.slice(0,80)+'…' : url)}</span></div>`;
+    contentHtml = `<div class="stamp-url-link">🔗 <span>${escHtml(url.length>80?url.slice(0,80)+'…':url)}</span></div>`;
   } else if (isFile) {
-    contentHtml = `<div class="stamp-sealed-msg">📄 ${escHtml(s.file_name || 'File stamp')}${s.file_size_bytes ? ' · ' + (s.file_size_bytes/1024).toFixed(1) + ' KB' : ''}</div>`;
+    contentHtml = `<div class="stamp-sealed-msg">📄 ${escHtml(s.file_name||'File stamp')}${s.file_size_bytes?' · '+(s.file_size_bytes/1024).toFixed(1)+' KB':''}</div>`;
   } else if (s.text_content) {
-    const text = s.text_content.length > 200 ? s.text_content.slice(0,200) + '…' : s.text_content;
-    contentHtml = `<div class="stamp-content">${escHtml(text)}</div>`;
+    const t = s.text_content.length > 200 ? s.text_content.slice(0,200)+'…' : s.text_content;
+    contentHtml = `<div class="stamp-content">${escHtml(t)}</div>`;
   } else if (s.display_title && s.display_title !== 'Sealed stamp') {
     contentHtml = `<div class="stamp-content">${escHtml(s.display_title)}</div>`;
   }
 
-  // Footer right side
   let footerRight = `<a class="proof-link" href="proof.html?id=${s.proof_id}" onclick="event.stopPropagation()">Proof →</a>`;
   if (isRevealed && s.storage_uri) {
     const txId = s.storage_uri.replace('ar://','');
     footerRight = `<a class="arweave-link" href="https://arweave.net/${txId}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Arweave ↗</a>`;
   }
 
-  // Badges — max 2 on mobile to prevent overflow
   let badges = `<span class="badge badge-type">${escHtml(s.content_type||'text')}</span>`;
   if (isPublic)   badges += `<span class="badge badge-public">public</span>`;
   if (isSealed)   badges += `<span class="badge badge-sealed">sealed</span>`;
   if (isRevealed) badges += `<span class="badge badge-revealed">revealed</span>`;
   if (isHashOnly) badges += `<span class="badge badge-hash">private</span>`;
-  // Only first category badge to avoid badge overflow
-  if (categories.length)
-    badges += `<span class="badge" style="background:var(--brand-bg);color:var(--brand)">${escHtml(categories[0])}</span>`;
+  if (categories.length) badges += `<span class="badge" style="background:var(--brand-bg);color:var(--brand)">${escHtml(categories[0])}</span>`;
 
-  return `
-    <div class="stamp-card ${cardClass}" onclick="location.href='proof.html?id=${s.proof_id}'"
-         data-type="${escHtml(s.content_type||'')}"
-         data-visibility="${escHtml(s.visibility||'')}"
-         data-cats="${escHtml(categories.join(','))}">
-      <div class="stamp-card-top">
-        <div class="stamp-avatar" style="background:${avatarColor(identity)}">${avatarInitial(identity)}</div>
-        <div class="stamp-meta">
-          <div class="stamp-author">${escHtml(truncIdent)}</div>
-          <div class="stamp-sub">${timeStr}${timeStr && s.proof_id ? ' · ' : ''}${s.proof_id ? 'Proof #'+s.proof_id : ''}</div>
-        </div>
-        <div class="stamp-badges">${badges}</div>
+  return `<div class="stamp-card ${cardClass}" onclick="location.href='proof.html?id=${s.proof_id}'"
+       data-type="${escHtml(s.content_type||'')}" data-visibility="${escHtml(s.visibility||'')}" data-cats="${escHtml(categories.join(','))}">
+    <div class="stamp-card-top">
+      <div class="stamp-avatar" style="background:${avatarColor(identity)}">${avatarInitial(identity)}</div>
+      <div class="stamp-meta">
+        <div class="stamp-author">${escHtml(truncateIdentity(identity))}</div>
+        <div class="stamp-sub">${s.block_timestamp?timeAgo(s.block_timestamp):''}${s.block_timestamp&&s.proof_id?' · ':''}${s.proof_id?'Proof #'+s.proof_id:''}</div>
       </div>
-      ${contentHtml}
-      <div class="stamp-footer">
-        <div class="stamp-hash"><span class="stamp-hash-text">${hashDisplay}</span>${txLink}</div>
-        ${footerRight}
-      </div>
-    </div>`;
+      <div class="stamp-badges">${badges}</div>
+    </div>
+    ${contentHtml}
+    <div class="stamp-footer">
+      <div class="stamp-hash"><span class="stamp-hash-text">${hashStr}</span>${txLink}</div>
+      ${footerRight}
+    </div>
+  </div>`;
 }
 
-// ── Load stamps from Supabase ─────────────────────────────────────────────
+// ── Load stamps ────────────────────────────────────────────────────────────
 async function loadStamps(reset = true) {
   if (reset) { offset = 0; allStamps = []; }
   const list = document.getElementById('stampList');
   if (reset) list.innerHTML = '<div class="feed-loading"><div class="feed-spinner"></div><p>Loading stamps…</p></div>';
 
   try {
-    let query = window.tsDB
+    let q = window.tsDB
       .from('stamps_with_creator')
-      .select('proof_id, content_type, visibility, display_title, text_content, file_name, file_size_bytes, tags, block_timestamp, status, storage_uri, sealed_until, revealed, content_hash, tx_hash, creator_identity, creator_address')
-      .eq('status', 'confirmed')
-      .in('visibility', ['public','sealed','hash_only'])
-      .eq('is_hidden', false)
-      .eq('contract_address', CONTRACT);
+      .select('proof_id,content_type,visibility,display_title,text_content,file_name,file_size_bytes,tags,block_timestamp,status,storage_uri,sealed_until,revealed,content_hash,tx_hash,creator_identity,creator_address')
+      .eq('status','confirmed')
+      .in('visibility',['public','sealed','hash_only'])
+      .eq('is_hidden',false)
+      .eq('contract_address',CONTRACT);
 
-    // Feed filter
     if (currentFeed === 'reveals') {
-      query = query.eq('visibility','sealed').eq('revealed', true);
+      q = q.eq('visibility','sealed').eq('revealed',true);
     } else if (currentFeed === 'upcoming') {
-      query = query.eq('visibility','sealed').eq('revealed', false);
+      q = q.eq('visibility','sealed').eq('revealed',false);
     } else if (currentFeed === 'trending') {
-      query = query.order('view_count', {ascending:false});
+      // Trending = most viewed. Falls back to newest if view_count is 0
+      q = q.order('view_count',{ascending:false}).order('block_timestamp',{ascending:false});
     }
 
-    // Sort
     if (currentFeed !== 'trending') {
-      query = query.order('block_timestamp', {ascending: sortAsc});
+      q = q.order('block_timestamp',{ascending:sortAsc});
     }
 
-    query = query.range(offset, offset + PAGE_SIZE - 1);
-
-    const { data: stamps, error } = await query;
+    q = q.range(offset, offset + PAGE_SIZE - 1);
+    const { data: stamps, error } = await q;
     if (error) throw error;
 
     hasMore = stamps && stamps.length === PAGE_SIZE;
-    document.getElementById('loadMoreBtn').style.display = hasMore ? 'block' : 'none';
+    const btn = document.getElementById('loadMoreBtn');
+    btn.style.display = hasMore ? 'block' : 'none';
 
     if (reset) allStamps = stamps || [];
     else allStamps = allStamps.concat(stamps || []);
 
+    // Prefetch display names for email users, then render
+    await prefetchDisplayNames(allStamps);
     renderFeed();
   } catch(e) {
     console.error('[Explorer] loadStamps error:', e);
@@ -979,33 +731,31 @@ async function loadStamps(reset = true) {
 
 function renderFeed() {
   const list = document.getElementById('stampList');
-  // Remove intro text once we have real content
   const intro = list.querySelector('.feed-intro');
   if (intro) intro.remove();
 
-  // Apply chip filter client-side
   let filtered = allStamps;
+
+  // Chip / category filter
   if (currentChip !== 'all') {
     filtered = allStamps.filter(s => {
       if (currentChip === 'url')  return s.content_type === 'url';
       if (currentChip === 'file') return s.content_type === 'file';
-      // category chip
-      const cats = getCategories(s.tags);
-      return cats.includes(currentChip);
+      return getCategories(s.tags, s.text_content||s.display_title||'').includes(currentChip);
     });
   }
 
-  // Apply search filter
-  const q = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+  // Search — uses shared searchQuery updated by both desktop + mobile inputs
+  const q = searchQuery.toLowerCase().trim();
   if (q) {
     filtered = filtered.filter(s =>
-      (s.text_content    || '').toLowerCase().includes(q) ||
-      (s.display_title   || '').toLowerCase().includes(q) ||
-      (s.file_name       || '').toLowerCase().includes(q) ||
-      (s.creator_identity|| '').toLowerCase().includes(q) ||
-      (s.creator_address || '').toLowerCase().includes(q) ||
-      String(s.proof_id || '').includes(q) ||
-      getCategories(s.tags).some(c => c.toLowerCase().includes(q))
+      (s.text_content||'').toLowerCase().includes(q) ||
+      (s.display_title||'').toLowerCase().includes(q) ||
+      (s.file_name||'').toLowerCase().includes(q) ||
+      (s.creator_identity||'').toLowerCase().includes(q) ||
+      (s.creator_address||'').toLowerCase().includes(q) ||
+      String(s.proof_id||'').includes(q) ||
+      getCategories(s.tags, s.text_content||'').some(c => c.toLowerCase().includes(q))
     );
   }
 
@@ -1015,66 +765,48 @@ function renderFeed() {
   }
 
   list.innerHTML = filtered.map(s => buildCard(s)).join('');
-  document.getElementById('feedSubtitle').textContent = `${filtered.length} stamp${filtered.length !== 1 ? 's' : ''}`;
+  const sub = document.getElementById('feedSubtitle');
+  sub.textContent = `${filtered.length} stamp${filtered.length!==1?'s':''}`;
+
+  // Update mobile search note
+  const note = document.getElementById('mobSearchNote');
+  if (note && q) note.textContent = `${filtered.length} result${filtered.length!==1?'s':''} found`;
 }
 
-// ── Infinite scroll ───────────────────────────────────────────────────────
-let isLoadingMore = false;
-
+// ── Load more (button) ─────────────────────────────────────────────────────
 async function loadMore() {
-  if (isLoadingMore || !hasMore) return;
-  isLoadingMore = true;
-  document.getElementById('scrollLoading').classList.add('show');
+  const btn = document.getElementById('loadMoreBtn');
+  btn.textContent = 'Loading…';
+  btn.disabled = true;
   offset += PAGE_SIZE;
   await loadStamps(false);
-  document.getElementById('scrollLoading').classList.remove('show');
-  isLoadingMore = false;
+  btn.textContent = 'Load more stamps';
+  btn.disabled = false;
 }
 
-function setupInfiniteScroll() {
-  const sentinel = document.getElementById('scrollSentinel');
-  if (!sentinel || !('IntersectionObserver' in window)) return;
-  const observer = new IntersectionObserver(entries => {
-    if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
-      loadMore();
-    }
-  }, { rootMargin: '200px' });
-  observer.observe(sentinel);
-}
-
-// ── Load today stats ──────────────────────────────────────────────────────
+// ── Stats ──────────────────────────────────────────────────────────────────
 async function loadTodayStats() {
   try {
-    const [{ count: total }, { count: reveals }, { count: sealed }, { data: creatorsData }] = await Promise.all([
-      // All-time total confirmed stamps
-      window.tsDB.from('stamps').select('*',{count:'exact',head:true})
-        .eq('status','confirmed').eq('contract_address',CONTRACT),
-      // Revealed sealed stamps
-      window.tsDB.from('stamps').select('*',{count:'exact',head:true})
-        .eq('visibility','sealed').eq('revealed',true)
-        .eq('contract_address',CONTRACT),
-      // Pending sealed stamps (seals still ticking)
-      window.tsDB.from('stamps').select('*',{count:'exact',head:true})
-        .eq('visibility','sealed').eq('revealed',false)
-        .eq('contract_address',CONTRACT),
-      // Unique creators
-      window.tsDB.from('stamps').select('creator_identity')
-        .eq('status','confirmed').eq('contract_address',CONTRACT),
+    const [{ count: total },{ count: reveals },{ count: sealed },{ data: creatorsData }] = await Promise.all([
+      window.tsDB.from('stamps').select('*',{count:'exact',head:true}).eq('status','confirmed').eq('contract_address',CONTRACT),
+      window.tsDB.from('stamps').select('*',{count:'exact',head:true}).eq('visibility','sealed').eq('revealed',true).eq('contract_address',CONTRACT),
+      window.tsDB.from('stamps').select('*',{count:'exact',head:true}).eq('visibility','sealed').eq('revealed',false).eq('contract_address',CONTRACT),
+      window.tsDB.from('stamps').select('creator_identity').eq('status','confirmed').eq('contract_address',CONTRACT),
     ]);
-
-    const uniqueCreators = new Set((creatorsData||[]).map(r => r.creator_identity).filter(Boolean)).size;
-
-    animateCount('st-total',    total          ?? 0);
-    animateCount('st-reveals',  reveals        ?? 0);
-    animateCount('st-seals',    sealed         ?? 0);
+    const uniqueCreators = new Set((creatorsData||[]).map(r=>r.creator_identity).filter(Boolean)).size;
+    animateCount('st-total', total ?? 0);
+    animateCount('st-reveals', reveals ?? 0);
+    animateCount('st-seals', sealed ?? 0);
     animateCount('st-creators', uniqueCreators);
-
-    // Sidebar counts
-    const setEl = (id,v) => { const e=el(id); if(e) e.textContent=v; };
-    setEl('cnt-total',   total   ?? 0);
-    setEl('cnt-reveals', reveals ?? 0);
-    setEl('cnt-sealed',  sealed  ?? 0);
-
+    const s = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+    s('cnt-total', total ?? 0);
+    s('cnt-reveals', reveals ?? 0);
+    s('cnt-sealed', sealed ?? 0);
+    // Trending = stamps with view_count > 0 (approximation)
+    const { count: trendingCount } = await window.tsDB
+      .from('stamps').select('*',{count:'exact',head:true})
+      .eq('contract_address',CONTRACT).gt('view_count',0);
+    s('cnt-trending', trendingCount ?? '—');
   } catch(e) { console.warn('[Explorer] stats error:', e); }
 }
 
@@ -1082,156 +814,96 @@ function animateCount(id, target) {
   const el = document.getElementById(id);
   if (!el) return;
   let n = 0;
-  const step = Math.max(1, Math.floor(target / 20));
-  const t = setInterval(() => {
-    n = Math.min(n + step, target);
-    el.textContent = n;
-    if (n >= target) clearInterval(t);
-  }, 40);
+  const step = Math.max(1, Math.floor(target/20));
+  const t = setInterval(() => { n = Math.min(n+step, target); el.textContent = n; if (n>=target) clearInterval(t); }, 40);
 }
-function el(id) { return document.getElementById(id); }
 
-// ── Reveal calendar ───────────────────────────────────────────────────────
+// ── Reveal calendar ────────────────────────────────────────────────────────
 async function loadRevealCalendar() {
   try {
-    const now = new Date();
     const { data: sealed } = await window.tsDB
-      .from('stamps')
-      .select('sealed_until, tags')
-      .eq('visibility','sealed').eq('revealed',false)
-      .eq('contract_address',CONTRACT)
-      .gte('sealed_until', now.toISOString())
-      .order('sealed_until', {ascending:true})
-      .limit(50);
+      .from('stamps').select('sealed_until,tags')
+      .eq('visibility','sealed').eq('revealed',false).eq('contract_address',CONTRACT)
+      .gte('sealed_until', new Date().toISOString())
+      .order('sealed_until',{ascending:true}).limit(50);
 
-    if (!sealed?.length) {
-      document.getElementById('calendarItems').innerHTML =
-        '<p style="color:var(--text-muted);font-size:12px;text-align:center;padding:8px 0">No upcoming seals yet.</p>';
-      return;
-    }
+    const container = document.getElementById('calendarItems');
+    if (!sealed?.length) { container.innerHTML = '<p style="color:var(--text-muted);font-size:12px;text-align:center;padding:8px 0">No upcoming seals yet.</p>'; return; }
 
-    // Group by date bucket
     const groups = {};
-    sealed.forEach(s => {
-      const d   = new Date(s.sealed_until);
-      const key = d.toISOString().split('T')[0];
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(s);
-    });
-
-    const dotColors = ['green','amber','brand','muted','muted','muted'];
-    const emojis    = ['🔮','🚀','📊','🔒','🔒','🔒'];
+    sealed.forEach(s => { const k = new Date(s.sealed_until).toISOString().split('T')[0]; (groups[k]=groups[k]||[]).push(s); });
+    const dotColors = ['green','amber','brand','muted','muted'];
+    const emojis    = ['🔮','🚀','📊','🔒','🔒'];
     const keys      = Object.keys(groups).slice(0,5);
-
-    document.getElementById('calendarItems').innerHTML = keys.map((k,i) => {
-      const items    = groups[k];
-      const date     = new Date(k + 'T00:00:00Z');
-      const now2     = new Date();
-      const diffDays = Math.floor((date - now2) / 86400000);
-      let label;
-      if (diffDays < 0)  label = 'Overdue';
-      else if (diffDays === 0) label = 'Tonight';
-      else if (diffDays === 1) label = 'Tomorrow';
-      else if (diffDays < 7)  label = date.toLocaleDateString('en-US',{weekday:'long'});
-      else label = date.toLocaleDateString('en-US',{month:'short',day:'numeric'});
-
-      return `<div class="cal-item">
-        <div class="cal-dot ${dotColors[i]||'muted'}"></div>
-        <div class="cal-info">
-          <div class="cal-when">${escHtml(label)}</div>
-          <div class="cal-desc">${items.length} stamp${items.length!==1?'s':''} unsealing</div>
-          <div class="cal-count">🔒 ${items.length} seal${items.length!==1?'s':''}</div>
-        </div>
-        <div class="cal-emoji">${emojis[i]||'🔒'}</div>
-      </div>`;
+    container.innerHTML = keys.map((k,i) => {
+      const items = groups[k];
+      const d = new Date(k+'T00:00:00Z');
+      const dd = Math.floor((d - Date.now()) / 86400000);
+      const label = dd < 0 ? 'Overdue' : dd===0 ? 'Tonight' : dd===1 ? 'Tomorrow' : dd<7 ? d.toLocaleDateString('en-US',{weekday:'long'}) : d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      return `<div class="cal-item"><div class="cal-dot ${dotColors[i]||'muted'}"></div><div class="cal-info"><div class="cal-when">${escHtml(label)}</div><div class="cal-desc">${items.length} stamp${items.length!==1?'s':''} unsealing</div><div class="cal-count">🔒 ${items.length} seal${items.length!==1?'s':''}</div></div><div class="cal-emoji">${emojis[i]||'🔒'}</div></div>`;
     }).join('');
   } catch(e) { console.warn('[Explorer] calendar error:', e); }
 }
 
-// ── Top creators ──────────────────────────────────────────────────────────
+// ── Top creators ───────────────────────────────────────────────────────────
 async function loadTopCreators() {
   try {
-    const { data } = await window.tsDB
-      .from('stamps')
-      .select('creator_identity')
-      .eq('status','confirmed')
-      .eq('contract_address',CONTRACT)
-      .neq('creator_identity',null)
-      .limit(200);
-
-    if (!data?.length) {
-      document.getElementById('topCreators').innerHTML =
-        '<p style="color:var(--text-muted);font-size:12px;text-align:center;padding:8px 0">No creators yet.</p>';
-      return;
-    }
-
-    // Count per creator
+    const { data } = await window.tsDB.from('stamps').select('creator_identity')
+      .eq('status','confirmed').eq('contract_address',CONTRACT).neq('creator_identity',null).limit(200);
+    const container = document.getElementById('topCreators');
+    if (!data?.length) { container.innerHTML = '<p style="color:var(--text-muted);font-size:12px;text-align:center;padding:8px 0">No creators yet.</p>'; return; }
     const counts = {};
-    data.forEach(r => { counts[r.creator_identity] = (counts[r.creator_identity]||0) + 1; });
-    const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,5);
-
-    document.getElementById('topCreators').innerHTML = sorted.map(([ident,cnt],i) => `
-      <div class="creator-item">
-        <div class="creator-rank">${i+1}</div>
-        <div class="creator-avatar" style="background:${avatarColor(ident)}">${avatarInitial(ident)}</div>
-        <div class="creator-info">
-          <div class="creator-name">${escHtml(truncateIdentity(ident))}</div>
-          <div class="creator-sub">${cnt} stamp${cnt!==1?'s':''}</div>
-        </div>
-        <div class="creator-stamps">${cnt}</div>
-      </div>`).join('');
+    data.forEach(r => { counts[r.creator_identity] = (counts[r.creator_identity]||0)+1; });
+    const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    // Prefetch display names for email (UUID) creators
+    await prefetchDisplayNames(sorted.map(([id]) => ({ creator_identity: id })));
+    container.innerHTML = sorted.map(([id,cnt],i) =>
+      `<div class="creator-item"><div class="creator-rank">${i+1}</div><div class="creator-avatar" style="background:${avatarColor(id)}">${avatarInitial(id)}</div><div class="creator-info"><div class="creator-name">${escHtml(getDisplayName(id))}</div><div class="creator-sub">${cnt} stamp${cnt!==1?'s':''}</div></div><div class="creator-stamps">${cnt}</div></div>`
+    ).join('');
   } catch(e) { console.warn('[Explorer] creators error:', e); }
 }
 
-// ── Sidebar counts ────────────────────────────────────────────────────────
+// ── Sidebar counts ─────────────────────────────────────────────────────────
 async function loadSidebarCounts() {
   try {
-    const { data } = await window.tsDB
-      .from('stamps')
-      .select('content_type, tags')
-      .eq('status','confirmed')
-      .eq('contract_address',CONTRACT)
-      .in('visibility', ['public','sealed','hash_only'])
-      .limit(1000);
-
+    const { data } = await window.tsDB.from('stamps')
+      .select('content_type,tags,text_content,display_title')
+      .eq('status','confirmed').eq('contract_address',CONTRACT)
+      .in('visibility',['public','sealed','hash_only']).limit(1000);
     if (!data) return;
-    let text=0, file=0, url=0, pred=0, research=0, creative=0, news=0, crypto=0;
+    let text=0,file=0,url=0,pred=0,research=0,creative=0,news=0,crypto=0;
     data.forEach(s => {
       if (s.content_type==='text') text++;
       else if (s.content_type==='file') file++;
       else if (s.content_type==='url') url++;
-      const cats = getCategories(s.tags);
+      const cats = getCategories(s.tags, s.text_content||s.display_title||'');
       if (cats.includes('Predictions')) pred++;
-      if (cats.includes('Research'))   research++;
-      if (cats.includes('Creative'))   creative++;
-      if (cats.includes('News'))       news++;
-      if (cats.includes('Crypto'))     crypto++;
+      if (cats.includes('Research'))    research++;
+      if (cats.includes('Creative'))    creative++;
+      if (cats.includes('News'))        news++;
+      if (cats.includes('Crypto'))      crypto++;
     });
-    const set = (id,v) => { const e=el(id); if(e) e.textContent=v; };
-    set('cnt-text',text); set('cnt-file',file); set('cnt-url',url);
-    set('cnt-pred',pred);
-    // Update all category sidebar counts by finding buttons with data-cat
+    const set = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+    set('cnt-text',text); set('cnt-file',file); set('cnt-url',url); set('cnt-pred',pred);
     document.querySelectorAll('[data-cat]').forEach(btn => {
-      const counts = {Predictions:pred,Research:research,Creative:creative,News:news,Crypto:crypto};
-      const span = btn.querySelector('.sidebar-count');
-      if (span) span.textContent = counts[btn.dataset.cat] ?? 0;
+      const m = {Predictions:pred,Research:research,Creative:creative,News:news,Crypto:crypto};
+      const sp = btn.querySelector('.sidebar-count');
+      if (sp) sp.textContent = m[btn.dataset.cat] ?? 0;
     });
   } catch(e) { console.warn('[Explorer] sidebar counts error:', e); }
 }
 
-// ── Sidebar & chip interaction ────────────────────────────────────────────
+// ── Sidebar & chip interactions ────────────────────────────────────────────
 document.querySelectorAll('[data-feed]').forEach(btn => {
   btn.addEventListener('click', () => {
-    // Sidebar feed items
     document.querySelectorAll('[data-feed]').forEach(b => b.classList.remove('active'));
     document.querySelectorAll(`[data-feed="${btn.dataset.feed}"]`).forEach(b => b.classList.add('active'));
     currentFeed = btn.dataset.feed;
     const titles = {latest:'Latest stamps',trending:'Trending',reveals:'Recent reveals',upcoming:'Upcoming seals'};
-    document.getElementById('feedTitle').textContent = titles[currentFeed] || 'Latest stamps';
+    document.getElementById('feedTitle').textContent = titles[currentFeed]||'Latest stamps';
     loadStamps();
   });
 });
-
 document.querySelectorAll('[data-chip]').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('[data-chip]').forEach(b => b.classList.remove('active'));
@@ -1240,7 +912,6 @@ document.querySelectorAll('[data-chip]').forEach(btn => {
     renderFeed();
   });
 });
-
 document.querySelectorAll('[data-type]').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('[data-type]').forEach(b => b.classList.remove('active'));
@@ -1249,7 +920,6 @@ document.querySelectorAll('[data-type]').forEach(btn => {
     renderFeed();
   });
 });
-
 document.querySelectorAll('[data-cat]').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('[data-cat]').forEach(b => b.classList.remove('active'));
@@ -1259,167 +929,114 @@ document.querySelectorAll('[data-cat]').forEach(btn => {
   });
 });
 
-// ── Sort ──────────────────────────────────────────────────────────────────
+// ── Sort ───────────────────────────────────────────────────────────────────
 function toggleSort() {
   sortAsc = !sortAsc;
   document.getElementById('sortLbl').textContent = sortAsc ? 'Oldest first' : 'Newest first';
   loadStamps();
 }
 
-// ── Mobile search (inline, Etherscan-style) ───────────────────────────────
+// ── Search — desktop ───────────────────────────────────────────────────────
+document.getElementById('searchInput').addEventListener('input', function() {
+  searchQuery = this.value;
+  // Keep mobile input in sync
+  const mob = document.getElementById('mobSearchInput');
+  if (mob) mob.value = this.value;
+  renderFeed();
+});
+document.addEventListener('keydown', e => {
+  if (e.key==='/' && document.activeElement.tagName!=='INPUT') {
+    e.preventDefault(); document.getElementById('searchInput').focus();
+  }
+});
+
+// ── Search — mobile ────────────────────────────────────────────────────────
 function openMobSearch() {
-  const bar = document.getElementById('mobSearchExpanded');
-  bar.classList.add('open');
-  // Small delay so the element is visible before focus (iOS Safari requirement)
+  document.getElementById('mobSearchOverlay').classList.add('open');
   setTimeout(() => {
     const inp = document.getElementById('mobSearchInput');
+    inp.value = searchQuery; // carry over any existing query
     inp.focus();
-    inp.select();
-  }, 80);
-  // Scroll to top so search bar is visible
-  window.scrollTo({top: 0, behavior: 'smooth'});
+  }, 100);
 }
-
 function closeMobSearch() {
-  const bar = document.getElementById('mobSearchExpanded');
-  bar.classList.remove('open');
-  const inp = document.getElementById('mobSearchInput');
-  inp.value = '';
-  inp.blur();
-  // Clear search from main input and re-render all
-  document.getElementById('searchInput').value = '';
-  renderFeed();
+  document.getElementById('mobSearchOverlay').classList.remove('open');
+  // Keep results — don't clear search on cancel
 }
-
-// Live filtering as user types — results show immediately in the feed below
 document.getElementById('mobSearchInput').addEventListener('input', function() {
-  document.getElementById('searchInput').value = this.value.trim();
+  searchQuery = this.value;
+  // Keep desktop input in sync
+  document.getElementById('searchInput').value = this.value;
   renderFeed();
-});
-
-// Enter key on mobile keyboard triggers search (no need to press Cancel)
-document.getElementById('mobSearchInput').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    this.blur(); // dismiss keyboard so user can see results
-    // Keep search active — results already showing live
+  // Update results note
+  const note = document.getElementById('mobSearchNote');
+  if (note) {
+    const count = document.querySelectorAll('#stampList .stamp-card').length;
+    note.textContent = this.value ? `${count} result${count!==1?'s':''} found` : '';
   }
 });
 
-// Also handle the desktop search input
-document.getElementById('searchInput').addEventListener('input', renderFeed);
-document.addEventListener('keydown', e => {
-  if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
-    e.preventDefault();
-    document.getElementById('searchInput').focus();
-  }
-});
-
-// ── Filter drawer ─────────────────────────────────────────────────────────
+// ── Filter drawer ──────────────────────────────────────────────────────────
 function openFilterDrawer() {
   document.getElementById('filterDrawer').classList.add('open');
   document.getElementById('drawerOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
-  renderDrawerCalendar();
-  renderDrawerCreators();
+  if (!window._drawerCalDone) renderDrawerCalendar();
+  if (!window._drawerCreatorsDone) renderDrawerCreators();
 }
 
 function renderDrawerCalendar() {
-  const el = document.getElementById('drawerCalendar');
-  if (!el) return;
-  if (window._drawerCalDone) return; // only load once per session
   if (!window.tsDB) return;
-  const now = new Date();
-  window.tsDB.from('stamps')
-    .select('sealed_until')
-    .eq('visibility','sealed').eq('revealed',false)
-    .eq('contract_address', CONTRACT)
-    .gte('sealed_until', now.toISOString())
-    .order('sealed_until',{ascending:true})
-    .limit(20)
+  window.tsDB.from('stamps').select('sealed_until')
+    .eq('visibility','sealed').eq('revealed',false).eq('contract_address',CONTRACT)
+    .gte('sealed_until', new Date().toISOString())
+    .order('sealed_until',{ascending:true}).limit(20)
     .then(({data}) => {
-      if (!data || !data.length) {
-        el.innerHTML = '<div style="text-align:center;padding:12px 0;color:var(--text-muted);font-size:13px">No upcoming reveals</div>';
-        return;
-      }
-      // Group by day
+      const el = document.getElementById('drawerCalendar');
+      if (!data?.length) { el.innerHTML = '<div style="text-align:center;padding:12px 0;color:var(--text-muted);font-size:13px">No upcoming reveals</div>'; return; }
       const groups = {};
-      data.forEach(r => {
-        const d = new Date(r.sealed_until);
-        const key = d.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
-        groups[key] = (groups[key] || 0) + 1;
-      });
-      const today = now.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
-      const tomorrow = new Date(now.getTime()+86400000).toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
       const dotColors = ['#1D9E75','#BA7517','#2854E8','#9B9A96'];
-      let i = 0; let html = '';
-      Object.entries(groups).slice(0,4).forEach(([day, count]) => {
-        const label = day === today ? 'Today' : day === tomorrow ? 'Tomorrow' : day;
-        const color = dotColors[i++ % dotColors.length];
-        html += `<div class="drawer-cal-item">
-          <div class="drawer-cal-dot" style="background:${color}"></div>
-          <div class="drawer-cal-info">
-            <div class="drawer-cal-when">${label}</div>
-            <div class="drawer-cal-count">🔒 ${count} stamp${count>1?'s':''} unsealing</div>
-          </div>
-        </div>`;
+      data.forEach(r => { const k = new Date(r.sealed_until).toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'}); groups[k]=(groups[k]||0)+1; });
+      const today    = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
+      const tomorrow = new Date(Date.now()+86400000).toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
+      let i=0, html='';
+      Object.entries(groups).slice(0,4).forEach(([day,count]) => {
+        const label = day===today?'Today':day===tomorrow?'Tomorrow':day;
+        const color = dotColors[i++%dotColors.length];
+        html += `<div class="drawer-cal-item"><div class="drawer-cal-dot" style="background:${color}"></div><div><div class="drawer-cal-when">${label}</div><div class="drawer-cal-count">🔒 ${count} stamp${count>1?'s':''}</div></div></div>`;
       });
       el.innerHTML = html;
       window._drawerCalDone = true;
-    }).catch(() => {
-      el.innerHTML = '<div style="text-align:center;padding:8px 0;color:var(--text-muted);font-size:12px">Could not load</div>';
     });
 }
 
 function renderDrawerCreators() {
-  const el = document.getElementById('drawerCreators');
-  if (!el) return;
-  if (window._drawerCreatorsDone) return;
   if (!window.tsDB) return;
-  window.tsDB.from('stamps')
-    .select('creator_identity, creator_address')
-    .eq('status','confirmed').eq('contract_address', CONTRACT)
+  window.tsDB.from('stamps').select('creator_identity,creator_address')
+    .eq('status','confirmed').eq('contract_address',CONTRACT)
     .then(({data}) => {
-      if (!data || !data.length) {
-        el.innerHTML = '<div style="text-align:center;padding:12px 0;color:var(--text-muted);font-size:13px">No creators yet</div>';
-        return;
-      }
+      const el = document.getElementById('drawerCreators');
+      if (!data?.length) { el.innerHTML = '<div style="text-align:center;padding:12px 0;color:var(--text-muted);font-size:13px">No creators yet</div>'; return; }
       const counts = {};
-      data.forEach(r => {
-        const id = r.creator_identity || r.creator_address || 'Anonymous';
-        counts[id] = (counts[id] || 0) + 1;
-      });
+      data.forEach(r => { const id = r.creator_identity||r.creator_address||'Anonymous'; counts[id]=(counts[id]||0)+1; });
       const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,3);
-      let html = '';
-      sorted.forEach(([id, count], idx) => {
-        const trunc = id.startsWith('0x') && id.length>=10 ? id.slice(0,6)+'…'+id.slice(-4) : id.slice(0,10)+(id.length>10?'…':'');
-        const initials = id.startsWith('0x') ? id.slice(2,4).toUpperCase() : id.slice(0,2).toUpperCase();
-        html += `<div class="drawer-creator-item">
-          <div class="drawer-creator-rank">${idx+1}</div>
-          <div class="drawer-creator-avatar" style="background:${avatarColor(id)}">${initials}</div>
-          <div class="drawer-creator-info">
-            <div class="drawer-creator-name">${escHtml(trunc)}</div>
-            <div class="drawer-creator-sub">${count} stamp${count>1?'s':''}</div>
-          </div>
-          <div class="drawer-creator-count">${count}</div>
-        </div>`;
-      });
-      el.innerHTML = html;
+      el.innerHTML = sorted.map(([id,cnt],idx) =>
+        `<div class="drawer-creator-item"><div class="drawer-creator-rank">${idx+1}</div><div class="drawer-creator-avatar" style="background:${avatarColor(id)}">${avatarInitial(id)}</div><div class="drawer-creator-info"><div class="drawer-creator-name">${escHtml(getDisplayName(id))}</div><div class="drawer-creator-sub">${cnt} stamp${cnt>1?'s':''}</div></div><div class="drawer-creator-count">${cnt}</div></div>`
+      ).join('');
       window._drawerCreatorsDone = true;
-    }).catch(() => {
-      el.innerHTML = '<div style="text-align:center;padding:8px 0;color:var(--text-muted);font-size:12px">Could not load</div>';
     });
 }
+
 function closeFilterDrawer() {
   document.getElementById('filterDrawer').classList.remove('open');
   document.getElementById('drawerOverlay').classList.remove('open');
   document.body.style.overflow = '';
 }
 function toggleOpt(el) { el.querySelector('.drawer-check').classList.toggle('on'); }
-function resetOpts() { document.querySelectorAll('.drawer-check').forEach(c => c.classList.add('on')); }
+function resetOpts()   { document.querySelectorAll('.drawer-check').forEach(c => c.classList.add('on')); }
 function applyDrawerFilters() { closeFilterDrawer(); renderFeed(); }
 
-// ── Init ──────────────────────────────────────────────────────────────────
+// ── Init ───────────────────────────────────────────────────────────────────
 function initExplorer() {
   document.getElementById('loadMoreBtn').style.display = 'none';
   loadStamps();
@@ -1427,43 +1044,22 @@ function initExplorer() {
   loadRevealCalendar();
   loadTopCreators();
   loadSidebarCounts();
-  setupInfiniteScroll();
 }
 
 function waitForDB(tries) {
   tries = tries || 0;
-
-  // Already set by supabase-client.js — best case
   if (window.tsDB) { initExplorer(); return; }
-
-  // supabase lib loaded — create client directly
-  if (window.supabase && window.TRUTHSTAMP_CONFIG &&
-      window.TRUTHSTAMP_CONFIG.SUPABASE_URL &&
-      window.TRUTHSTAMP_CONFIG.SUPABASE_ANON_KEY) {
+  if (window.supabase && window.TRUTHSTAMP_CONFIG?.SUPABASE_URL && window.TRUTHSTAMP_CONFIG?.SUPABASE_ANON_KEY) {
     try {
-      window.tsDB = window.supabase.createClient(
-        window.TRUTHSTAMP_CONFIG.SUPABASE_URL,
-        window.TRUTHSTAMP_CONFIG.SUPABASE_ANON_KEY
-      );
-      console.log('[Explorer] tsDB created directly');
-      initExplorer();
-      return;
-    } catch(e) {
-      console.warn('[Explorer] direct init failed:', e.message);
-    }
+      window.tsDB = window.supabase.createClient(window.TRUTHSTAMP_CONFIG.SUPABASE_URL, window.TRUTHSTAMP_CONFIG.SUPABASE_ANON_KEY);
+      initExplorer(); return;
+    } catch(e) { console.warn('[Explorer] direct init failed:', e.message); }
   }
-
-  // Still waiting — retry up to 5 seconds
   if (tries > 50) {
-    document.getElementById('stampList').innerHTML =
-      '<div class="feed-empty"><div class="feed-empty-icon">⚠️</div>' +
-      '<h3>Connection failed</h3>' +
-      '<p style="font-size:13px;color:var(--text-muted)">' +
-      'Could not connect to database. Please check your connection and ' +
-      '<a href="" style="color:var(--brand)">refresh</a>.</p></div>';
+    document.getElementById('stampList').innerHTML = '<div class="feed-empty"><div class="feed-empty-icon">⚠️</div><h3>Connection failed</h3><p style="font-size:13px;color:var(--text-muted)">Could not connect. Please <a href="" style="color:var(--brand)">refresh</a>.</p></div>';
     return;
   }
-  setTimeout(() => waitForDB(tries + 1), 100);
+  setTimeout(() => waitForDB(tries+1), 100);
 }
 
 document.addEventListener('DOMContentLoaded', () => waitForDB(0));
