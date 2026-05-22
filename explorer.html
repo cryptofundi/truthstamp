@@ -465,58 +465,73 @@ function getCategories(tags) {
   return [...cats];
 }
 
-// ── Display name cache — prevents showing raw UUIDs publicly ──────────────
-// Wallet users (0x...) → always truncated address, looks good
-// Email users (UUID) → look up display_name from profiles table
-const _nameCache = {}; // { uuid: displayName | null }
+// ── Public identity resolution ────────────────────────────────────────────
+// Rules (permanent, privacy-first):
+//   Wallet user  → truncated wallet  e.g. 0x5b77…5b0f  (pseudonymous by design)
+//   Email user with public_handle set → their chosen handle  e.g. "cryptolady"
+//   Email user with NO public_handle  → "Creator"  (never shows UUID or real name)
+//
+// The stamp row already carries creator_public_handle from stamps_with_creator view.
+// No extra DB call needed for cards — just read the field directly.
+// Top Creators and drawer still need a separate fetch since they group by identity.
 
 function isUUID(id) {
   return id && id.includes('-') && !id.startsWith('0x') && id.length > 20;
 }
 
-// Batch-fetch display names for any UUID creators in the current stamp page
-async function prefetchNames(stamps) {
+// Resolve display name from a stamp row (uses view columns, zero extra queries)
+function resolveNameFromStamp(s) {
+  const identity = s.creator_identity || s.creator_address || '';
+  // Wallet: always show truncated address
+  if (identity.startsWith('0x') && identity.length >= 10)
+    return identity.slice(0, 6) + '…' + identity.slice(-4);
+  // Email user: only show public_handle if they explicitly set one
+  if (isUUID(identity))
+    return s.creator_public_handle || 'Creator';
+  return identity || 'Creator';
+}
+
+// For Top Creators / drawer: we only have identity strings, need a separate lookup
+const _handleCache = {}; // { uuid: public_handle | null }
+
+async function prefetchHandles(identities) {
   const uuids = [...new Set(
-    stamps.map(s => s.creator_identity).filter(id => isUUID(id) && !(id in _nameCache))
+    identities.filter(id => isUUID(id) && !(id in _handleCache))
   )];
   if (!uuids.length) return;
   try {
     const { data } = await window.tsDB
-      .from('profiles').select('id, display_name').in('id', uuids);
-    (data || []).forEach(p => { _nameCache[p.id] = p.display_name || null; });
-    // Mark any not returned as checked (no profile)
-    uuids.forEach(u => { if (!(u in _nameCache)) _nameCache[u] = null; });
-  } catch(e) { console.warn('[Explorer] prefetchNames:', e.message); }
+      .from('profiles').select('id, public_handle').in('id', uuids);
+    (data || []).forEach(p => { _handleCache[p.id] = p.public_handle || null; });
+    uuids.forEach(u => { if (!(u in _handleCache)) _handleCache[u] = null; });
+  } catch(e) { console.warn('[Explorer] prefetchHandles:', e.message); }
 }
 
-// Public-facing display name — never exposes raw UUIDs
-function getDisplayName(identity) {
-  if (!identity) return 'Anonymous';
-  // Wallet address — truncate nicely
+// Resolve display name when only identity string is available (Top Creators, drawer)
+function resolveNameFromIdentity(identity) {
+  if (!identity) return 'Creator';
   if (identity.startsWith('0x') && identity.length >= 10)
     return identity.slice(0, 6) + '…' + identity.slice(-4);
-  // UUID email user — use cached display name or friendly fallback
-  if (isUUID(identity)) {
-    const name = _nameCache[identity];
-    if (name) return name;
-    return 'Creator'; // Never show the raw UUID
-  }
+  if (isUUID(identity))
+    return _handleCache[identity] || 'Creator';
   return identity;
 }
 
-// Avatar initials from display name (not raw identity)
-function getAvatarInitial(identity) {
-  if (!identity) return '?';
-  if (identity.startsWith('0x')) return identity.slice(2, 4).toUpperCase();
-  if (isUUID(identity)) {
-    const name = _nameCache[identity];
-    if (name) {
-      const clean = name.replace(/[^A-Za-z]/g, '');
-      return (clean.slice(0, 2) || name.slice(0, 2)).toUpperCase();
-    }
-    return 'CR'; // Creator
+// Avatar initials — derived from public-facing name, not raw identity
+function getAvatarInitial(identity, displayName) {
+  if (!displayName || displayName === 'Creator') {
+    if (identity && identity.startsWith('0x')) return identity.slice(2, 4).toUpperCase();
+    return 'CR';
   }
-  return identity.slice(0, 2).toUpperCase();
+  const clean = displayName.replace(/[^A-Za-z0-9]/g, '');
+  return (clean.slice(0, 2) || displayName.slice(0, 2)).toUpperCase();
+}
+
+// Keep prefetchNames as alias so any legacy callers don't break
+async function prefetchNames(stamps) {
+  // stamps can be stamp rows OR plain identity objects
+  const ids = stamps.map(s => typeof s === 'string' ? s : (s.creator_identity || s.id || ''));
+  await prefetchHandles(ids);
 }
 
 let allStamps = [], currentFeed = 'latest', currentChip = 'all';
@@ -568,9 +583,9 @@ function buildCard(s) {
   const isOverdue   = isSealed && sealedUntil && sealedUntil <= new Date();
   const cardClass   = isRevealed ? 'revealed' : isSealed ? 'sealed' : isUrl ? 'url-type' : isHashOnly ? 'hash-only' : 'public';
   const identity    = s.creator_identity || s.creator_address || '';
-  // ── Use display name, never raw UUID ──────────────────────────────────
-  const displayName = getDisplayName(identity);
-  const initial     = getAvatarInitial(identity);
+  // Privacy-first: read public_handle from view column — no UUID ever shown
+  const displayName = resolveNameFromStamp(s);
+  const avatarInit  = getAvatarInitial(identity, displayName);
   const timeStr     = s.block_timestamp ? timeAgo(s.block_timestamp) : '';
   const txLink      = s.tx_hash ? `<a href="${EXPLORER}/tx/${escHtml(s.tx_hash)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗</a>` : '';
   const hashDisplay = s.content_hash
@@ -615,7 +630,7 @@ function buildCard(s) {
   return `<div class="stamp-card ${cardClass}" onclick="location.href='proof.html?id=${s.proof_id}'"
        data-type="${escHtml(s.content_type||'')}" data-visibility="${escHtml(s.visibility||'')}" data-cats="${escHtml(categories.join(','))}">
     <div class="stamp-card-top">
-      <div class="stamp-avatar" style="background:${avatarColor(identity)}">${escHtml(initial)}</div>
+      <div class="stamp-avatar" style="background:${avatarColor(identity)}">${escHtml(avatarInit)}</div>
       <div class="stamp-meta">
         <div class="stamp-author">${escHtml(displayName)}</div>
         <div class="stamp-sub">${timeStr}${timeStr && s.proof_id ? ' · ' : ''}${s.proof_id ? 'Proof #'+s.proof_id : ''}</div>
@@ -637,7 +652,7 @@ async function loadStamps(reset = true) {
   try {
     let query = window.tsDB
       .from('stamps_with_creator')
-      .select('proof_id, content_type, visibility, display_title, text_content, file_name, file_size_bytes, tags, block_timestamp, status, storage_uri, sealed_until, revealed, content_hash, tx_hash, creator_identity, creator_address')
+      .select('proof_id, content_type, visibility, display_title, text_content, file_name, file_size_bytes, tags, block_timestamp, status, storage_uri, sealed_until, revealed, content_hash, tx_hash, creator_identity, creator_address, creator_public_handle')
       .eq('status', 'confirmed').in('visibility', ['public','sealed','hash_only'])
       .eq('is_hidden', false).eq('contract_address', CONTRACT);
     if (currentFeed === 'reveals') query = query.eq('visibility','sealed').eq('revealed', true);
@@ -681,8 +696,8 @@ function renderFeed() {
       (s.file_name       || '').toLowerCase().includes(q) ||
       (s.creator_identity|| '').toLowerCase().includes(q) ||
       (s.creator_address || '').toLowerCase().includes(q) ||
-      // Also search by resolved display name
-      getDisplayName(s.creator_identity || '').toLowerCase().includes(q) ||
+      // Also search by public handle / resolved display name
+      resolveNameFromStamp(s).toLowerCase().includes(q) ||
       String(s.proof_id || '').includes(q) ||
       getCategories(s.tags).some(c => c.toLowerCase().includes(q))
     );
@@ -765,17 +780,20 @@ async function loadTopCreators() {
     data.forEach(r => { counts[r.creator_identity] = (counts[r.creator_identity]||0)+1; });
     const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
     // Prefetch display names for top creators
-    await prefetchNames(sorted.map(([id]) => ({ creator_identity: id })));
-    document.getElementById('topCreators').innerHTML = sorted.map(([ident,cnt],i) => `
+    await prefetchHandles(sorted.map(([id]) => id));
+    document.getElementById('topCreators').innerHTML = sorted.map(([ident,cnt],i) => {
+      const name = resolveNameFromIdentity(ident);
+      return `
       <div class="creator-item">
         <div class="creator-rank">${i+1}</div>
-        <div class="creator-avatar" style="background:${avatarColor(ident)}">${escHtml(getAvatarInitial(ident))}</div>
+        <div class="creator-avatar" style="background:${avatarColor(ident)}">${escHtml(getAvatarInitial(ident,name))}</div>
         <div class="creator-info">
-          <div class="creator-name">${escHtml(getDisplayName(ident))}</div>
+          <div class="creator-name">${escHtml(name)}</div>
           <div class="creator-sub">${cnt} stamp${cnt!==1?'s':''}</div>
         </div>
         <div class="creator-stamps">${cnt}</div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   } catch(e) { console.warn('[Explorer] creators error:', e); }
 }
 
@@ -906,14 +924,15 @@ async function renderDrawerCreators() {
       data.forEach(r => { const id = r.creator_identity||r.creator_address||'Anonymous'; counts[id]=(counts[id]||0)+1; });
       const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,3);
       // Prefetch display names for drawer creators too
-      await prefetchNames(sorted.map(([id]) => ({ creator_identity: id })));
+      await prefetchHandles(sorted.map(([id]) => id));
       let html = '';
       sorted.forEach(([id,count],idx) => {
+        const name = resolveNameFromIdentity(id);
         html += `<div class="drawer-creator-item">
           <div class="drawer-creator-rank">${idx+1}</div>
-          <div class="drawer-creator-avatar" style="background:${avatarColor(id)}">${escHtml(getAvatarInitial(id))}</div>
+          <div class="drawer-creator-avatar" style="background:${avatarColor(id)}">${escHtml(getAvatarInitial(id,name))}</div>
           <div class="drawer-creator-info">
-            <div class="drawer-creator-name">${escHtml(getDisplayName(id))}</div>
+            <div class="drawer-creator-name">${escHtml(name)}</div>
             <div class="drawer-creator-sub">${count} stamp${count>1?'s':''}</div>
           </div>
           <div class="drawer-creator-count">${count}</div>
