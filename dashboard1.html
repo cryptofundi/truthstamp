@@ -13,6 +13,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/supabase-client.js"></script>
+  <script src="js/nav.js"></script>
   <style>
     .dash-shell {
       max-width: 900px;
@@ -213,9 +214,34 @@
         <a href="dashboard.html" style="color: var(--color-text); font-weight: 500;">My stamps</a>
         <a href="pricing.html">Pricing</a>
         <a href="trust.html">Trust</a>
+        <a href="arweave-index.html" title="Find stamps via Arweave — works when DB is offline">Arweave index</a>
         <a href="stamp.html" class="btn btn-primary btn-sm">+ New stamp</a>
-        <a href="#" id="sign-out-btn" onclick="handleSignOut(event); return false;" style="font-size: var(--text-sm); color: var(--color-text-muted);">Sign out</a>
-        <span id="user-avatar" style="width: 28px; height: 28px; border-radius: 50%; background: var(--brand-accent-light); color: var(--brand-accent); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">··</span>
+        <!-- Account menu -->
+        <div style="position: relative; display: inline-block;">
+          <button id="user-avatar"
+            onclick="toggleAccountMenu()"
+            style="width:30px;height:30px;border-radius:50%;background:var(--brand-accent-light);color:var(--brand-accent);border:1px solid var(--color-border);cursor:pointer;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;">··</button>
+          <div id="account-menu" style="display:none;position:absolute;right:0;top:38px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);box-shadow:0 4px 16px rgba(0,0,0,0.12);min-width:210px;z-index:200;padding:var(--space-2) 0;">
+            <div id="account-menu-header" style="padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--color-border);">
+              <p style="font-size:var(--text-xs);color:var(--color-text-muted);margin:0 0 2px;">Signed in as</p>
+              <p id="account-menu-identity" style="font-size:var(--text-sm);font-weight:600;margin:0;word-break:break-all;"></p>
+              <p id="account-menu-credits" style="font-size:var(--text-xs);color:var(--brand-primary);margin:2px 0 0;font-weight:500;">— credits remaining</p>
+            </div>
+            <a href="stamp.html" style="display:flex;align-items:center;gap:8px;padding:var(--space-3) var(--space-4);font-size:var(--text-sm);color:var(--color-text);text-decoration:none;" onmouseover="this.style.background='var(--color-surface-alt)'" onmouseout="this.style.background=''">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>New stamp
+            </a>
+            <a href="buy-credits.html" style="display:flex;align-items:center;gap:8px;padding:var(--space-3) var(--space-4);font-size:var(--text-sm);color:var(--color-text);text-decoration:none;" onmouseover="this.style.background='var(--color-surface-alt)'" onmouseout="this.style.background=''">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Buy credits
+            </a>
+            <a href="auth.html" id="switch-account-btn" onclick="handleSwitchAccount(event)" style="display:flex;align-items:center;gap:8px;padding:var(--space-3) var(--space-4);font-size:var(--text-sm);color:var(--color-text);text-decoration:none;" onmouseover="this.style.background='var(--color-surface-alt)'" onmouseout="this.style.background=''">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 16l4-4-4-4M7 8l-4 4 4 4"/></svg><span id="switch-account-label">Switch account</span>
+            </a>
+            <div style="border-top:1px solid var(--color-border);margin:var(--space-1) 0;"></div>
+            <a href="#" id="sign-out-btn" onclick="handleSignOut(event);return false;" style="display:flex;align-items:center;gap:8px;padding:var(--space-3) var(--space-4);font-size:var(--text-sm);color:#DC2626;text-decoration:none;" onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background=''">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign out
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   </nav>
@@ -239,7 +265,7 @@
         <p class="stat-card-meta">Lifetime count</p>
       </div>
       <div class="stat-card">
-        <p class="stat-card-label">Public verifications</p>
+        <p class="stat-card-label">Public stamps</p>
         <p class="stat-card-value" id="stat-verifications">—</p>
         <p class="stat-card-meta">Across all your stamps</p>
       </div>
@@ -251,103 +277,33 @@
       <div class="stat-card upgrade">
         <p class="stat-card-label" style="color: var(--brand-accent);">Credit balance</p>
         <p class="stat-card-value" id="stat-credits">—</p>
-        <p class="stat-card-meta" style="color: var(--brand-accent); margin-top: 8px;"><a href="pricing.html" style="text-decoration: underline; font-weight: 500;">Buy more credits →</a></p>
+        <p class="stat-card-meta" style="color: var(--brand-accent); margin-top: 8px;"><a href="buy-credits.html" style="text-decoration: underline; font-weight: 500;">Buy more credits →</a></p>
       </div>
     </div>
 
     <!-- Filter bar -->
     <div class="filter-bar">
       <div class="filter-tabs">
-        <button class="filter-tab active">All</button>
-        <button class="filter-tab">Public</button>
-        <button class="filter-tab">Sealed</button>
-        <button class="filter-tab">Hash only</button>
+        <button class="filter-tab active" data-filter="all">All</button>
+        <button class="filter-tab" data-filter="public">Public</button>
+        <button class="filter-tab" data-filter="sealed">Sealed</button>
+        <button class="filter-tab" data-filter="hash_only">Hash only</button>
       </div>
-      <input type="text" class="input search-input" placeholder="Search your stamps...">
+      <input type="text" class="input search-input" id="stamp-search" placeholder="Search your stamps..." oninput="handleSearch(this.value)">
     </div>
 
     <!-- Stamps list -->
-    <div class="stamp-list">
-
-      <a href="proof.html" class="stamp-row" style="text-decoration: none; color: inherit; display: flex;">
-        <div class="stamp-icon text">TXT</div>
-        <div class="stamp-content">
-          <p class="stamp-preview">MEGA hits $1 before end of June 2026. Volume + ecosystem catalysts...</p>
-          <p class="stamp-meta">Today · 14:32 · Public · 1,247 verifications</p>
-        </div>
-        <div class="stamp-status">
-          <span class="badge badge-success"><span class="badge-dot"></span> Verified</span>
-        </div>
-      </a>
-
-      <div class="stamp-row">
-        <div class="stamp-icon text">TXT</div>
-        <div class="stamp-content">
-          <p class="stamp-preview">Sealed prediction — auto-reveals June 1, 2026</p>
-          <p class="stamp-meta">May 1 · Sealed · Reveals in 31 days</p>
-        </div>
-        <div class="stamp-status">
-          <span class="badge badge-accent">Sealed</span>
-        </div>
-      </div>
-
-      <div class="stamp-row">
-        <div class="stamp-icon text">TXT</div>
-        <div class="stamp-content">
-          <p class="stamp-preview">Calling it now — the next narrative is X. 3 reasons why.</p>
-          <p class="stamp-meta">Apr 28 · Public · 412 verifications</p>
-        </div>
-        <div class="stamp-status">
-          <span class="badge badge-success"><span class="badge-dot"></span> Verified</span>
-        </div>
-      </div>
-
-      <div class="stamp-row">
-        <div class="stamp-icon pdf">PDF</div>
-        <div class="stamp-content">
-          <p class="stamp-preview">my-research-2026.pdf</p>
-          <p class="stamp-meta">Apr 25 · Hash only · 2.4 MB</p>
-        </div>
-        <div class="stamp-status">
-          <span class="badge badge-success"><span class="badge-dot"></span> Verified</span>
-        </div>
-      </div>
-
-      <div class="stamp-row">
-        <div class="stamp-icon text">TXT</div>
-        <div class="stamp-content">
-          <p class="stamp-preview">Hot take that nobody's ready for yet — bookmark this.</p>
-          <p class="stamp-meta">Apr 22 · Public · 89 verifications</p>
-        </div>
-        <div class="stamp-status">
-          <span class="badge badge-success"><span class="badge-dot"></span> Verified</span>
-        </div>
-      </div>
-
-      <div class="stamp-row">
-        <div class="stamp-icon image">IMG</div>
-        <div class="stamp-content">
-          <p class="stamp-preview">brand-mockup-final-v3.jpg</p>
-          <p class="stamp-meta">Apr 18 · Public · 156 verifications</p>
-        </div>
-        <div class="stamp-status">
-          <span class="badge badge-success"><span class="badge-dot"></span> Verified</span>
-        </div>
-      </div>
-
-      <div class="stamp-row">
-        <div class="stamp-icon audio">MP3</div>
-        <div class="stamp-content">
-          <p class="stamp-preview">podcast-ep-12-original.mp3</p>
-          <p class="stamp-meta">Apr 12 · Public · 234 verifications</p>
-        </div>
-        <div class="stamp-status">
-          <span class="badge badge-success"><span class="badge-dot"></span> Verified</span>
-        </div>
+    <div id="stamps-container">
+      <!-- Loaded dynamically by JS below -->
+      <div id="stamps-loading" class="stamp-list" style="padding: var(--space-8); text-align: center; color: var(--color-text-muted);">
+        Loading your stamps...
       </div>
     </div>
+    </div>
 
-    <p class="text-center text-muted mt-6" style="font-size: var(--text-sm);">Showing 7 of 47 stamps · <a href="#" style="color: var(--brand-primary);">Load more</a></p>
+    <p class="text-center text-muted mt-6" id="stamps-pagination" style="font-size: var(--text-sm); display:none;">
+      <a href="#" id="load-more-btn" style="color: var(--brand-primary);">Load more</a>
+    </p>
   </main>
 
   <footer class="footer">
@@ -359,6 +315,7 @@
       <div class="footer-links">
         <a href="trust.html">Trust</a>
         <a href="verify.html">Verify a stamp</a>
+        <a href="arweave-index.html">Arweave index</a>
         <a href="pricing.html">Pricing</a>
       </div>
     </div>
@@ -389,11 +346,36 @@
         subtitleEl.textContent = 'Every receipt you have ever dropped.';
       }
 
-      // Update avatar (first 2 chars of name or email)
+      // Update avatar and account menu
       const avatarEl = document.getElementById('user-avatar');
+      const isWallet = profile.auth_method === 'wallet' || profile.wallet_address;
+      const identity = isWallet
+        ? (profile.wallet_address
+            ? profile.wallet_address.slice(0,6) + '...' + profile.wallet_address.slice(-4)
+            : profile.display_name)
+        : (profile.display_name || user.email || '??');
+
       if (avatarEl) {
-        const seed = (profile.display_name || profile.email || '??').replace(/[^A-Za-z]/g, '');
+        const seed = (profile.display_name || '??').replace(/[^A-Za-z0-9]/g, '');
         avatarEl.textContent = (seed.slice(0, 2) || '··').toUpperCase();
+      }
+
+      // Populate account menu identity — truncated for wallet, email for others
+      const menuIdentity = document.getElementById('account-menu-identity');
+      const menuCredits  = document.getElementById('account-menu-credits');
+      if (menuIdentity) {
+        menuIdentity.textContent = isWallet && profile.wallet_address
+          ? profile.wallet_address.slice(0,6) + '…' + profile.wallet_address.slice(-4)
+          : (user.email ?? profile.display_name ?? 'User');
+      }
+      if (menuCredits) {
+        menuCredits.textContent = `${profile.credits_balance ?? 0} credits remaining`;
+      }
+
+      // Update switch account label for wallet users
+      const switchLabel = document.getElementById('switch-account-label');
+      if (switchLabel && isWallet) {
+        switchLabel.textContent = 'Switch account / wallet';
       }
 
       // Update credit balance
@@ -412,22 +394,261 @@
 
         if (stats) {
           document.getElementById('stat-total-stamps').textContent = stats.total_stamps || 0;
-          document.getElementById('stat-verifications').textContent = stats.total_verifications || 0;
+          // Count public stamps separately (verification_count not yet wired up)
+          const { count: publicCount } = await window.tsDB
+            .from('stamps')
+            .select('*', { count: 'exact', head: true })
+            .eq('creator_profile_id', user.id)
+            .eq('visibility', 'public')
+            .eq('status', 'confirmed');
+          document.getElementById('stat-verifications').textContent = publicCount ?? 0;
           document.getElementById('stat-sealed-pending').textContent = stats.sealed_pending_reveal || 0;
         } else {
-          // No stats yet — fresh account
           document.getElementById('stat-total-stamps').textContent = '0';
           document.getElementById('stat-verifications').textContent = '0';
           document.getElementById('stat-sealed-pending').textContent = '0';
         }
       } catch (err) {
         console.error('Could not load dashboard stats:', err);
-        // Fall back to zeros
         document.getElementById('stat-total-stamps').textContent = '0';
         document.getElementById('stat-verifications').textContent = '0';
         document.getElementById('stat-sealed-pending').textContent = '0';
       }
+
+      // Store userId for search/filter use
+      window._dashUserId = user.id;
+
+      // Load stamps list
+      await loadStamps(user.id, 'all', 0);
     })();
+
+    // ── Stamp list loader ────────────────────────────────────────────────────
+    const PAGE_SIZE = 20; // Show 20 per page
+    let currentFilter = 'all';
+    let currentOffset = 0;
+    let searchDebounce = null;
+
+    function handleSearch(value) {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => {
+        if (window._dashUserId) loadStamps(window._dashUserId, currentFilter, 0, value.trim());
+      }, 300);
+    }
+
+    async function loadStamps(userId, filter, offset, searchQuery = '') {
+      currentFilter = filter;
+      currentOffset = offset;
+
+      if (offset === 0) {
+        document.getElementById('stamps-container').innerHTML =
+          '<div id="stamps-loading" class="stamp-list" style="padding: var(--space-8); text-align: center; color: var(--color-text-muted);">Loading your stamps...</div>';
+      }
+
+      let query = window.tsDB
+        .from('stamps')
+        .select('proof_id, content_type, visibility, display_title, text_content, file_name, file_size_bytes, tags, block_timestamp, status, storage_uri, sealed_until, revealed')
+        .eq('creator_profile_id', userId)
+        .eq('status', 'confirmed')
+        .order('block_timestamp', { ascending: false })
+        .range(offset, offset + PAGE_SIZE - 1);
+
+      if (filter === 'public')    query = query.eq('visibility', 'public');
+      if (filter === 'sealed')    query = query.eq('visibility', 'sealed');
+      if (filter === 'hash_only') query = query.eq('visibility', 'hash_only');
+
+      // Search across display_title, file_name, tags
+      if (searchQuery) {
+        query = query.or(
+          `display_title.ilike.%${searchQuery}%,file_name.ilike.%${searchQuery}%`
+        );
+      }
+
+      const { data: stamps, error } = await query;
+
+      if (error) {
+        console.error('Failed to load stamps:', error);
+        document.getElementById('stamps-container').innerHTML =
+          '<div class="stamp-list" style="padding: var(--space-6); text-align: center; color: var(--color-text-muted);">Failed to load stamps. Please refresh.</div>';
+        return;
+      }
+
+      if (!stamps || stamps.length === 0) {
+        if (offset === 0) {
+          document.getElementById('stamps-container').innerHTML =
+            searchQuery ? `<div class="stamp-list" style="padding: var(--space-8); text-align:center; color: var(--color-text-muted);">
+              <div style="font-size:2rem;margin-bottom:8px;">🔍</div>
+              <p style="margin:0;">No stamps found for "<strong>${escapeHtml(searchQuery)}</strong>"</p>
+            </div>` : renderEmptyState(filter);
+        }
+        document.getElementById('stamps-pagination').style.display = 'none';
+        return;
+      }
+
+      const listHTML = stamps.map(renderStampRow).join('');
+
+      if (offset === 0) {
+        document.getElementById('stamps-container').innerHTML =
+          `<div class="stamp-list">${listHTML}</div>`;
+      } else {
+        document.querySelector('.stamp-list').insertAdjacentHTML('beforeend', listHTML);
+      }
+
+      // Show/hide load more
+      const pagination = document.getElementById('stamps-pagination');
+      if (stamps.length === PAGE_SIZE) {
+        pagination.style.display = 'block';
+        document.getElementById('load-more-btn').onclick = (e) => {
+          e.preventDefault();
+          loadStamps(
+            window._dashUserId,
+            currentFilter,
+            currentOffset + PAGE_SIZE
+          );
+        };
+      } else {
+        pagination.style.display = 'none';
+      }
+    }
+
+    function renderStampRow(stamp) {
+      const typeLabel = {
+        text: 'TXT', file: 'FILE', url: 'URL'
+      }[stamp.content_type] ?? 'TXT';
+
+      const typeClass = {
+        text: 'text', file: 'pdf', url: 'text'
+      }[stamp.content_type] ?? 'text';
+
+      // Preview text — for hash-only show title if provided, otherwise private message
+      let preview;
+      if (stamp.visibility === 'hash_only') {
+        // Show user-given title if it exists and isn't the generic fallback
+        const hasCustomTitle = stamp.display_title &&
+          stamp.display_title !== 'Private stamp' &&
+          stamp.display_title !== 'Private stamp' &&
+          stamp.display_title.trim() !== '';
+        preview = hasCustomTitle
+          ? `🔐 ${stamp.display_title}`
+          : '🔐 Private stamp · content encrypted';
+      } else {
+        preview = stamp.display_title
+          || stamp.text_content?.slice(0, 80)
+          || stamp.file_name
+          || '(no preview)';
+        if (preview.length > 80) preview = preview.slice(0, 77) + '...';
+      }
+
+      // Meta line
+      const date = stamp.block_timestamp
+        ? formatDate(new Date(stamp.block_timestamp))
+        : '—';
+      const visLabel = { public: 'Public', sealed: 'Sealed', hash_only: 'Hash only' }[stamp.visibility] ?? stamp.visibility;
+      const meta = `${date} · ${visLabel}`;
+
+      // Badge
+      let badge = '';
+      if (stamp.visibility === 'sealed' && !stamp.revealed) {
+        const sealedUntil = stamp.sealed_until ? new Date(stamp.sealed_until) : null;
+        const isOverdue   = sealedUntil && sealedUntil <= new Date();
+        const revealLabel = sealedUntil ? formatRevealDate(sealedUntil) : '?';
+        if (isOverdue) {
+          badge = `<span class="badge badge-accent" style="background:#FEF3C7;color:#92400E;">⚡ Reveal pending</span>`;
+        } else {
+          badge = `<span class="badge badge-accent">🔒 Reveals ${revealLabel}</span>`;
+        }
+      } else if (stamp.visibility === 'sealed' && stamp.revealed) {
+        badge = `<span class="badge badge-success"><span class="badge-dot"></span> Revealed</span>`;
+      } else {
+        badge = `<span class="badge badge-success"><span class="badge-dot"></span> Verified</span>`;
+      }
+
+      return `
+        <a href="proof.html?id=${stamp.proof_id}" class="stamp-row" style="text-decoration: none; color: inherit; display: flex;">
+          <div class="stamp-icon ${typeClass}">${typeLabel}</div>
+          <div class="stamp-content">
+            <p class="stamp-preview">${escapeHtml(preview)}</p>
+            <p class="stamp-meta">${meta}</p>
+          </div>
+          <div class="stamp-status">${badge}</div>
+        </a>`;
+    }
+
+    function renderEmptyState(filter) {
+      const msgs = {
+        all:      { icon: '🖊️', title: 'No stamps yet', desc: 'Create your first stamp to lock in a permanent timestamp.' },
+        public:   { icon: '🌐', title: 'No public stamps', desc: 'Public stamps share full content on Arweave.' },
+        sealed:   { icon: '🔒', title: 'No sealed stamps', desc: 'Sealed stamps auto-reveal on a date you choose.' },
+        hash_only:{ icon: '🔐', title: 'No hash-only stamps', desc: 'Hash-only stamps keep content private while proving you had it.' },
+      };
+      const { icon, title, desc } = msgs[filter] || msgs.all;
+      return `
+        <div class="stamp-list" style="padding: var(--space-10); text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: var(--space-3);">${icon}</div>
+          <p style="font-weight: 600; margin: 0 0 var(--space-2);">${title}</p>
+          <p style="color: var(--color-text-muted); font-size: var(--text-sm); margin: 0 0 var(--space-5);">${desc}</p>
+          <a href="stamp.html" class="btn btn-primary">+ New stamp</a>
+        </div>`;
+    }
+
+    function formatDate(d) {
+      const now     = new Date();
+      const diffMs  = now - d;
+      const diffDays = Math.floor(diffMs / 86400000);
+      if (diffDays === 0)  return 'Today';
+      if (diffDays === 1)  return 'Yesterday';
+      if (diffDays > 1 && diffDays < 7) return `${diffDays}d ago`;
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+    }
+
+    // Format a future date for seal reveal (e.g. "in 2 days", "May 21 at 10:00 UTC")
+    function formatRevealDate(d) {
+      const now      = new Date();
+      const diffMs   = d - now;  // positive = future
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHrs  = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+      if (diffMs < 0)       return 'overdue'; // past but not revealed
+      if (diffMins < 60)    return `in ${diffMins}m`;
+      if (diffHrs < 24)     return `in ${diffHrs}h`;
+      if (diffDays === 1)   return 'tomorrow';
+      if (diffDays < 7)     return `in ${diffDays} days`;
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }) + ' UTC';
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Filter tabs ──────────────────────────────────────────────────────────
+    document.querySelectorAll('[data-filter]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const searchVal = document.getElementById('stamp-search')?.value?.trim() ?? '';
+        if (window._dashUserId) loadStamps(window._dashUserId, btn.dataset.filter, 0, searchVal);
+      });
+    });
+
+    function toggleAccountMenu() {
+      const menu = document.getElementById('account-menu');
+      if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function(e) {
+      const menu = document.getElementById('account-menu');
+      const avatar = document.getElementById('user-avatar');
+      if (menu && menu.style.display !== 'none' &&
+          !menu.contains(e.target) && e.target !== avatar) {
+        menu.style.display = 'none';
+      }
+    });
+
+    async function handleSwitchAccount(e) {
+      if (e) e.preventDefault();
+      await window.tsAuth.signOut();
+      window.location.href = 'auth.html';
+    }
 
     async function handleSignOut(e) {
       if (e) e.preventDefault();
