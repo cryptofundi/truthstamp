@@ -281,6 +281,54 @@
       </div>
     </div>
 
+    <!-- Public handle settings -->
+    <div id="public-handle-card" style="
+      background:var(--color-surface);border:1px solid var(--color-border);
+      border-radius:12px;padding:20px 24px;margin-bottom:24px;display:none;
+    ">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:0">
+          <h3 style="font-size:14px;font-weight:600;color:var(--color-text);margin-bottom:4px">
+            🌐 Public handle
+          </h3>
+          <p style="font-size:13px;color:var(--color-text-muted);line-height:1.5;max-width:480px">
+            This is what others see on the public Explorer next to your stamps.
+            Leave blank to appear as <strong>"Creator"</strong> — your email is never shown.
+          </p>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+          <div style="position:relative">
+            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-text-muted);font-size:14px;pointer-events:none">@</span>
+            <input
+              type="text" id="public-handle-input"
+              placeholder="yourhandle"
+              maxlength="30"
+              autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+              style="
+                padding:8px 12px 8px 28px;border:1px solid var(--color-border-md);
+                border-radius:8px;font-size:14px;font-family:var(--font-sans);
+                color:var(--color-text);background:var(--color-surface-alt);
+                outline:none;width:200px;transition:border .15s,box-shadow .15s;
+              "
+              onfocus="this.style.borderColor='var(--brand-primary)';this.style.boxShadow='0 0 0 3px var(--brand-primary-alpha)'"
+              onblur="this.style.borderColor='';this.style.boxShadow=''"
+            />
+          </div>
+          <button id="save-handle-btn" onclick="savePublicHandle()" style="
+            background:var(--brand-primary);color:#fff;font-size:13.5px;font-weight:600;
+            padding:8px 18px;border-radius:8px;border:none;cursor:pointer;
+            transition:opacity .15s;white-space:nowrap;
+          " onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+            Save
+          </button>
+        </div>
+      </div>
+      <p id="handle-msg" style="font-size:12.5px;margin-top:10px;display:none"></p>
+      <p style="font-size:11.5px;color:var(--color-text-muted);margin-top:8px">
+        Allowed: letters, numbers, underscores. Max 30 characters. Example: <code style="font-family:monospace">@cryptolady</code>
+      </p>
+    </div>
+
     <!-- Filter bar -->
     <div class="filter-bar">
       <div class="filter-tabs">
@@ -380,6 +428,16 @@
 
       // Update credit balance
       const creditsEl = document.getElementById('stat-credits');
+
+      // Show public handle card for email users; pre-fill current handle
+      const handleCard = document.getElementById('public-handle-card');
+      const handleInput = document.getElementById('public-handle-input');
+      if (handleCard && !isWallet) {
+        handleCard.style.display = 'block';
+        if (handleInput && profile.public_handle) {
+          handleInput.value = profile.public_handle;
+        }
+      }
       if (creditsEl) {
         creditsEl.textContent = profile.credits_balance + ' credit' + (profile.credits_balance === 1 ? '' : 's');
       }
@@ -648,6 +706,62 @@
       if (e) e.preventDefault();
       await window.tsAuth.signOut();
       window.location.href = 'auth.html';
+    }
+
+
+    // ── Public handle save ─────────────────────────────────────────────────
+    async function savePublicHandle() {
+      const input = document.getElementById('public-handle-input');
+      const btn   = document.getElementById('save-handle-btn');
+      const msg   = document.getElementById('handle-msg');
+      if (!input || !msg) return;
+
+      const raw    = input.value.trim();
+      // Validate: letters, numbers, underscores only
+      const handle = raw.replace(/[^A-Za-z0-9_]/g, '');
+
+      if (raw !== handle) {
+        input.value = handle;
+      }
+      if (handle.length > 30) {
+        showHandleMsg('Max 30 characters.', 'var(--brand-warn, #BA7517)');
+        return;
+      }
+
+      btn.textContent = 'Saving…';
+      btn.disabled = true;
+
+      try {
+        const user = await window.tsAuth.getUser?.() || (await window.tsDB.auth.getUser()).data.user;
+        if (!user) throw new Error('Not signed in');
+
+        const { error } = await window.tsDB
+          .from('profiles')
+          .update({ public_handle: handle || null })  // null = anonymous (shows as "Creator")
+          .eq('id', user.id);
+
+        if (error) throw error;
+
+        if (handle) {
+          showHandleMsg('✓ Handle saved — you\'ll appear as @' + handle + ' on the Explorer.', 'var(--brand-success, #1D9E75)');
+        } else {
+          showHandleMsg('✓ Cleared — you\'ll appear as "Creator" publicly.', 'var(--color-text-muted)');
+        }
+      } catch(e) {
+        showHandleMsg('Error: ' + e.message, 'var(--brand-error, #A32D2D)');
+      } finally {
+        btn.textContent = 'Save';
+        btn.disabled = false;
+      }
+    }
+
+    function showHandleMsg(text, color) {
+      const msg = document.getElementById('handle-msg');
+      if (!msg) return;
+      msg.textContent = text;
+      msg.style.color = color;
+      msg.style.display = 'block';
+      setTimeout(() => { msg.style.display = 'none'; }, 5000);
     }
 
     async function handleSignOut(e) {
