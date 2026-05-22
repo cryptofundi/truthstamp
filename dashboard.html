@@ -431,6 +431,11 @@
       // Update credit balance
       const creditsEl = document.getElementById('stat-credits');
 
+      // Show switch wallet in mobile drawer (nav.js picks this up)
+      if (typeof window.tsNavDrawerShowSwitch === 'function') {
+        window.tsNavDrawerShowSwitch(isWallet);
+      }
+
       // Show public handle card for ALL users (wallet + email)
       // Wallet users: can optionally set a handle instead of showing truncated address
       // Email users: can set a handle instead of showing Creator_XXXX
@@ -713,7 +718,7 @@
       }
     });
 
-    async function handleSwitchAccount(e) {
+    window.handleSwitchAccount = async function handleSwitchAccount(e) {
       if (e) e.preventDefault();
 
       // Detect MetaMask / injected wallet environment
