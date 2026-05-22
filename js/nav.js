@@ -140,6 +140,24 @@
     .ts-drawer-signout:hover {
       border-color: #EF4444; color: #EF4444;
     }
+    /* Switch wallet button — same style as signout, shown only for wallet users */
+    .ts-drawer-switch {
+      margin: 4px 16px 0;
+      padding: 10px;
+      background: none;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      color: var(--color-text-secondary);
+      font-size: 13px; font-weight: 500;
+      cursor: pointer; font-family: inherit;
+      width: calc(100% - 32px);
+      display: none;
+      align-items: center; justify-content: center; gap: 7px;
+      transition: all 0.15s;
+    }
+    .ts-drawer-switch:hover {
+      border-color: var(--brand-primary); color: var(--brand-primary);
+    }
 
     /* Network badge */
     .ts-drawer-network {
@@ -255,6 +273,11 @@
         </div>
       </div>
 
+      <button class="ts-drawer-switch" id="ts-drawer-switch" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M17 16l4-4-4-4M7 8l-4 4 4 4"/></svg>
+        <span id="ts-drawer-switch-label">Switch wallet</span>
+      </button>
+
       <button class="ts-drawer-signout" id="ts-drawer-signout">Sign out</button>
     `;
     document.body.appendChild(drawer);
@@ -287,6 +310,49 @@
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') closeDrawer();
     });
+
+    // ── Switch wallet button in drawer ──────────────────────────────────
+    // Show after auth resolves — reveal only for wallet users
+    const switchBtn  = document.getElementById('ts-drawer-switch');
+    const switchLbl  = document.getElementById('ts-drawer-switch-label');
+    const signOutBtn = document.getElementById('ts-drawer-signout');
+
+    function showDrawerSwitchWallet(isWalletUser) {
+      if (!switchBtn) return;
+      if (isWalletUser) {
+        switchBtn.style.display = 'flex';
+        if (switchLbl) switchLbl.textContent = 'Switch wallet';
+      } else {
+        // Email users can also switch account
+        switchBtn.style.display = 'flex';
+        if (switchLbl) switchLbl.textContent = 'Switch account';
+      }
+    }
+
+    if (switchBtn) {
+      switchBtn.addEventListener('click', async () => {
+        closeDrawer();
+        // If dashboard's handleSwitchAccount exists, use it (handles MetaMask)
+        if (typeof window.handleSwitchAccount === 'function') {
+          await window.handleSwitchAccount(null);
+        } else {
+          // Fallback for non-dashboard pages
+          const hasEth = typeof window.ethereum !== 'undefined';
+          if (hasEth && (window.ethereum.isMetaMask || window.ethereum.isBraveWallet)) {
+            try {
+              await window.ethereum.request({ method: 'wallet_requestPermissions', params: [{ eth_accounts: {} }] });
+              window.location.reload();
+              return;
+            } catch(err) { if (err.code === 4001) return; }
+          }
+          if (window.tsAuth) await window.tsAuth.signOut();
+          window.location.href = 'auth.html';
+        }
+      });
+    }
+
+    // Expose so dashboard can call after it knows auth type
+    window.tsNavDrawerShowSwitch = showDrawerSwitchWallet;
 
   // ── Desktop account dropdown ──────────────────────────────────────────
   // Inject into nav-links on pages that don't have their own (non-dashboard pages)
