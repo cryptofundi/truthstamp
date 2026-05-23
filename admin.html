@@ -434,70 +434,61 @@
         <div class="admin-header">
           <div>
             <h1 class="admin-page-title">Dashboard</h1>
-            <p class="admin-page-subtitle">Today's snapshot · last updated 2 minutes ago</p>
+            <p class="admin-page-subtitle" id="overview-updated">Loading live data…</p>
           </div>
+          <button class="btn btn-secondary btn-sm" onclick="loadOverviewStats()">↻ Refresh</button>
         </div>
 
         <div class="stat-row">
           <div class="stat-tile">
-            <p class="stat-tile-label">Stamps today</p>
-            <p class="stat-tile-value">847</p>
-            <p class="stat-tile-meta up">↑ 23% vs yesterday</p>
+            <p class="stat-tile-label">Total stamps</p>
+            <p class="stat-tile-value" id="stat-total-stamps">—</p>
+            <p class="stat-tile-meta" id="stat-stamps-today">Loading…</p>
           </div>
           <div class="stat-tile">
-            <p class="stat-tile-label">New signups today</p>
-            <p class="stat-tile-value">142</p>
-            <p class="stat-tile-meta up">↑ 8% vs yesterday</p>
+            <p class="stat-tile-label">Total users</p>
+            <p class="stat-tile-value" id="stat-total-users">—</p>
+            <p class="stat-tile-meta" id="stat-users-today">Loading…</p>
           </div>
           <div class="stat-tile">
-            <p class="stat-tile-label">Total active users</p>
-            <p class="stat-tile-value">3,124</p>
-            <p class="stat-tile-meta up">↑ 421 this week</p>
+            <p class="stat-tile-label">Sealed (ticking)</p>
+            <p class="stat-tile-value" id="stat-sealed">—</p>
+            <p class="stat-tile-meta">Not yet revealed</p>
           </div>
           <div class="stat-tile">
-            <p class="stat-tile-label">MRR</p>
-            <p class="stat-tile-value">$2,847</p>
-            <p class="stat-tile-meta up">↑ $312 vs last month</p>
+            <p class="stat-tile-label">Revealed</p>
+            <p class="stat-tile-value" id="stat-revealed">—</p>
+            <p class="stat-tile-meta">Sealed → public</p>
           </div>
           <div class="stat-tile">
-            <p class="stat-tile-label">Free → Paid conversion</p>
-            <p class="stat-tile-value">4.2%</p>
-            <p class="stat-tile-meta up">↑ 0.8% vs last month</p>
+            <p class="stat-tile-label">Hidden stamps</p>
+            <p class="stat-tile-value" id="stat-hidden">—</p>
+            <p class="stat-tile-meta">Moderated content</p>
           </div>
           <div class="stat-tile">
-            <p class="stat-tile-label">Platform wallet balance</p>
-            <p class="stat-tile-value">0.84 ETH</p>
-            <p class="stat-tile-meta">~ 12 days at current rate</p>
+            <p class="stat-tile-label">Platform wallet</p>
+            <p class="stat-tile-value" id="stat-wallet">—</p>
+            <p class="stat-tile-meta" id="stat-wallet-meta">MegaETH testnet</p>
           </div>
         </div>
 
-        <div class="admin-alert">
+        <div id="overview-alert" style="display:none" class="admin-alert">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          Platform wallet running low. Refill threshold ($50 worth of ETH) hits in ~12 days at current burn rate.
+          <span id="overview-alert-text"></span>
         </div>
 
         <div class="admin-panel">
           <div class="admin-panel-header">
             <div>
-              <p class="admin-panel-title">Recent activity</p>
-              <p class="admin-panel-desc">Latest signups, stamps, and notable events</p>
+              <p class="admin-panel-title">Recent stamps</p>
+              <p class="admin-panel-desc">Latest stamps created on the platform</p>
             </div>
+            <a href="#" onclick="showSection('stamps',document.querySelector('[onclick*=stamps]'));return false" class="btn btn-ghost btn-sm">View all →</a>
           </div>
           <table class="admin-table">
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Event</th>
-                <th>User</th>
-                <th>Details</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>2 min ago</td><td>Plan upgrade</td><td><div class="user-cell"><div class="user-avatar">JM</div>jane@maktech.io</div></td><td>Free → Creator</td></tr>
-              <tr><td>5 min ago</td><td>Stamp created</td><td><div class="user-cell"><div class="user-avatar">PR</div>priya@example.com</div></td><td>Sealed text · 30-day reveal</td></tr>
-              <tr><td>12 min ago</td><td>New signup</td><td><div class="user-cell"><div class="user-avatar">RK</div>rahul.k@gmail.com</div></td><td>Google OAuth</td></tr>
-              <tr><td>18 min ago</td><td>Stamp created</td><td><div class="user-cell"><div class="user-avatar">SM</div>sahil.m@example.com</div></td><td>Public text · 312 chars</td></tr>
-              <tr><td>34 min ago</td><td>Plan upgrade</td><td><div class="user-cell"><div class="user-avatar">VB</div>venu@studio.in</div></td><td>Creator → Pro</td></tr>
+            <thead><tr><th>Proof #</th><th>Preview</th><th>Creator</th><th>Type</th><th>Created</th></tr></thead>
+            <tbody id="overview-recent-stamps">
+              <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--color-text-muted)">Loading…</td></tr>
             </tbody>
           </table>
         </div>
@@ -896,12 +887,7 @@
         <div class="admin-panel" style="padding:0">
           <div style="padding:var(--space-4);border-bottom:1px solid var(--color-border);display:flex;gap:8px;flex-wrap:wrap">
             <input type="text" class="input" id="user-search" placeholder="Search by email, wallet, or ID…" style="flex:1;min-width:200px" oninput="filterUsers()">
-            <select class="input" id="user-filter-plan" style="width:140px" onchange="filterUsers()">
-              <option value="">All plans</option>
-              <option value="free">Free</option>
-              <option value="creator">Creator</option>
-              <option value="pro">Pro</option>
-            </select>
+
             <select class="input" id="user-filter-auth" style="width:150px" onchange="filterUsers()">
               <option value="">All auth methods</option>
               <option value="email">Email</option>
@@ -909,7 +895,7 @@
             </select>
           </div>
           <table class="admin-table" id="users-table">
-            <thead><tr><th>User</th><th>Auth</th><th>Plan</th><th>Credits</th><th>Stamps</th><th>Joined</th><th>Actions</th></tr></thead>
+            <thead><tr><th>User</th><th>Auth</th><th>Credits</th><th>Joined</th><th>Actions</th></tr></thead>
             <tbody id="users-tbody">
               <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--color-text-muted)">Loading users…</td></tr>
             </tbody>
@@ -1059,23 +1045,65 @@
         <div class="admin-header">
           <div>
             <h1 class="admin-page-title">Smart contract &amp; wallet</h1>
-            <p class="admin-page-subtitle">On-chain operations and platform wallet status</p>
+            <p class="admin-page-subtitle">On-chain operations and platform wallet status · MegaETH testnet</p>
           </div>
+          <button class="btn btn-secondary btn-sm" onclick="loadWalletBalance()">↻ Refresh balance</button>
         </div>
         <div class="stat-row">
-          <div class="stat-tile"><p class="stat-tile-label">Platform wallet balance</p><p class="stat-tile-value">0.84 ETH</p></div>
-          <div class="stat-tile"><p class="stat-tile-label">Gas spent today</p><p class="stat-tile-value">$2.47</p></div>
-          <div class="stat-tile"><p class="stat-tile-label">Total transactions</p><p class="stat-tile-value">14,283</p></div>
-          <div class="stat-tile"><p class="stat-tile-label">Avg confirmation</p><p class="stat-tile-value">1.2s</p></div>
+          <div class="stat-tile">
+            <p class="stat-tile-label">Platform wallet balance</p>
+            <p class="stat-tile-value" id="chain-wallet-balance">Loading…</p>
+            <p class="stat-tile-meta">Used to pay gas for stamps</p>
+          </div>
+          <div class="stat-tile">
+            <p class="stat-tile-label">Total stamps on-chain</p>
+            <p class="stat-tile-value" id="chain-total-stamps">—</p>
+            <p class="stat-tile-meta">Confirmed transactions</p>
+          </div>
+          <div class="stat-tile">
+            <p class="stat-tile-label">Network</p>
+            <p class="stat-tile-value" style="font-size:16px">MegaETH</p>
+            <p class="stat-tile-meta">Testnet · chain ID 6343</p>
+          </div>
+          <div class="stat-tile">
+            <p class="stat-tile-label">Avg confirmation</p>
+            <p class="stat-tile-value">~1s</p>
+            <p class="stat-tile-meta">Sub-second finality</p>
+          </div>
         </div>
         <div class="admin-panel">
           <div class="setting-row">
-            <div><p class="setting-label">Smart contract address</p><p class="setting-help">Read-only · deployed on MegaETH mainnet</p></div>
-            <div class="setting-control"><input type="text" class="input text-mono" value="0x4f8a9c2b3d6e1f8a4b7c9d2e3f1a4b7c8e9d2f3" readonly></div>
+            <div>
+              <p class="setting-label">Smart contract address</p>
+              <p class="setting-help">Deployed on MegaETH testnet (chain ID 6343) · Read-only</p>
+            </div>
+            <div class="setting-control">
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="text" class="input text-mono" value="0x8FEB092b7303c9419d8525C99a3113E7c299C584" readonly style="flex:1;font-size:12px">
+                <a href="https://megaeth-testnet-v2.blockscout.com/address/0x8FEB092b7303c9419d8525C99a3113E7c299C584" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">Blockscout ↗</a>
+              </div>
+            </div>
           </div>
           <div class="setting-row">
-            <div><p class="setting-label">Auto-refill threshold</p><p class="setting-help">Send alert when balance drops below this.</p></div>
-            <div class="setting-control"><div class="setting-control-row"><input type="number" class="input" value="0.2" step="0.01"><span class="setting-suffix">ETH</span></div></div>
+            <div>
+              <p class="setting-label">Platform wallet address</p>
+              <p class="setting-help">This wallet signs all stamp transactions and pays gas fees. Keep it topped up.</p>
+            </div>
+            <div class="setting-control">
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="text" class="input text-mono" value="0x689d21A3fa8c43dc73199dC2Ab8Cf8461A3B65E5" readonly style="flex:1;font-size:12px">
+                <a href="https://megaeth-testnet-v2.blockscout.com/address/0x689d21A3fa8c43dc73199dC2Ab8Cf8461A3B65E5" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">Blockscout ↗</a>
+              </div>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <p class="setting-label">Permanent storage</p>
+              <p class="setting-help">Public stamps are stored permanently on Arweave via Turbo.</p>
+            </div>
+            <div class="setting-control">
+              <a href="https://arweave.net" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">Arweave network ↗</a>
+            </div>
           </div>
         </div>
       </section>
@@ -1149,26 +1177,106 @@
     // ── OVERVIEW stats ─────────────────────────────────────────────────────
     async function loadOverviewStats() {
       try {
+        const todayStart = new Date();
+        todayStart.setUTCHours(0,0,0,0);
+
         const [
           {count: totalUsers},
+          {count: usersToday},
           {count: totalStamps},
-          {count: hiddenStamps},
-          {data: creditData}
+          {count: stampsToday},
+          {count: sealed},
+          {count: revealed},
+          {count: hidden},
+          {data: recentStamps}
         ] = await Promise.all([
           window.tsDB.from('profiles').select('*',{count:'exact',head:true}),
+          window.tsDB.from('profiles').select('*',{count:'exact',head:true}).gte('created_at', todayStart.toISOString()),
           window.tsDB.from('stamps').select('*',{count:'exact',head:true}).eq('contract_address',CONTRACT),
+          window.tsDB.from('stamps').select('*',{count:'exact',head:true}).eq('contract_address',CONTRACT).gte('block_timestamp', todayStart.toISOString()),
+          window.tsDB.from('stamps').select('*',{count:'exact',head:true}).eq('contract_address',CONTRACT).eq('visibility','sealed').eq('revealed',false),
+          window.tsDB.from('stamps').select('*',{count:'exact',head:true}).eq('contract_address',CONTRACT).eq('visibility','sealed').eq('revealed',true),
           window.tsDB.from('stamps').select('*',{count:'exact',head:true}).eq('is_hidden',true),
-          window.tsDB.from('profiles').select('credits_balance'),
+          window.tsDB.from('stamps').select('proof_id,content_type,visibility,text_content,display_title,file_name,creator_identity,block_timestamp')
+            .eq('contract_address',CONTRACT).order('block_timestamp',{ascending:false}).limit(8),
         ]);
+
         const setEl = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
-        setEl('stat-total-users',  totalUsers  ?? '—');
-        setEl('stat-total-stamps', totalStamps ?? '—');
+        setEl('stat-total-stamps',  totalStamps  ?? '—');
+        setEl('stat-total-users',   totalUsers   ?? '—');
+        setEl('stat-sealed',        sealed       ?? '—');
+        setEl('stat-revealed',      revealed     ?? '—');
+        setEl('stat-hidden',        hidden       ?? 0);
+        setEl('stat-stamps-today',  `+${stampsToday??0} today`);
+        setEl('stat-users-today',   `+${usersToday??0} today`);
+
+        // Fetch wallet balance from MegaETH RPC
+        loadWalletBalance();
+
         // Update hidden badge in sidebar
-        if (hiddenStamps > 0) {
+        if ((hidden??0) > 0) {
           const badge = document.getElementById('mod-badge');
-          if (badge) { badge.textContent = hiddenStamps; badge.style.display = 'inline'; }
+          if (badge) { badge.textContent = hidden; badge.style.display = 'inline'; }
         }
-      } catch(e) { console.warn('[Admin] overview stats:', e.message); }
+
+        // Recent stamps table
+        const tbody = document.getElementById('overview-recent-stamps');
+        if (tbody && recentStamps?.length) {
+          const visBadge = {public:'<span class="badge badge-success">Public</span>',sealed:'<span class="badge badge-warning">Sealed</span>',hash_only:'<span class="badge badge-info">Hash-only</span>'};
+          tbody.innerHTML = recentStamps.map(s => {
+            const preview = s.visibility==='sealed'?'<em style="color:var(--color-text-muted)">Sealed</em>'
+                          : s.visibility==='hash_only'?'<em style="color:var(--color-text-muted)">Hash-only</em>'
+                          : esc((s.text_content||s.display_title||s.file_name||'—').slice(0,70));
+            const creator = s.creator_identity
+              ? (s.creator_identity.startsWith('0x') ? s.creator_identity.slice(0,6)+'…'+s.creator_identity.slice(-4) : s.creator_identity.slice(0,8)+'…')
+              : '—';
+            return `<tr>
+              <td><a href="proof.html?id=${s.proof_id}" target="_blank" style="color:var(--brand-primary);font-weight:600">#${s.proof_id}</a></td>
+              <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${preview}</td>
+              <td style="font-family:var(--font-mono);font-size:12px">${esc(creator)}</td>
+              <td>${visBadge[s.visibility]||s.visibility}</td>
+              <td>${timeAgo(s.block_timestamp)}</td>
+            </tr>`;
+          }).join('');
+        } else if (tbody) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--color-text-muted)">No stamps yet.</td></tr>';
+        }
+
+        document.getElementById('overview-updated').textContent =
+          'Live data · updated ' + new Date().toLocaleTimeString();
+
+      } catch(e) {
+        console.warn('[Admin] overview stats:', e.message);
+        document.getElementById('overview-updated').textContent = 'Error loading stats: ' + e.message;
+      }
+    }
+
+    async function loadWalletBalance() {
+      try {
+        const PLATFORM_WALLET = '0x689d21A3fa8c43dc73199dC2Ab8Cf8461A3B65E5';
+        const RPC = cfg.CONTRACT_RPC_URL || 'https://carrot.megaeth.com/rpc';
+        const res = await fetch(RPC, {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({jsonrpc:'2.0',method:'eth_getBalance',params:[PLATFORM_WALLET,'latest'],id:1})
+        });
+        const { result } = await res.json();
+        const eth = (parseInt(result, 16) / 1e18).toFixed(4);
+        const setEl = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+        setEl('stat-wallet', eth + ' ETH');
+        setEl('stat-wallet-meta', 'Platform wallet · MegaETH testnet');
+        // Also update chain section fields
+        const chainBal = document.getElementById('chain-wallet-balance');
+        if (chainBal) chainBal.textContent = eth + ' ETH';
+        // Low balance alert
+        if (parseFloat(eth) < 0.1) {
+          const alert = document.getElementById('overview-alert');
+          const alertText = document.getElementById('overview-alert-text');
+          if (alert && alertText) {
+            alertText.textContent = `Platform wallet balance is low (${eth} ETH). Top up to avoid failed stamp transactions.`;
+            alert.style.display = 'flex';
+          }
+        }
+      } catch(e) { console.warn('[Admin] wallet balance:', e.message); }
     }
 
     // ── USERS ──────────────────────────────────────────────────────────────
@@ -1180,7 +1288,7 @@
       try {
         const { data, count, error } = await window.tsDB
           .from('profiles')
-          .select('id, display_name, public_handle, wallet_address, auth_method, plan, credits_balance, created_at, is_suspended', { count: 'exact' })
+          .select('id, display_name, public_handle, wallet_address, auth_method, credits_balance, created_at', { count: 'exact' })
           .order('created_at', { ascending: false })
           .range(0, USERS_PAGE - 1);
         if (error) throw error;
@@ -1199,7 +1307,7 @@
 
     async function loadMoreUsers() {
       const { data } = await window.tsDB.from('profiles')
-        .select('id, display_name, public_handle, wallet_address, auth_method, plan, credits_balance, created_at, is_suspended')
+        .select('id, display_name, public_handle, wallet_address, auth_method, credits_balance, created_at')
         .order('created_at', { ascending: false })
         .range(usersOffset, usersOffset + USERS_PAGE - 1);
       allUsers = allUsers.concat(data || []);
@@ -1211,14 +1319,12 @@
 
     function filterUsers() {
       const q    = document.getElementById('user-search').value.toLowerCase();
-      const plan = document.getElementById('user-filter-plan').value;
       const auth = document.getElementById('user-filter-auth').value;
       const filtered = allUsers.filter(u => {
         const matchQ    = !q || (u.display_name||'').toLowerCase().includes(q)
                           || (u.wallet_address||'').toLowerCase().includes(q)
                           || (u.id||'').toLowerCase().includes(q)
                           || (u.public_handle||'').toLowerCase().includes(q);
-        const matchPlan = !plan || (u.plan||'free') === plan;
         const matchAuth = !auth || (u.auth_method||'email') === auth;
         return matchQ && matchPlan && matchAuth;
       });
@@ -1228,60 +1334,40 @@
     function renderUsers(users) {
       if (!users.length) {
         document.getElementById('users-tbody').innerHTML =
-          '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--color-text-muted)">No users found.</td></tr>';
+          '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--color-text-muted)">No users found.</td></tr>';
         return;
       }
       document.getElementById('users-tbody').innerHTML = users.map(u => {
-        const identity = u.wallet_address
+        const isWallet = u.auth_method === 'wallet' || !!u.wallet_address;
+        const identity = isWallet && u.wallet_address
           ? u.wallet_address.slice(0,6)+'…'+u.wallet_address.slice(-4)
-          : (u.display_name || u.public_handle || u.id.slice(0,8)+'…');
+          : (u.public_handle || u.display_name || u.id.slice(0,8)+'…');
         const initials = identity.replace(/[^A-Za-z0-9]/g,'').slice(0,2).toUpperCase() || '??';
-        const planBadge = {
-          pro:     `<span class="badge badge-accent">Pro</span>`,
-          creator: `<span class="badge badge-info">Creator</span>`,
-          free:    `<span class="badge" style="background:var(--color-surface-alt);color:var(--color-text-secondary)">Free</span>`,
-        }[u.plan||'free'] || '';
-        const authIcon = u.auth_method === 'wallet' ? '🔑' : '📧';
-        const suspended = u.is_suspended
-          ? `<span class="badge" style="background:#fee2e2;color:#991b1b">Suspended</span>` : '';
+        const authLabel = isWallet ? '🔑 Wallet' : '📧 Email';
         return `<tr>
           <td><div class="user-cell"><div class="user-avatar">${initials}</div>${esc(identity)}</div></td>
-          <td>${authIcon} ${esc(u.auth_method||'email')}</td>
-          <td>${planBadge} ${suspended}</td>
-          <td>${u.credits_balance ?? '—'}</td>
-          <td>—</td>
+          <td>${authLabel}</td>
+          <td>${u.credits_balance ?? 0} credits</td>
           <td>${timeAgo(u.created_at)}</td>
           <td><div class="row-actions">
             <button class="btn btn-ghost btn-sm" onclick="viewUserStamps('${esc(u.id)}')">Stamps</button>
-            ${!u.is_suspended
-              ? `<button class="btn btn-ghost btn-sm" style="color:var(--color-error)" onclick="toggleSuspend('${esc(u.id)}',true)">Suspend</button>`
-              : `<button class="btn btn-ghost btn-sm" style="color:var(--brand-primary)" onclick="toggleSuspend('${esc(u.id)}',false)">Reinstate</button>`
-            }
           </div></td>
         </tr>`;
       }).join('');
     }
 
-    async function toggleSuspend(userId, suspend) {
-      if (!confirm(suspend ? 'Suspend this user? They cannot create new stamps.' : 'Reinstate this user?')) return;
-      const { error } = await window.tsDB.from('profiles')
-        .update({ is_suspended: suspend }).eq('id', userId);
-      if (error) { alert('Error: ' + error.message); return; }
-      // Refresh
-      allUsers = allUsers.map(u => u.id === userId ? {...u, is_suspended: suspend} : u);
-      renderUsers(allUsers);
-    }
-
     function viewUserStamps(userId) {
-      // Switch to stamps section pre-filtered by this user
       document.getElementById('stamp-search').value = userId;
-      showSection('stamps', document.querySelector('[onclick*="stamps"]'));
+      showSection('stamps', document.querySelector('[onclick*='stamps']'));
       if (!window._stampsLoaded) loadStamps(); else filterStamps();
     }
 
     function exportUsersCSV() {
-      const rows = [['ID','Display name','Auth','Plan','Credits','Joined','Suspended']];
-      allUsers.forEach(u => rows.push([u.id, u.display_name||'', u.auth_method||'', u.plan||'free', u.credits_balance||0, u.created_at||'', u.is_suspended||false]));
+      const rows = [['ID','Identity','Auth','Credits','Joined']];
+      allUsers.forEach(u => {
+        const id = (u.auth_method==='wallet' && u.wallet_address) ? u.wallet_address : (u.public_handle||u.display_name||u.id);
+        rows.push([u.id, id, u.auth_method||'email', u.credits_balance||0, u.created_at||'']);
+      });
       const csv  = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
       const link = document.createElement('a');
       link.href  = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
@@ -1516,6 +1602,7 @@
 
       if (!profileId) { banMsg.textContent='User not found.'; banMsg.style.color='#991b1b'; banMsg.style.display='block'; return; }
 
+      // Requires: ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_suspended BOOLEAN DEFAULT FALSE;
       const { error } = await window.tsDB.from('profiles').update({ is_suspended: true }).eq('id', profileId);
       if (error) { banMsg.textContent='Error: '+error.message; banMsg.style.color='#991b1b'; banMsg.style.display='block'; return; }
 
