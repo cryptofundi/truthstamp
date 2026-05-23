@@ -328,7 +328,14 @@
       color: var(--color-info);
     }
 
-    /* Inline action buttons in tables */
+    .btn-danger {
+      background: #ef4444; color: #fff; border: none;
+      font-size: var(--text-sm); font-weight: 600;
+      padding: 8px 16px; border-radius: var(--radius-md);
+      cursor: pointer; transition: background .15s;
+    }
+    .btn-danger:hover { background: #dc2626; }
+    .color-error { color: #ef4444; }
     .row-actions {
       display: flex;
       gap: 6px;
@@ -369,7 +376,7 @@
         <div class="admin-nav-label">Operations</div>
         <div class="admin-nav-item" onclick="showSection('pricing', this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-          Pricing &amp; limits
+          Pricing &amp; credits
         </div>
         <div class="admin-nav-item" onclick="showSection('features', this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
@@ -394,6 +401,11 @@
         <div class="admin-nav-item" onclick="showSection('stamps', this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
           Stamps
+        </div>
+        <div class="admin-nav-item" onclick="showSection('moderation', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Moderation
+          <span id="mod-badge" style="margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;display:none"></span>
         </div>
         <div class="admin-nav-item" onclick="showSection('analytics', this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -491,145 +503,225 @@
         </div>
       </section>
 
-      <!-- Section: Pricing & Limits -->
+      <!-- Section: Pricing & Credit Packs -->
       <section class="admin-section" id="section-pricing">
         <div class="admin-header">
           <div>
-            <h1 class="admin-page-title">Pricing &amp; limits</h1>
-            <p class="admin-page-subtitle">Change tier limits, pricing, and promo campaigns. Saves apply immediately to all users.</p>
+            <h1 class="admin-page-title">Pricing &amp; credit packs</h1>
+            <p class="admin-page-subtitle">Manage credit pack tiers, launch bonuses, and the free signup grant. Changes apply to new purchases immediately.</p>
           </div>
         </div>
 
         <div class="admin-alert info">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          Changes here apply to all new actions. Existing user limits reset on the 1st of each month at 00:00 UTC.
+          Pricing changes apply to new purchases only. Existing user balances are unaffected.
         </div>
 
-        <!-- Free tier -->
+        <!-- Free signup bonus -->
         <div class="admin-panel">
           <div class="admin-panel-header">
             <div>
-              <p class="admin-panel-title">Free tier</p>
-              <p class="admin-panel-desc">Default plan when users sign up</p>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" checked>
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-
-          <div class="setting-row">
-            <div>
-              <p class="setting-label">Text stamps per month</p>
-              <p class="setting-help">How many free text stamps a user can create per calendar month.</p>
-            </div>
-            <div class="setting-control">
-              <input type="number" class="input" value="30">
+              <p class="admin-panel-title">Free signup bonus</p>
+              <p class="admin-panel-desc">Credits granted once when a user signs up</p>
             </div>
           </div>
 
           <div class="setting-row">
             <div>
-              <p class="setting-label">Max characters per stamp</p>
-              <p class="setting-help">Maximum text length on the free tier.</p>
-            </div>
-            <div class="setting-control">
-              <input type="number" class="input" value="500">
-            </div>
-          </div>
-
-          <div class="setting-row">
-            <div>
-              <p class="setting-label">Allow Sealed visibility?</p>
-              <p class="setting-help">Reserve sealed reveals for paid plans (recommended).</p>
-            </div>
-            <div class="setting-control" style="text-align: right;">
-              <label class="toggle">
-                <input type="checkbox">
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="setting-row">
-            <div>
-              <p class="setting-label">First-time user bonus</p>
-              <p class="setting-help">Extra free stamps on signup. Useful for promo campaigns: "First 10 stamps free!"</p>
+              <p class="setting-label">Credits granted on signup</p>
+              <p class="setting-help">One-time grant. Applied automatically when user creates account. Set to 0 to disable.</p>
             </div>
             <div class="setting-control">
               <div class="setting-control-row">
-                <input type="number" class="input" value="0">
-                <span class="setting-suffix">extra stamps</span>
+                <input type="number" class="input" value="10" min="0" max="100">
+                <span class="setting-suffix">credits</span>
               </div>
             </div>
           </div>
 
           <div class="setting-row">
             <div>
-              <p class="setting-label">Promo campaign banner</p>
-              <p class="setting-help">Show a banner on landing &amp; pricing pages. Leave empty to hide.</p>
+              <p class="setting-label">Signup banner text</p>
+              <p class="setting-help">Shown above the signup form. Leave empty to hide.</p>
             </div>
             <div class="setting-control">
-              <input type="text" class="input" placeholder="e.g. Launch week — first 100 users get unlimited stamps">
+              <input type="text" class="input" value="Get 10 free credits — try it instantly">
             </div>
           </div>
         </div>
 
-        <!-- Creator tier -->
+        <!-- Credit consumption rules -->
         <div class="admin-panel">
           <div class="admin-panel-header">
             <div>
-              <p class="admin-panel-title">Creator plan</p>
-              <p class="admin-panel-desc">Most popular paid tier</p>
+              <p class="admin-panel-title">Credit consumption</p>
+              <p class="admin-panel-desc">Credits consumed per stamp type</p>
             </div>
-            <label class="toggle">
-              <input type="checkbox" checked>
-              <span class="toggle-slider"></span>
-            </label>
           </div>
 
           <div class="setting-row">
-            <div><p class="setting-label">Monthly price (USD)</p><p class="setting-help">Displayed on pricing page.</p></div>
-            <div class="setting-control"><div class="setting-control-row"><span class="setting-suffix">$</span><input type="number" class="input" value="9" step="0.01"></div></div>
+            <div>
+              <p class="setting-label">Text stamp cost</p>
+              <p class="setting-help">Includes sealed text. Most common stamp type.</p>
+            </div>
+            <div class="setting-control">
+              <div class="setting-control-row">
+                <input type="number" class="input" value="1" min="1">
+                <span class="setting-suffix">credits</span>
+              </div>
+            </div>
           </div>
 
           <div class="setting-row">
-            <div><p class="setting-label">Yearly price (USD)</p><p class="setting-help">Annual billing discount option.</p></div>
-            <div class="setting-control"><div class="setting-control-row"><span class="setting-suffix">$</span><input type="number" class="input" value="86" step="0.01"></div></div>
+            <div>
+              <p class="setting-label">URL stamp cost</p>
+              <p class="setting-help">Captures full webpage at point in time.</p>
+            </div>
+            <div class="setting-control">
+              <div class="setting-control-row">
+                <input type="number" class="input" value="2" min="1">
+                <span class="setting-suffix">credits</span>
+              </div>
+            </div>
           </div>
 
           <div class="setting-row">
-            <div><p class="setting-label">Text stamps per month</p></div>
-            <div class="setting-control"><input type="number" class="input" value="500"></div>
-          </div>
-
-          <div class="setting-row">
-            <div><p class="setting-label">File stamps per month</p></div>
-            <div class="setting-control"><input type="number" class="input" value="50"></div>
-          </div>
-
-          <div class="setting-row">
-            <div><p class="setting-label">Max file size (MB)</p></div>
-            <div class="setting-control"><input type="number" class="input" value="25"></div>
+            <div>
+              <p class="setting-label">File stamp cost</p>
+              <p class="setting-help">PDF, image, audio, video — uses more permanent storage.</p>
+            </div>
+            <div class="setting-control">
+              <div class="setting-control-row">
+                <input type="number" class="input" value="3" min="1">
+                <span class="setting-suffix">credits</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Pro tier -->
+        <!-- Starter Pack -->
         <div class="admin-panel">
           <div class="admin-panel-header">
             <div>
-              <p class="admin-panel-title">Pro plan</p>
-              <p class="admin-panel-desc">High-volume tier with API access</p>
+              <p class="admin-panel-title">Starter Pack</p>
+              <p class="admin-panel-desc">Entry-level pack for new buyers</p>
             </div>
             <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
           </div>
           <div class="setting-row">
-            <div><p class="setting-label">Monthly price (USD)</p></div>
-            <div class="setting-control"><div class="setting-control-row"><span class="setting-suffix">$</span><input type="number" class="input" value="29" step="0.01"></div></div>
+            <div><p class="setting-label">Price (USD)</p></div>
+            <div class="setting-control"><div class="setting-control-row"><span class="setting-suffix">$</span><input type="number" class="input" value="10" step="0.01"></div></div>
           </div>
           <div class="setting-row">
-            <div><p class="setting-label">API calls per day</p></div>
-            <div class="setting-control"><input type="number" class="input" value="1000"></div>
+            <div><p class="setting-label">Base credits</p></div>
+            <div class="setting-control"><input type="number" class="input" value="30"></div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <p class="setting-label">Launch bonus credits</p>
+              <p class="setting-help">Set to 0 to remove the launch promotion. Pack price stays the same.</p>
+            </div>
+            <div class="setting-control"><input type="number" class="input" value="20"></div>
+          </div>
+        </div>
+
+        <!-- Standard Pack -->
+        <div class="admin-panel">
+          <div class="admin-panel-header">
+            <div>
+              <p class="admin-panel-title">Standard Pack</p>
+              <p class="admin-panel-desc">Mid-tier for regular users</p>
+            </div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><p class="setting-label">Price (USD)</p></div>
+            <div class="setting-control"><div class="setting-control-row"><span class="setting-suffix">$</span><input type="number" class="input" value="25" step="0.01"></div></div>
+          </div>
+          <div class="setting-row">
+            <div><p class="setting-label">Base credits</p></div>
+            <div class="setting-control"><input type="number" class="input" value="90"></div>
+          </div>
+          <div class="setting-row">
+            <div><p class="setting-label">Launch bonus credits</p></div>
+            <div class="setting-control"><input type="number" class="input" value="35"></div>
+          </div>
+        </div>
+
+        <!-- Pro Pack (Featured) -->
+        <div class="admin-panel">
+          <div class="admin-panel-header">
+            <div>
+              <p class="admin-panel-title">Pro Pack ⭐ Best Value</p>
+              <p class="admin-panel-desc">Featured tier with most popular pricing</p>
+            </div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><p class="setting-label">Price (USD)</p></div>
+            <div class="setting-control"><div class="setting-control-row"><span class="setting-suffix">$</span><input type="number" class="input" value="50" step="0.01"></div></div>
+          </div>
+          <div class="setting-row">
+            <div><p class="setting-label">Base credits</p></div>
+            <div class="setting-control"><input type="number" class="input" value="200"></div>
+          </div>
+          <div class="setting-row">
+            <div><p class="setting-label">Launch bonus credits</p></div>
+            <div class="setting-control"><input type="number" class="input" value="100"></div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <p class="setting-label">Show "Best Value" badge</p>
+              <p class="setting-help">Highlights this pack on the pricing page.</p>
+            </div>
+            <div class="setting-control" style="text-align: right;">
+              <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Power Pack -->
+        <div class="admin-panel">
+          <div class="admin-panel-header">
+            <div>
+              <p class="admin-panel-title">Power Pack</p>
+              <p class="admin-panel-desc">Bulk pack for power users and agencies</p>
+            </div>
+            <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div><p class="setting-label">Price (USD)</p></div>
+            <div class="setting-control"><div class="setting-control-row"><span class="setting-suffix">$</span><input type="number" class="input" value="100" step="0.01"></div></div>
+          </div>
+          <div class="setting-row">
+            <div><p class="setting-label">Base credits</p></div>
+            <div class="setting-control"><input type="number" class="input" value="450"></div>
+          </div>
+          <div class="setting-row">
+            <div><p class="setting-label">Launch bonus credits</p></div>
+            <div class="setting-control"><input type="number" class="input" value="250"></div>
+          </div>
+        </div>
+
+        <!-- Crypto discount -->
+        <div class="admin-panel">
+          <div class="admin-panel-header">
+            <div>
+              <p class="admin-panel-title">Digital asset payment discount</p>
+              <p class="admin-panel-desc">Discount applied to digital asset payments to offset zero processor fees</p>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <p class="setting-label">Discount percentage</p>
+              <p class="setting-help">Applied to all packs when paid in USDC, ETH, or USDM.</p>
+            </div>
+            <div class="setting-control">
+              <div class="setting-control-row">
+                <input type="number" class="input" value="10" min="0" max="50">
+                <span class="setting-suffix">% off</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -782,7 +874,7 @@
           <div class="admin-panel-header">
             <div><p class="admin-panel-title">Suggested tags</p><p class="admin-panel-desc">Comma-separated. Shown as quick-add pills in the composer.</p></div>
           </div>
-          <textarea class="textarea" rows="3">prediction, crypto, alpha, takes, draft, research, art, journalism</textarea>
+          <textarea class="textarea" rows="3">prediction, alpha, takes, draft, research, content, analysis, idea</textarea>
         </div>
         <div class="admin-panel">
           <div class="admin-panel-header">
@@ -797,44 +889,144 @@
         <div class="admin-header">
           <div>
             <h1 class="admin-page-title">Users</h1>
-            <p class="admin-page-subtitle">3,124 total users · 142 new today</p>
+            <p class="admin-page-subtitle" id="users-subtitle">Loading…</p>
           </div>
-          <button class="btn btn-secondary">Export CSV</button>
+          <button class="btn btn-secondary" onclick="exportUsersCSV()">Export CSV</button>
         </div>
-        <div class="admin-panel" style="padding: 0;">
-          <div style="padding: var(--space-4); border-bottom: 1px solid var(--color-border); display: flex; gap: 8px;">
-            <input type="text" class="input" placeholder="Search by email, ID, or wallet" style="flex: 1;">
-            <select class="input" style="width: 140px;"><option>All plans</option><option>Free</option><option>Creator</option><option>Pro</option></select>
+        <div class="admin-panel" style="padding:0">
+          <div style="padding:var(--space-4);border-bottom:1px solid var(--color-border);display:flex;gap:8px;flex-wrap:wrap">
+            <input type="text" class="input" id="user-search" placeholder="Search by email, wallet, or ID…" style="flex:1;min-width:200px" oninput="filterUsers()">
+            <select class="input" id="user-filter-plan" style="width:140px" onchange="filterUsers()">
+              <option value="">All plans</option>
+              <option value="free">Free</option>
+              <option value="creator">Creator</option>
+              <option value="pro">Pro</option>
+            </select>
+            <select class="input" id="user-filter-auth" style="width:150px" onchange="filterUsers()">
+              <option value="">All auth methods</option>
+              <option value="email">Email</option>
+              <option value="wallet">Wallet</option>
+            </select>
           </div>
-          <table class="admin-table">
-            <thead><tr><th>User</th><th>Plan</th><th>Stamps</th><th>Joined</th><th>Last active</th><th></th></tr></thead>
-            <tbody>
-              <tr><td><div class="user-cell"><div class="user-avatar">PR</div>priya@example.com</div></td><td><span class="badge badge-info">Creator</span></td><td>47</td><td>Mar 12, 2026</td><td>Today</td><td><div class="row-actions"><button class="btn btn-ghost">View</button></div></td></tr>
-              <tr><td><div class="user-cell"><div class="user-avatar">RK</div>rahul.k@gmail.com</div></td><td><span class="badge" style="background:var(--color-surface-alt);color:var(--color-text-secondary);">Free</span></td><td>3</td><td>Today</td><td>12 min ago</td><td><div class="row-actions"><button class="btn btn-ghost">View</button></div></td></tr>
-              <tr><td><div class="user-cell"><div class="user-avatar">VB</div>venu@studio.in</div></td><td><span class="badge badge-accent">Pro</span></td><td>284</td><td>Feb 1, 2026</td><td>2h ago</td><td><div class="row-actions"><button class="btn btn-ghost">View</button></div></td></tr>
-              <tr><td><div class="user-cell"><div class="user-avatar">SM</div>sahil.m@example.com</div></td><td><span class="badge" style="background:var(--color-surface-alt);color:var(--color-text-secondary);">Free</span></td><td>11</td><td>Apr 18, 2026</td><td>18 min ago</td><td><div class="row-actions"><button class="btn btn-ghost">View</button></div></td></tr>
+          <table class="admin-table" id="users-table">
+            <thead><tr><th>User</th><th>Auth</th><th>Plan</th><th>Credits</th><th>Stamps</th><th>Joined</th><th>Actions</th></tr></thead>
+            <tbody id="users-tbody">
+              <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--color-text-muted)">Loading users…</td></tr>
             </tbody>
           </table>
+          <div id="users-load-more" style="display:none;padding:12px;text-align:center">
+            <button class="btn btn-secondary btn-sm" onclick="loadMoreUsers()">Load more</button>
+          </div>
         </div>
       </section>
 
-      <!-- Section: Stamps -->
+      <!-- Section: Stamps (live) -->
       <section class="admin-section" id="section-stamps">
         <div class="admin-header">
           <div>
             <h1 class="admin-page-title">Stamps</h1>
-            <p class="admin-page-subtitle">All stamps created on the platform</p>
+            <p class="admin-page-subtitle" id="stamps-subtitle">Loading…</p>
           </div>
         </div>
-        <div class="admin-panel" style="padding: 0;">
+        <div class="admin-panel" style="padding:0">
+          <div style="padding:var(--space-4);border-bottom:1px solid var(--color-border);display:flex;gap:8px;flex-wrap:wrap">
+            <input type="text" class="input" id="stamp-search" placeholder="Search content, creator, proof ID…" style="flex:1;min-width:200px" oninput="filterStamps()">
+            <select class="input" id="stamp-filter-vis" style="width:140px" onchange="filterStamps()">
+              <option value="">All types</option>
+              <option value="public">Public</option>
+              <option value="sealed">Sealed</option>
+              <option value="hash_only">Hash-only</option>
+            </select>
+            <select class="input" id="stamp-filter-hidden" style="width:150px" onchange="filterStamps()">
+              <option value="">All visibility</option>
+              <option value="visible">Visible only</option>
+              <option value="hidden">Hidden only</option>
+            </select>
+          </div>
           <table class="admin-table">
-            <thead><tr><th>Preview</th><th>User</th><th>Type</th><th>Created</th><th>Verifications</th><th></th></tr></thead>
-            <tbody>
-              <tr><td style="max-width: 280px; overflow:hidden; text-overflow: ellipsis; white-space: nowrap;">MEGA hits $1 before end of June 2026...</td><td>priya@example.com</td><td><span class="badge badge-info">Public</span></td><td>2 min ago</td><td>1,247</td><td><div class="row-actions"><button class="btn btn-ghost">View</button></div></td></tr>
-              <tr><td style="max-width: 280px;"><em class="text-muted">Sealed — reveals June 1</em></td><td>priya@example.com</td><td><span class="badge badge-accent">Sealed</span></td><td>2h ago</td><td>—</td><td><div class="row-actions"><button class="btn btn-ghost">View</button></div></td></tr>
-              <tr><td>my-research-2026.pdf</td><td>venu@studio.in</td><td><span class="badge" style="background:var(--color-warning-bg);color:var(--color-warning);">Hash only</span></td><td>4h ago</td><td>—</td><td><div class="row-actions"><button class="btn btn-ghost">View</button></div></td></tr>
+            <thead><tr><th>Proof #</th><th>Preview</th><th>Creator</th><th>Type</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+            <tbody id="stamps-tbody">
+              <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--color-text-muted)">Loading stamps…</td></tr>
             </tbody>
           </table>
+          <div id="stamps-load-more" style="display:none;padding:12px;text-align:center">
+            <button class="btn btn-secondary btn-sm" onclick="loadMoreStamps()">Load more</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Moderation -->
+      <section class="admin-section" id="section-moderation">
+        <div class="admin-header">
+          <div>
+            <h1 class="admin-page-title">Moderation</h1>
+            <p class="admin-page-subtitle">Review and action stamps flagged for inappropriate content</p>
+          </div>
+          <div style="display:flex;gap:8px">
+            <span id="mod-hidden-count" style="font-size:13px;color:var(--color-text-muted);line-height:36px">Loading…</span>
+          </div>
+        </div>
+
+        <!-- Quick-hide by Proof ID -->
+        <div class="admin-panel" style="margin-bottom:20px">
+          <div class="admin-panel-header">
+            <div>
+              <p class="admin-panel-title">Quick action by Proof ID</p>
+              <p class="admin-panel-desc">Hide or unhide any stamp immediately by entering its proof ID.</p>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+            <div style="flex:1;min-width:180px">
+              <label style="font-size:12px;color:var(--color-text-muted);display:block;margin-bottom:4px">Proof ID</label>
+              <input type="number" class="input" id="mod-proof-id" placeholder="e.g. 53" min="1">
+            </div>
+            <div>
+              <label style="font-size:12px;color:var(--color-text-muted);display:block;margin-bottom:4px">Reason (optional)</label>
+              <input type="text" class="input" id="mod-reason" placeholder="Inappropriate content, spam…" style="width:260px">
+            </div>
+            <button class="btn btn-danger" onclick="quickHideStamp()">Hide from Explorer</button>
+            <button class="btn btn-secondary" onclick="quickUnhideStamp()">Unhide</button>
+          </div>
+          <p id="mod-action-msg" style="font-size:13px;margin-top:10px;display:none"></p>
+        </div>
+
+        <!-- Hidden stamps list -->
+        <div class="admin-panel" style="padding:0">
+          <div class="admin-panel-header" style="padding:var(--space-4) var(--space-5)">
+            <div>
+              <p class="admin-panel-title">Currently hidden stamps</p>
+              <p class="admin-panel-desc">Hidden from public Explorer and homepage. Creator can still see them in their dashboard.</p>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="loadHiddenStamps()">↻ Refresh</button>
+          </div>
+          <table class="admin-table">
+            <thead><tr><th>Proof #</th><th>Preview</th><th>Creator</th><th>Type</th><th>Hidden since</th><th>Actions</th></tr></thead>
+            <tbody id="hidden-stamps-tbody">
+              <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--color-text-muted)">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- User ban section -->
+        <div class="admin-panel" style="margin-top:20px">
+          <div class="admin-panel-header">
+            <div>
+              <p class="admin-panel-title">Suspend a user</p>
+              <p class="admin-panel-desc">Prevents the user from creating new stamps. Their existing stamps remain on-chain but are hidden from public Explorer.</p>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+            <div style="flex:1;min-width:220px">
+              <label style="font-size:12px;color:var(--color-text-muted);display:block;margin-bottom:4px">User email or wallet address</label>
+              <input type="text" class="input" id="ban-user-input" placeholder="user@email.com or 0x…">
+            </div>
+            <div>
+              <label style="font-size:12px;color:var(--color-text-muted);display:block;margin-bottom:4px">Reason</label>
+              <input type="text" class="input" id="ban-reason" placeholder="Spam, abuse, offensive content…" style="width:240px">
+            </div>
+            <button class="btn btn-danger" onclick="suspendUser()">Suspend user</button>
+          </div>
+          <p id="ban-msg" style="font-size:13px;margin-top:10px;display:none"></p>
         </div>
       </section>
 
@@ -913,14 +1105,430 @@
     </main>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase-client.js"></script>
   <script>
+    // ── Section nav ────────────────────────────────────────────────────────
     function showSection(id, btn) {
       document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
       document.getElementById('section-' + id).classList.add('active');
       document.querySelectorAll('.admin-nav-item').forEach(n => n.classList.remove('active'));
       btn.classList.add('active');
       window.scrollTo(0, 0);
+      // Lazy-load section data
+      if (id === 'users' && !window._usersLoaded)     loadUsers();
+      if (id === 'stamps' && !window._stampsLoaded)   loadStamps();
+      if (id === 'moderation')                        loadHiddenStamps();
     }
+
+    const cfg      = window.TRUTHSTAMP_CONFIG ?? {};
+    const CONTRACT = cfg.CONTRACT_ADDRESS ?? '';
+
+    function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function timeAgo(ts) {
+      if (!ts) return '—';
+      const s = Math.floor((Date.now() - new Date(ts)) / 1000);
+      if (s < 60)    return 'just now';
+      if (s < 3600)  return Math.floor(s/60) + 'm ago';
+      if (s < 86400) return Math.floor(s/3600) + 'h ago';
+      return new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    }
+
+    // ── DB ready ───────────────────────────────────────────────────────────
+    function waitForDB(cb, tries=0) {
+      if (window.tsDB) { cb(); return; }
+      if (window.supabase && cfg.SUPABASE_URL) {
+        window.tsDB = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+        cb(); return;
+      }
+      if (tries > 50) return;
+      setTimeout(() => waitForDB(cb, tries+1), 100);
+    }
+
+    // ── OVERVIEW stats ─────────────────────────────────────────────────────
+    async function loadOverviewStats() {
+      try {
+        const [
+          {count: totalUsers},
+          {count: totalStamps},
+          {count: hiddenStamps},
+          {data: creditData}
+        ] = await Promise.all([
+          window.tsDB.from('profiles').select('*',{count:'exact',head:true}),
+          window.tsDB.from('stamps').select('*',{count:'exact',head:true}).eq('contract_address',CONTRACT),
+          window.tsDB.from('stamps').select('*',{count:'exact',head:true}).eq('is_hidden',true),
+          window.tsDB.from('profiles').select('credits_balance'),
+        ]);
+        const setEl = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+        setEl('stat-total-users',  totalUsers  ?? '—');
+        setEl('stat-total-stamps', totalStamps ?? '—');
+        // Update hidden badge in sidebar
+        if (hiddenStamps > 0) {
+          const badge = document.getElementById('mod-badge');
+          if (badge) { badge.textContent = hiddenStamps; badge.style.display = 'inline'; }
+        }
+      } catch(e) { console.warn('[Admin] overview stats:', e.message); }
+    }
+
+    // ── USERS ──────────────────────────────────────────────────────────────
+    let allUsers = [], usersOffset = 0;
+    const USERS_PAGE = 50;
+
+    async function loadUsers() {
+      window._usersLoaded = true;
+      try {
+        const { data, count, error } = await window.tsDB
+          .from('profiles')
+          .select('id, display_name, public_handle, wallet_address, auth_method, plan, credits_balance, created_at, is_suspended', { count: 'exact' })
+          .order('created_at', { ascending: false })
+          .range(0, USERS_PAGE - 1);
+        if (error) throw error;
+        allUsers = data || [];
+        usersOffset = USERS_PAGE;
+        document.getElementById('users-subtitle').textContent =
+          `${count ?? allUsers.length} total users`;
+        document.getElementById('users-load-more').style.display =
+          (count > USERS_PAGE) ? 'block' : 'none';
+        renderUsers(allUsers);
+      } catch(e) {
+        document.getElementById('users-tbody').innerHTML =
+          `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--color-error)">Error: ${esc(e.message)}</td></tr>`;
+      }
+    }
+
+    async function loadMoreUsers() {
+      const { data } = await window.tsDB.from('profiles')
+        .select('id, display_name, public_handle, wallet_address, auth_method, plan, credits_balance, created_at, is_suspended')
+        .order('created_at', { ascending: false })
+        .range(usersOffset, usersOffset + USERS_PAGE - 1);
+      allUsers = allUsers.concat(data || []);
+      usersOffset += USERS_PAGE;
+      renderUsers(allUsers);
+      if ((data||[]).length < USERS_PAGE)
+        document.getElementById('users-load-more').style.display = 'none';
+    }
+
+    function filterUsers() {
+      const q    = document.getElementById('user-search').value.toLowerCase();
+      const plan = document.getElementById('user-filter-plan').value;
+      const auth = document.getElementById('user-filter-auth').value;
+      const filtered = allUsers.filter(u => {
+        const matchQ    = !q || (u.display_name||'').toLowerCase().includes(q)
+                          || (u.wallet_address||'').toLowerCase().includes(q)
+                          || (u.id||'').toLowerCase().includes(q)
+                          || (u.public_handle||'').toLowerCase().includes(q);
+        const matchPlan = !plan || (u.plan||'free') === plan;
+        const matchAuth = !auth || (u.auth_method||'email') === auth;
+        return matchQ && matchPlan && matchAuth;
+      });
+      renderUsers(filtered);
+    }
+
+    function renderUsers(users) {
+      if (!users.length) {
+        document.getElementById('users-tbody').innerHTML =
+          '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--color-text-muted)">No users found.</td></tr>';
+        return;
+      }
+      document.getElementById('users-tbody').innerHTML = users.map(u => {
+        const identity = u.wallet_address
+          ? u.wallet_address.slice(0,6)+'…'+u.wallet_address.slice(-4)
+          : (u.display_name || u.public_handle || u.id.slice(0,8)+'…');
+        const initials = identity.replace(/[^A-Za-z0-9]/g,'').slice(0,2).toUpperCase() || '??';
+        const planBadge = {
+          pro:     `<span class="badge badge-accent">Pro</span>`,
+          creator: `<span class="badge badge-info">Creator</span>`,
+          free:    `<span class="badge" style="background:var(--color-surface-alt);color:var(--color-text-secondary)">Free</span>`,
+        }[u.plan||'free'] || '';
+        const authIcon = u.auth_method === 'wallet' ? '🔑' : '📧';
+        const suspended = u.is_suspended
+          ? `<span class="badge" style="background:#fee2e2;color:#991b1b">Suspended</span>` : '';
+        return `<tr>
+          <td><div class="user-cell"><div class="user-avatar">${initials}</div>${esc(identity)}</div></td>
+          <td>${authIcon} ${esc(u.auth_method||'email')}</td>
+          <td>${planBadge} ${suspended}</td>
+          <td>${u.credits_balance ?? '—'}</td>
+          <td>—</td>
+          <td>${timeAgo(u.created_at)}</td>
+          <td><div class="row-actions">
+            <button class="btn btn-ghost btn-sm" onclick="viewUserStamps('${esc(u.id)}')">Stamps</button>
+            ${!u.is_suspended
+              ? `<button class="btn btn-ghost btn-sm" style="color:var(--color-error)" onclick="toggleSuspend('${esc(u.id)}',true)">Suspend</button>`
+              : `<button class="btn btn-ghost btn-sm" style="color:var(--brand-primary)" onclick="toggleSuspend('${esc(u.id)}',false)">Reinstate</button>`
+            }
+          </div></td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function toggleSuspend(userId, suspend) {
+      if (!confirm(suspend ? 'Suspend this user? They cannot create new stamps.' : 'Reinstate this user?')) return;
+      const { error } = await window.tsDB.from('profiles')
+        .update({ is_suspended: suspend }).eq('id', userId);
+      if (error) { alert('Error: ' + error.message); return; }
+      // Refresh
+      allUsers = allUsers.map(u => u.id === userId ? {...u, is_suspended: suspend} : u);
+      renderUsers(allUsers);
+    }
+
+    function viewUserStamps(userId) {
+      // Switch to stamps section pre-filtered by this user
+      document.getElementById('stamp-search').value = userId;
+      showSection('stamps', document.querySelector('[onclick*="stamps"]'));
+      if (!window._stampsLoaded) loadStamps(); else filterStamps();
+    }
+
+    function exportUsersCSV() {
+      const rows = [['ID','Display name','Auth','Plan','Credits','Joined','Suspended']];
+      allUsers.forEach(u => rows.push([u.id, u.display_name||'', u.auth_method||'', u.plan||'free', u.credits_balance||0, u.created_at||'', u.is_suspended||false]));
+      const csv  = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const link = document.createElement('a');
+      link.href  = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+      link.download = `truthstamp-users-${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+    }
+
+    // ── STAMPS ─────────────────────────────────────────────────────────────
+    let allStampsData = [], stampsOffset = 0;
+    const STAMPS_PAGE = 50;
+
+    async function loadStamps() {
+      window._stampsLoaded = true;
+      try {
+        const { data, count, error } = await window.tsDB
+          .from('stamps')
+          .select('proof_id, content_type, visibility, display_title, text_content, file_name, creator_identity, creator_address, block_timestamp, is_hidden, status', { count: 'exact' })
+          .eq('contract_address', CONTRACT)
+          .order('block_timestamp', { ascending: false })
+          .range(0, STAMPS_PAGE - 1);
+        if (error) throw error;
+        allStampsData = data || [];
+        stampsOffset  = STAMPS_PAGE;
+        document.getElementById('stamps-subtitle').textContent =
+          `${count ?? allStampsData.length} total stamps`;
+        document.getElementById('stamps-load-more').style.display =
+          (count > STAMPS_PAGE) ? 'block' : 'none';
+        renderStamps(allStampsData);
+      } catch(e) {
+        document.getElementById('stamps-tbody').innerHTML =
+          `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--color-error)">Error: ${esc(e.message)}</td></tr>`;
+      }
+    }
+
+    async function loadMoreStamps() {
+      const { data } = await window.tsDB.from('stamps')
+        .select('proof_id, content_type, visibility, display_title, text_content, file_name, creator_identity, creator_address, block_timestamp, is_hidden, status')
+        .eq('contract_address', CONTRACT)
+        .order('block_timestamp', { ascending: false })
+        .range(stampsOffset, stampsOffset + STAMPS_PAGE - 1);
+      allStampsData = allStampsData.concat(data || []);
+      stampsOffset += STAMPS_PAGE;
+      renderStamps(allStampsData);
+      if ((data||[]).length < STAMPS_PAGE)
+        document.getElementById('stamps-load-more').style.display = 'none';
+    }
+
+    function filterStamps() {
+      const q       = document.getElementById('stamp-search').value.toLowerCase();
+      const vis     = document.getElementById('stamp-filter-vis').value;
+      const hidden  = document.getElementById('stamp-filter-hidden').value;
+      const filtered = allStampsData.filter(s => {
+        const matchQ = !q || String(s.proof_id).includes(q)
+                       || (s.text_content||'').toLowerCase().includes(q)
+                       || (s.display_title||'').toLowerCase().includes(q)
+                       || (s.creator_identity||'').toLowerCase().includes(q)
+                       || (s.file_name||'').toLowerCase().includes(q);
+        const matchV = !vis    || s.visibility === vis;
+        const matchH = !hidden || (hidden === 'hidden' ? s.is_hidden : !s.is_hidden);
+        return matchQ && matchV && matchH;
+      });
+      renderStamps(filtered);
+    }
+
+    function renderStamps(stamps) {
+      if (!stamps.length) {
+        document.getElementById('stamps-tbody').innerHTML =
+          '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--color-text-muted)">No stamps found.</td></tr>';
+        return;
+      }
+      const visBadge = { public:'<span class="badge badge-success">Public</span>', sealed:'<span class="badge badge-warning">Sealed</span>', hash_only:'<span class="badge badge-info">Hash-only</span>' };
+      document.getElementById('stamps-tbody').innerHTML = stamps.map(s => {
+        const preview = s.visibility === 'sealed' ? '<em style="color:var(--color-text-muted)">Sealed</em>'
+                      : s.visibility === 'hash_only' ? '<em style="color:var(--color-text-muted)">Hash-only</em>'
+                      : esc((s.text_content || s.display_title || s.file_name || '—').slice(0,80));
+        const creator = s.creator_identity
+          ? (s.creator_identity.startsWith('0x') ? s.creator_identity.slice(0,6)+'…'+s.creator_identity.slice(-4) : s.creator_identity.slice(0,8)+'…')
+          : '—';
+        const hiddenTag = s.is_hidden ? '<span class="badge" style="background:#fee2e2;color:#991b1b;margin-left:4px">Hidden</span>' : '';
+        return `<tr style="${s.is_hidden?'opacity:.6':''}">
+          <td><a href="proof.html?id=${s.proof_id}" target="_blank" style="color:var(--brand-primary);font-weight:600">#${s.proof_id}</a></td>
+          <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${preview}</td>
+          <td style="font-family:var(--font-mono);font-size:12px">${esc(creator)}</td>
+          <td>${visBadge[s.visibility]||s.visibility}${hiddenTag}</td>
+          <td>${s.is_hidden ? '🚫 Hidden' : '✅ Visible'}</td>
+          <td>${timeAgo(s.block_timestamp)}</td>
+          <td><div class="row-actions">
+            <a class="btn btn-ghost btn-sm" href="proof.html?id=${s.proof_id}" target="_blank">View</a>
+            ${s.is_hidden
+              ? `<button class="btn btn-ghost btn-sm" style="color:var(--brand-primary)" onclick="setHidden(${s.proof_id},false,this)">Unhide</button>`
+              : `<button class="btn btn-ghost btn-sm" style="color:var(--color-error)" onclick="setHidden(${s.proof_id},true,this)">Hide</button>`
+            }
+          </div></td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ── MODERATION core ────────────────────────────────────────────────────
+    async function setHidden(proofId, hide, btn) {
+      const action = hide ? 'Hide' : 'Unhide';
+      if (!confirm(`${action} Proof #${proofId} from the public Explorer?`)) return;
+      if (btn) { btn.disabled = true; btn.textContent = '…'; }
+      const { error } = await window.tsDB.from('stamps')
+        .update({ is_hidden: hide })
+        .eq('proof_id', proofId)
+        .eq('contract_address', CONTRACT);
+      if (error) { alert('Error: ' + error.message); if (btn) { btn.disabled=false; btn.textContent=action; } return; }
+      // Update local state
+      allStampsData = allStampsData.map(s =>
+        s.proof_id === proofId ? {...s, is_hidden: hide} : s
+      );
+      filterStamps();
+      updateHiddenBadge();
+      showModMsg(`✓ Proof #${proofId} ${hide ? 'hidden from' : 'restored to'} Explorer.`, hide ? '#991b1b' : '#1D9E75');
+    }
+
+    async function quickHideStamp() {
+      const id     = parseInt(document.getElementById('mod-proof-id').value);
+      const reason = document.getElementById('mod-reason').value.trim();
+      if (!id) { showModMsg('Enter a valid proof ID.', '#991b1b'); return; }
+      await setHiddenById(id, true, reason);
+    }
+    async function quickUnhideStamp() {
+      const id = parseInt(document.getElementById('mod-proof-id').value);
+      if (!id) { showModMsg('Enter a valid proof ID.', '#991b1b'); return; }
+      await setHiddenById(id, false, '');
+    }
+    async function setHiddenById(proofId, hide, reason) {
+      const { error } = await window.tsDB.from('stamps')
+        .update({ is_hidden: hide })
+        .eq('proof_id', proofId)
+        .eq('contract_address', CONTRACT);
+      if (error) { showModMsg('Error: ' + error.message, '#991b1b'); return; }
+      showModMsg(`✓ Proof #${proofId} ${hide ? 'hidden' : 'unhidden'} successfully.${reason?' Reason: '+reason:''}`, '#1D9E75');
+      loadHiddenStamps();
+      updateHiddenBadge();
+      // Refresh stamps list if loaded
+      if (window._stampsLoaded) {
+        allStampsData = allStampsData.map(s => s.proof_id===proofId ? {...s,is_hidden:hide} : s);
+        filterStamps();
+      }
+    }
+
+    function showModMsg(text, color) {
+      const el = document.getElementById('mod-action-msg');
+      if (!el) return;
+      el.textContent = text; el.style.color = color; el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 5000);
+    }
+
+    async function loadHiddenStamps() {
+      const tbody = document.getElementById('hidden-stamps-tbody');
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--color-text-muted)">Loading…</td></tr>';
+      try {
+        const { data, count } = await window.tsDB
+          .from('stamps')
+          .select('proof_id, content_type, visibility, text_content, display_title, file_name, creator_identity, updated_at', { count: 'exact' })
+          .eq('is_hidden', true)
+          .order('updated_at', { ascending: false })
+          .limit(50);
+
+        const el = document.getElementById('mod-hidden-count');
+        if (el) el.textContent = `${count ?? 0} stamp${count!==1?'s':''} hidden`;
+        updateHiddenBadge(count);
+
+        if (!data?.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--color-text-muted)">✅ No hidden stamps. Explorer is clean.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.map(s => {
+          const preview = s.visibility === 'sealed' ? '<em>Sealed</em>'
+                        : s.visibility === 'hash_only' ? '<em>Hash-only</em>'
+                        : esc((s.text_content || s.display_title || s.file_name || '—').slice(0,80));
+          const creator = s.creator_identity
+            ? (s.creator_identity.startsWith('0x') ? s.creator_identity.slice(0,6)+'…'+s.creator_identity.slice(-4) : s.creator_identity.slice(0,8)+'…')
+            : '—';
+          return `<tr>
+            <td><a href="proof.html?id=${s.proof_id}" target="_blank" style="color:var(--brand-primary);font-weight:600">#${s.proof_id}</a></td>
+            <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${preview}</td>
+            <td style="font-family:var(--font-mono);font-size:12px">${esc(creator)}</td>
+            <td>${s.visibility||'—'}</td>
+            <td>${timeAgo(s.updated_at)}</td>
+            <td><div class="row-actions">
+              <a class="btn btn-ghost btn-sm" href="proof.html?id=${s.proof_id}" target="_blank">View</a>
+              <button class="btn btn-ghost btn-sm" style="color:var(--brand-primary)" onclick="setHiddenById(${s.proof_id},false,'')">Unhide</button>
+            </div></td>
+          </tr>`;
+        }).join('');
+      } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--color-error);padding:24px">Error: ${esc(e.message)}</td></tr>`;
+      }
+    }
+
+    function updateHiddenBadge(count) {
+      const badge = document.getElementById('mod-badge');
+      if (!badge) return;
+      if (count === undefined) {
+        window.tsDB.from('stamps').select('*',{count:'exact',head:true}).eq('is_hidden',true)
+          .then(({count:c}) => { if(c>0){badge.textContent=c;badge.style.display='inline';}else{badge.style.display='none';} });
+      } else {
+        if (count > 0) { badge.textContent = count; badge.style.display = 'inline'; }
+        else badge.style.display = 'none';
+      }
+    }
+
+    async function suspendUser() {
+      const input  = document.getElementById('ban-user-input').value.trim();
+      const reason = document.getElementById('ban-reason').value.trim();
+      const banMsg = document.getElementById('ban-msg');
+      if (!input) { banMsg.textContent='Enter a user email or wallet address.'; banMsg.style.color='#991b1b'; banMsg.style.display='block'; return; }
+      if (!confirm(`Suspend user "${input}"? They will not be able to create new stamps.`)) return;
+
+      // Find profile by email or wallet
+      const isWallet = input.startsWith('0x');
+      const query    = isWallet
+        ? window.tsDB.from('profiles').select('id').eq('wallet_address', input).single()
+        : window.tsDB.from('profiles').select('id').ilike('display_name', input).limit(1);
+
+      // Try auth users for email
+      let profileId = null;
+      if (!isWallet) {
+        const { data: authUsers } = await window.tsDB.from('profiles').select('id, display_name').ilike('display_name', `%${input}%`).limit(5);
+        if (authUsers?.length === 1) profileId = authUsers[0].id;
+        else if (authUsers?.length > 1) {
+          banMsg.textContent = `${authUsers.length} users match "${input}" — please be more specific.`;
+          banMsg.style.color='#991b1b'; banMsg.style.display='block'; return;
+        }
+      } else {
+        const { data: wData } = await window.tsDB.from('profiles').select('id').eq('wallet_address', input).limit(1);
+        if (wData?.[0]) profileId = wData[0].id;
+      }
+
+      if (!profileId) { banMsg.textContent='User not found.'; banMsg.style.color='#991b1b'; banMsg.style.display='block'; return; }
+
+      const { error } = await window.tsDB.from('profiles').update({ is_suspended: true }).eq('id', profileId);
+      if (error) { banMsg.textContent='Error: '+error.message; banMsg.style.color='#991b1b'; banMsg.style.display='block'; return; }
+
+      banMsg.textContent = `✓ User suspended.${reason?' Reason: '+reason:''}`;
+      banMsg.style.color='#1D9E75'; banMsg.style.display='block';
+      document.getElementById('ban-user-input').value = '';
+      document.getElementById('ban-reason').value = '';
+    }
+
+    // ── Boot ───────────────────────────────────────────────────────────────
+    waitForDB(() => {
+      loadOverviewStats();
+    });
   </script>
 </body>
 </html>
