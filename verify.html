@@ -122,6 +122,8 @@
         <button class="tab" data-mode="file" onclick="switchMode('file')">Verify file</button>
         <button class="tab" data-mode="proof" onclick="switchMode('proof')">By proof ID</button>
         <button class="tab" data-mode="hash" onclick="switchMode('hash')">By hash</button>
+        <button class="tab" data-mode="bitcoin" onclick="switchMode('bitcoin')" style="display:flex;align-items:center;gap:5px;">₿ Bitcoin</button>
+        <button class="tab" data-mode="bitcoin" onclick="switchMode('bitcoin')" style="display:flex;align-items:center;gap:5px;">₿ Bitcoin archive</button>
       </div>
     </div>
 
@@ -195,6 +197,53 @@
       <div class="result-box" id="result-hash"></div>
     </div>
 
+    <!-- Bitcoin Archive mode -->
+    <div class="verify-card" id="mode-bitcoin" style="display:none;">
+      <div style="margin-bottom:var(--space-5)">
+        <p style="font-size:var(--text-base);font-weight:600;margin:0 0 6px;color:var(--color-text)">
+          Verify Bitcoin Archive (TSA-1)
+        </p>
+        <p style="font-size:var(--text-sm);color:var(--color-text-secondary);margin:0;line-height:1.6">
+          Paste a Bitcoin txid or a TruthStamp Proof ID to decode and verify the on-chain TSA-1 archive record.
+          Works independently — no TruthStamp servers required.
+        </p>
+      </div>
+
+      <!-- Input: txid or proof ID -->
+      <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-4)">
+        <div style="flex:1;min-width:200px">
+          <label class="label" for="btc-verify-input">Bitcoin txid or Proof ID</label>
+          <input type="text" class="input" id="btc-verify-input"
+            placeholder="e.g. a1b2c3...64chars  or  65"
+            style="font-family:var(--font-mono);font-size:var(--text-sm)"
+            oninput="detectBtcInput(this.value)">
+          <p id="btc-input-hint" style="font-size:var(--text-xs);color:var(--color-text-muted);margin:4px 0 0"></p>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" onclick="verifyBitcoinArchive()">
+        Verify Bitcoin archive
+      </button>
+
+      <div class="spinner" id="spinner-bitcoin"></div>
+      <div class="result-box" id="result-bitcoin"></div>
+
+      <!-- How it works -->
+      <div style="margin-top:var(--space-5);padding:var(--space-4);background:var(--color-surface-alt);border-radius:var(--radius-md);border:1px solid var(--color-border)">
+        <p style="font-size:var(--text-sm);font-weight:600;margin:0 0 var(--space-2);color:var(--color-text)">
+          ₿ How Bitcoin archive verification works
+        </p>
+        <p style="font-size:var(--text-xs);color:var(--color-text-secondary);margin:0;line-height:1.7">
+          TruthStamp embeds a <strong>TSA-1 canonical manifest</strong> into Bitcoin transactions via OP_RETURN.
+          This page fetches the transaction from <a href="https://mempool.space" target="_blank" rel="noopener" style="color:var(--brand-primary)">mempool.space</a>,
+          decodes the OP_RETURN data, and reconstructs the proof record — entirely in your browser.
+          No TruthStamp servers involved. Works forever.
+        </p>
+        <div style="margin-top:var(--space-3);font-family:var(--font-mono);font-size:11px;color:var(--color-text-secondary);background:var(--color-surface);padding:10px 12px;border-radius:var(--radius-md);border:1px solid var(--color-border)">
+          TSA1|proofId|hash|timestamp|arweaveRef|flag
+        </div>
+      </div>
+    </div>
+
     <!-- Independent verification section -->
     <div class="independent-section">
       <h2 class="independent-title">
@@ -226,15 +275,47 @@
 
   </main>
 
-  <footer class="footer">
-    <div class="footer-inner">
-      <div class="flex gap-2" style="align-items: center;">
-        <span class="nav-logo">T</span>
-        <span style="font-weight: 500; color: var(--color-text);">TruthStamp</span>
+  <footer style="background:var(--color-surface);border-top:1px solid var(--color-border);padding:48px 28px 28px;">
+    <div style="max-width:1280px;margin:0 auto;">
+      <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px;margin-bottom:12px;">
+            <span class="nav-logo">T</span>TruthStamp
+          </div>
+          <p style="font-size:13px;color:var(--color-text-muted);line-height:1.55;max-width:240px;">Receipts for your ideas. Verifiable, tamper-proof timestamps for the AI era.</p>
+        </div>
+        <div>
+          <h4 style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--color-text-muted);margin-bottom:14px;">Product</h4>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+            <li><a href="how-it-works.html" style="font-size:13.5px;color:var(--color-text-secondary);">How it works</a></li>
+            <li><a href="pricing.html"       style="font-size:13.5px;color:var(--color-text-secondary);">Pricing</a></li>
+            <li><a href="verify.html"        style="font-size:13.5px;color:var(--color-text-secondary);">Verify a proof</a></li>
+            <li><a href="explorer.html"      style="font-size:13.5px;color:var(--color-text-secondary);">Explorer</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--color-text-muted);margin-bottom:14px;">Company</h4>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+            <li><a href="trust.html"    style="font-size:13.5px;color:var(--color-text-secondary);">Trust &amp; permanence</a></li>
+            <li><a href="usecases.html" style="font-size:13.5px;color:var(--color-text-secondary);">Use cases</a></li>
+            <li><a href="faq.html"      style="font-size:13.5px;color:var(--color-text-secondary);">FAQ</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--color-text-muted);margin-bottom:14px;">Legal</h4>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;">
+            <li><a href="terms.html"   style="font-size:13.5px;color:var(--color-text-secondary);">Terms of Service</a></li>
+            <li><a href="privacy.html" style="font-size:13.5px;color:var(--color-text-secondary);">Privacy Policy</a></li>
+            <li><a href="refunds.html" style="font-size:13.5px;color:var(--color-text-secondary);">Refund Policy</a></li>
+          </ul>
+        </div>
       </div>
-      <div class="footer-links">
-        <a href="trust.html">Trust</a>
-        <a href="pricing.html">Pricing</a>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:24px;border-top:1px solid var(--color-border);">
+        <span style="font-size:12.5px;color:var(--color-text-muted);">© 2026 TruthStamp · Built on MegaETH &amp; Arweave</span>
+        <div style="display:flex;gap:16px;">
+          <a href="https://x.com/truthstamp" target="_blank" rel="noopener" style="font-size:14px;color:var(--color-text-muted);">𝕏</a>
+          <a href="#" title="Discord" style="font-size:14px;color:var(--color-text-muted);">💬</a>
+        </div>
       </div>
     </div>
   </footer>
@@ -256,7 +337,7 @@
     function switchMode(mode) {
       document.querySelectorAll('[data-mode]').forEach(t => t.classList.remove('active'));
       document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
-      ['text','file','proof','hash'].forEach(m => {
+      ['text','file','proof','hash','bitcoin'].forEach(m => {
         const el = document.getElementById('mode-' + m);
         if (el) el.style.display = (m === mode) ? 'block' : 'none';
       });
@@ -653,6 +734,203 @@
             ? '<p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:var(--space-1) 0;">Event log not available from RPC (hash-only or sealed stamp, or RPC limit).</p>'
             : '<p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:var(--space-1) 0;">No Arweave URI in event (hash-only stamp stores no content).</p>';
       }
+    }
+
+    // ── Bitcoin Archive Verification ─────────────────────────────────────────
+    const MEMPOOL_API = 'https://mempool.space/api';
+
+    // Auto-detect if input is txid (64 hex chars) or proof ID (number)
+    function detectBtcInput(val) {
+      const hint = document.getElementById('btc-input-hint');
+      if (!hint) return;
+      const v = val.trim();
+      if (!v) { hint.textContent = ''; return; }
+      if (/^[0-9]+$/.test(v)) {
+        hint.textContent = '🔢 Detected: Proof ID — will look up Bitcoin txid from TruthStamp';
+      } else if (/^[0-9a-f]{64}$/i.test(v)) {
+        hint.textContent = '₿ Detected: Bitcoin txid — will fetch directly from mempool.space';
+      } else {
+        hint.textContent = '⚠️ Enter a 64-character Bitcoin txid or a numeric Proof ID';
+      }
+    }
+
+    async function verifyBitcoinArchive() {
+      const raw = document.getElementById('btc-verify-input').value.trim();
+      if (!raw) { alert('Please enter a Bitcoin txid or Proof ID.'); return; }
+
+      clearResult('bitcoin');
+      spin('bitcoin', true);
+
+      try {
+        let txid = '';
+
+        if (/^[0-9a-f]{64}$/i.test(raw)) {
+          // Direct txid
+          txid = raw.toLowerCase();
+        } else if (/^[0-9]+$/.test(raw)) {
+          // Proof ID — look up txid from Supabase
+          const res = await fetch(
+            SUPABASE + '/rest/v1/stamps?proof_id=eq.' + raw +
+            '&select=bitcoin_txid,bitcoin_archive_status&limit=1',
+            { headers: { 'apikey': ANON_KEY, 'Accept': 'application/json' } }
+          );
+          const rows = await res.json();
+          if (!rows?.[0]?.bitcoin_txid) {
+            showBtcResult(false, null, `Proof #${raw} has not been archived to Bitcoin yet.`);
+            return;
+          }
+          txid = rows[0].bitcoin_txid;
+        } else {
+          showBtcResult(false, null, 'Invalid input — enter a 64-character Bitcoin txid or a numeric Proof ID.');
+          return;
+        }
+
+        // Fetch TX from mempool.space
+        const txRes = await fetch(`${MEMPOOL_API}/tx/${txid}`);
+        if (!txRes.ok) {
+          if (txRes.status === 404)
+            showBtcResult(false, null, 'Transaction not found on Bitcoin network. Check the txid and try again.');
+          else
+            showBtcResult(false, null, `mempool.space returned ${txRes.status}`);
+          return;
+        }
+        const tx = await txRes.json();
+
+        // Find OP_RETURN output
+        const opOut = tx.vout?.find(o =>
+          o.scriptpubkey_type === 'op_return' || o.scriptpubkey?.startsWith('6a')
+        );
+        if (!opOut) {
+          showBtcResult(false, null, 'No OP_RETURN output found in this transaction — not a TSA-1 archive.');
+          return;
+        }
+
+        // Decode — handle all encoding variants
+        const scriptHex = opOut.scriptpubkey;
+        let dataHex = '';
+        if (scriptHex.startsWith('6a4c'))      dataHex = scriptHex.slice(6);
+        else if (scriptHex.startsWith('6a4d')) dataHex = scriptHex.slice(8);
+        else                                    dataHex = scriptHex.slice(4);
+
+        const bytes   = new Uint8Array(dataHex.match(/.{2}/g).map(h => parseInt(h, 16)));
+        const decoded = new TextDecoder().decode(bytes).trim();
+
+        if (!decoded.startsWith('TSA1|')) {
+          showBtcResult(false, null,
+            `OP_RETURN data found but not a TSA-1 payload: "${decoded.slice(0, 40)}…"`);
+          return;
+        }
+
+        // Parse TSA-1 fields
+        const parts    = decoded.split('|');
+        // TSA1 | proofId | hash | timestamp | arweaveRef | flags
+        const protocol  = parts[0] ?? 'TSA1';
+        const proofId   = parts[1] ?? '—';
+        const hashShort = parts[2] ?? '—';
+        const tsUnix    = parseInt(parts[3] ?? '0');
+        const arwRef    = parts[4] ?? '—';
+        const flags     = parts[5] ?? '—';
+
+        const flagLabels = { P:'Public', S:'Sealed', R:'Revealed', H:'Hash-only' };
+        const flagLabel  = flagLabels[flags] ?? flags;
+        const stampedAt  = tsUnix ? new Date(tsUnix * 1000).toUTCString() : '—';
+        const blockHeight= tx.status?.block_height;
+        const confirmed  = tx.status?.confirmed ?? false;
+
+        // Try to look up full proof from Supabase for enrichment
+        let fullProof = null;
+        if (/^[0-9]+$/.test(proofId)) {
+          try {
+            const r = await fetch(
+              SUPABASE + '/rest/v1/stamps?proof_id=eq.' + proofId +
+              '&select=proof_id,display_title,content_hash,storage_uri,visibility,bitcoin_txid&limit=1',
+              { headers: { 'apikey': ANON_KEY } }
+            );
+            const rows = await r.json();
+            fullProof = rows?.[0] ?? null;
+          } catch { /* optional enrichment */ }
+        }
+
+        showBtcResult(true, {
+          txid, decoded, protocol, proofId, hashShort, tsUnix, stampedAt,
+          arwRef, flags, flagLabel, blockHeight, confirmed, fullProof,
+        }, null);
+
+      } catch(e) {
+        showBtcResult(false, null, 'Verification error: ' + e.message);
+      }
+    }
+
+    function showBtcResult(valid, data, errorMsg) {
+      spin('bitcoin', false);
+      const el = document.getElementById('result-bitcoin');
+      el.className = 'result-box show ' + (valid ? 'result-valid' : 'result-invalid');
+
+      if (!valid) {
+        el.innerHTML =
+          '<p class="result-title" style="color:#991B1B">❌ Not a valid TSA-1 archive</p>' +
+          '<p style="font-size:var(--text-sm);color:#7f1d1d;margin:0">' + escHtml(errorMsg) + '</p>';
+        return;
+      }
+
+      const d = data;
+      const proofUrl   = d.proofId !== '—' ? `proof.html?id=${d.proofId}` : null;
+      const mempoolUrl = `https://mempool.space/tx/${d.txid}`;
+      const vbUrl      = `https://viewblock.io/arweave/tx/${d.txid}`;
+      const fullHash   = d.fullProof?.content_hash
+        ? '0x' + d.fullProof.content_hash.replace(/^\x/,'').replace(/^0x/,'')
+        : null;
+      const arweaveUri = d.fullProof?.storage_uri
+        ? d.fullProof.storage_uri.replace('ar://','')
+        : null;
+
+      el.innerHTML = `
+        <p class="result-title" style="color:var(--color-success)">
+          ✅ Valid TSA-1 Bitcoin Archive
+        </p>
+        ${d.fullProof?.display_title
+          ? `<p style="font-size:var(--text-sm);font-weight:600;color:var(--color-text);margin:0 0 var(--space-3)">${escHtml(d.fullProof.display_title)}</p>`
+          : ''}
+
+        <div class="result-row"><span class="result-key">Protocol</span>
+          <span class="result-val">${escHtml(d.protocol)} · TruthStamp Bitcoin Archive v1</span></div>
+
+        <div class="result-row"><span class="result-key">Proof ID</span>
+          <span class="result-val">${proofUrl
+            ? `<a href="${proofUrl}" target="_blank" style="color:var(--brand-primary)">#${d.proofId} →</a>`
+            : escHtml(d.proofId)}</span></div>
+
+        <div class="result-row"><span class="result-key">Stamped at</span>
+          <span class="result-val">${escHtml(d.stampedAt)}</span></div>
+
+        <div class="result-row"><span class="result-key">Content hash (partial)</span>
+          <span class="result-val" style="font-family:var(--font-mono)">${escHtml(d.hashShort)}…
+            ${fullHash ? `<br><span style="font-size:10px;color:var(--color-text-muted)">Full: ${escHtml(fullHash.slice(0,20))}…</span>` : ''}
+          </span></div>
+
+        <div class="result-row"><span class="result-key">Arweave reference</span>
+          <span class="result-val" style="font-family:var(--font-mono)">
+            ${arweaveUri
+              ? `<a href="https://arweave.net/${arweaveUri}" target="_blank" rel="noopener" style="color:var(--brand-primary)">${escHtml(d.arwRef)}… ↗</a>`
+              : escHtml(d.arwRef) + '…'}
+          </span></div>
+
+        <div class="result-row"><span class="result-key">Proof type</span>
+          <span class="result-val">${escHtml(d.flagLabel)}</span></div>
+
+        <div class="result-row"><span class="result-key">Bitcoin block</span>
+          <span class="result-val">${d.confirmed && d.blockHeight
+            ? `#${d.blockHeight.toLocaleString()} · Confirmed`
+            : '⏳ In mempool (unconfirmed)'}</span></div>
+
+        <div class="result-row"><span class="result-key">Raw TSA-1 payload</span>
+          <span class="result-val" style="font-family:var(--font-mono);font-size:10px;word-break:break-all">${escHtml(d.decoded)}</span></div>
+
+        <div class="result-row" style="border-top:none;margin-top:var(--space-2);flex-wrap:wrap;gap:8px">
+          ${proofUrl ? `<a href="${proofUrl}" target="_blank" class="btn btn-secondary" style="font-size:var(--text-sm)">View full proof →</a>` : ''}
+          <a href="${mempoolUrl}" target="_blank" rel="noopener" class="btn btn-ghost" style="font-size:var(--text-sm)">mempool.space ↗</a>
+          <a href="${vbUrl}" target="_blank" rel="noopener" class="btn btn-ghost" style="font-size:var(--text-sm)">Arweave TX ↗</a>
+        </div>`;
     }
 
     function escHtml(s) {
