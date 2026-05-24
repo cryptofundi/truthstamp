@@ -399,7 +399,7 @@
       const note = document.getElementById('currency-note');
       if (note) {
         if (USER_CURRENCY === 'USD') {
-          note.textContent = '💱 Prices in USD. Razorpay handles international payments securely.';
+          note.textContent = '💳 International cards accepted. Charged in USD via Razorpay — Visa, Mastercard, Amex supported.';
           note.style.display = 'block';
         } else {
           note.style.display = 'none';
@@ -505,7 +505,7 @@
               'Authorization': `Bearer ${session.access_token}`,
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ pack_id: selectedPack }),
+            body: JSON.stringify({ pack_id: selectedPack, currency: USER_CURRENCY }),
           }
         );
 
