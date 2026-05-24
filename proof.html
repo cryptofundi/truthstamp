@@ -532,6 +532,24 @@
                   font-size:var(--text-xs);cursor:pointer;font-family:var(--font-sans);
                 ">Disconnect</button>
               </div>
+
+              <!-- Manual txid entry — for already-broadcast TXs waiting confirmation -->
+              <div style="margin-top:var(--space-4);padding-top:var(--space-4);border-top:1px solid var(--color-border)">
+                <p style="font-size:var(--text-xs);color:var(--color-text-muted);margin:0 0 8px">
+                  Already sent the transaction? Enter your Bitcoin txid to confirm:
+                </p>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <input id="btc-manual-txid" type="text" placeholder="Paste txid from mempool.space…"
+                    style="flex:1;min-width:200px;font-family:var(--font-mono);font-size:11px;
+                    padding:7px 10px;border:1px solid var(--color-border);border-radius:var(--radius-md);
+                    background:var(--color-surface);color:var(--color-text);outline:none">
+                  <button onclick="confirmManualTxid()" style="
+                    background:var(--brand-primary);color:#fff;border:none;
+                    font-family:var(--font-sans);font-size:var(--text-xs);font-weight:600;
+                    padding:7px 14px;border-radius:var(--radius-md);cursor:pointer;white-space:nowrap;
+                  ">Confirm TX</button>
+                </div>
+              </div>
             </div>
 
             <!-- Step 3: processing -->
@@ -1855,6 +1873,51 @@
       hideBtcProcessing();
       showBtcResult('❌ ' + escapeHtml(e.message), '#FEE2E2');
       btn.disabled = false;
+    }
+  }
+
+  async function confirmManualTxid() {
+    const input = document.getElementById('btc-manual-txid');
+    const txid  = (input?.value ?? '').trim().toLowerCase();
+    if (!txid || txid.length !== 64) {
+      showBtcResult('❌ Please paste a valid 64-character Bitcoin txid.', '#FEE2E2');
+      return;
+    }
+    showBtcProcessing('Verifying transaction on Bitcoin network…');
+
+    try {
+      const proofId     = new URLSearchParams(window.location.search).get('id');
+      const session     = await window.tsDB.auth.getSession();
+      const token       = session?.data?.session?.access_token;
+      if (!token) throw new Error('Please sign in first.');
+      const supabaseUrl = window.TRUTHSTAMP_CONFIG?.SUPABASE_URL;
+
+      const confirmRes  = await fetch(`${supabaseUrl}/functions/v1/bitcoin-archive-confirm`, {
+        method:  'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          proof_id:     Number(proofId),
+          txid,
+          tsa1_payload: btcPrepareData?.tsa1_payload ?? '', // may be null if page was refreshed
+        }),
+      });
+      const data = await confirmRes.json();
+      hideBtcProcessing();
+
+      if (!confirmRes.ok) {
+        showBtcResult('❌ ' + escapeHtml(data.error ?? 'Confirmation failed'), '#FEE2E2');
+        return;
+      }
+
+      showBtcArchived(txid);
+      showBtcResult(
+        `✅ ${data.message} · <a href="https://mempool.space/tx/${txid}" target="_blank" rel="noopener" style="color:var(--brand-primary)">View on mempool.space ↗</a>` +
+        `<br><span style="font-size:11px;color:var(--color-text-muted)">${data.credits_deducted} credits deducted · ${data.credits_remaining} remaining</span>`,
+        '#ECFDF5'
+      );
+    } catch(e) {
+      hideBtcProcessing();
+      showBtcResult('❌ ' + escapeHtml(e.message), '#FEE2E2');
     }
   }
 
