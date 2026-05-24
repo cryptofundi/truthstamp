@@ -391,7 +391,7 @@
           <button class="btn btn-secondary" onclick="shareToX()">Share on X</button>
           <button class="btn btn-secondary" onclick="copyLink()">Copy link</button>
           <button class="btn btn-secondary" onclick="shareWhatsApp()">WhatsApp</button>
-          <button class="btn btn-secondary" onclick="downloadCertificate()">⬇ Certificate</button>
+          <button class="btn btn-secondary" onclick="showCertificate()">⬇ Certificate</button>
           <a id="explorer-link" href="#" target="_blank" class="btn btn-ghost">View on explorer →</a>
         </div>
         <!-- Create your own CTA -->
@@ -411,7 +411,42 @@
     </div><!-- /state-proof -->
   </main>
 
-  <!-- JSON payload modal — view TSP-1 JSON inline on any device -->
+  <!-- Certificate modal — works in all browsers including MetaMask WebView -->
+  <div id="certModal" style="
+    display:none; position:fixed; inset:0; z-index:1001;
+    background:rgba(0,0,0,0.6); backdrop-filter:blur(4px);
+    align-items:flex-start; justify-content:center;
+    padding:16px; overflow-y:auto;
+  " onclick="if(event.target===this)closeCertModal()">
+    <div style="
+      background:#fff; border-radius:12px; width:100%; max-width:700px;
+      margin:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);
+      font-family:Arial,sans-serif;
+    ">
+      <!-- Modal toolbar -->
+      <div style="
+        display:flex; align-items:center; justify-content:space-between;
+        padding:14px 20px; border-bottom:1px solid #e5e7eb;
+        position:sticky; top:0; background:#fff; border-radius:12px 12px 0 0; z-index:1;
+      ">
+        <span style="font-weight:700;font-size:14px;color:#111">Certificate of Proof</span>
+        <div style="display:flex;gap:8px">
+          <button onclick="printCert()" style="
+            background:#2854E8;color:#fff;border:none;border-radius:6px;
+            padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;
+          ">🖨 Print / Save PDF</button>
+          <button onclick="closeCertModal()" style="
+            background:#f3f4f6;color:#374151;border:none;border-radius:6px;
+            padding:7px 12px;font-size:13px;cursor:pointer;
+          ">✕ Close</button>
+        </div>
+      </div>
+      <!-- Certificate content -->
+      <div id="cert-content" style="padding:40px 48px;"></div>
+    </div>
+  </div>
+
+  <!-- JSON payload modal -->
   <div class="json-modal-overlay" id="jsonModal" onclick="closeJsonModal(event)">
     <div class="json-modal" onclick="event.stopPropagation()">
       <div class="json-modal-header">
@@ -1400,121 +1435,86 @@
     if (window.trackEvent) window.trackEvent('proof_link_copied');
   }
 
-  function downloadCertificate() {
+  function showCertificate() {
     const proofId   = document.getElementById('tech-proof-id')?.textContent ?? '';
     const hash      = document.getElementById('tech-hash')?.textContent ?? '';
     const txEl      = document.getElementById('tech-tx');
     const tx        = txEl?.textContent ?? txEl?.querySelector('a')?.textContent ?? '';
-    const title     = document.querySelector('.proof-title')?.textContent
-                   ?? document.title.replace(' — TruthStamp','');
-    const stampedEl = document.getElementById('creator-meta');
-    const stampedAt = stampedEl?.textContent ?? '';
+    const title     = document.title.replace(' — TruthStamp','');
+    const stampedAt = document.getElementById('creator-meta')?.textContent ?? '';
     const proofUrl  = window.location.href;
     const cfg       = window.TRUTHSTAMP_CONFIG;
 
     const safe = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-    // Creator identity on certificate:
-    // Wallet users  → truncated wallet  e.g. 0x5520…F029  (public, meaningful)
-    // Email users   → public_handle if set, else omit (UUID is internal, meaningless to readers)
-    const creatorNameEl = document.getElementById('creator-name');
-    const rawName       = creatorNameEl?.textContent?.trim() ?? '';
-    const showCreator   = rawName &&
-                          rawName !== 'Anonymous' &&
-                          !rawName.startsWith('Creator_') &&
-                          rawName !== 'Creator';
-    const creatorRow    = showCreator
-      ? `<div class="row"><span class="key">Creator</span><span class="val" style="font-family:Arial;">${safe(rawName)}</span></div>`
+    // Creator row — show wallet address or custom handle only
+    const rawName     = document.getElementById('creator-name')?.textContent?.trim() ?? '';
+    const showCreator = rawName && rawName !== 'Anonymous'
+                        && !rawName.startsWith('Creator_') && rawName !== 'Creator';
+    const creatorRow  = showCreator
+      ? `<div class="crow"><span class="ck">Creator</span><span class="cv" style="font-family:Arial">${safe(rawName)}</span></div>`
       : '';
 
-    const cert = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-<title>TruthStamp Certificate ${proofId}</title>
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: Arial, sans-serif; background:#fff; color:#111; padding:50px; max-width:760px; margin:0 auto; }
-  .border { border:3px double #1a1a2e; padding:40px; border-radius:8px; }
-  .header { text-align:center; margin-bottom:28px; border-bottom:1px solid #e5e7eb; padding-bottom:20px; }
-  .logo { font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#2854E8; margin-bottom:8px; }
-  h1 { font-size:26px; font-weight:700; margin-bottom:6px; }
-  .subtitle { color:#6b7280; font-size:13px; }
-  .badge { display:inline-block; background:#ecfdf5; color:#065f46; border:1px solid #6ee7b7; border-radius:20px; padding:4px 14px; font-size:12px; font-weight:700; margin:16px 0; }
-  .title-box { background:#f8f9fb; border:1px solid #e5e7eb; border-radius:6px; padding:14px 20px; margin:20px 0; text-align:center; font-size:15px; font-weight:600; }
-  .row { display:flex; justify-content:space-between; align-items:flex-start; padding:9px 0; border-bottom:1px solid #f3f4f6; font-size:12px; gap:16px; }
-  .key { color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; font-size:10px; flex-shrink:0; padding-top:1px; }
-  .val { font-family:monospace; font-size:10px; word-break:break-all; text-align:right; }
-  .footer { text-align:center; margin-top:28px; padding-top:20px; border-top:1px solid #e5e7eb; }
-  .footer p { font-size:11px; color:#9ca3af; margin-bottom:4px; }
-  .footer .url { font-size:10px; color:#2854E8; }
-  @media print { body { padding:20px; } }
-</style></head>
-<body>
-<div class="border">
-  <div class="header">
-    <div class="logo">✦ TruthStamp</div>
-    <h1>Certificate of Proof</h1>
-    <p class="subtitle">Immutable blockchain proof of existence</p>
-    <div class="badge">✅ Verified on MegaETH Blockchain</div>
-  </div>
-  <div class="title-box">${safe(title)}</div>
-  <div class="row"><span class="key">Proof ID</span><span class="val">${safe(proofId)}</span></div>
-  <div class="row"><span class="key">Stamped</span><span class="val" style="font-family:Arial;">${safe(stampedAt)}</span></div>
-  ${creatorRow}
-  <div class="row"><span class="key">Content Hash (SHA-256)</span><span class="val">${safe(hash)}</span></div>
-  <div class="row"><span class="key">Blockchain Transaction</span><span class="val">${safe(tx)}</span></div>
-  <div class="row"><span class="key">Proof URL</span><span class="val" style="font-family:Arial;">${safe(proofUrl)}</span></div>
-  <div class="footer">
-    <p>This proof is permanently recorded on the MegaETH blockchain and cannot be altered or deleted.</p>
-    <p>Verify independently at any time — even without TruthStamp — using the hash and contract address.</p>
-    <p class="url">Contract: ${safe(cfg?.CONTRACT_ADDRESS ?? '')} · Network: MegaETH Testnet</p>
-  </div>
-</div>
-</body></html>`;
+    // Render certificate inside modal
+    document.getElementById('cert-content').innerHTML = `
+      <div style="border:3px double #1a1a2e;padding:40px;border-radius:8px;color:#111">
+        <div style="text-align:center;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid #e5e7eb">
+          <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#2854E8;margin-bottom:8px">✦ TruthStamp</div>
+          <h1 style="font-size:26px;font-weight:700;margin-bottom:6px">Certificate of Proof</h1>
+          <p style="color:#6b7280;font-size:13px">Immutable blockchain proof of existence</p>
+          <div style="display:inline-block;background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;margin-top:14px">✅ Verified on MegaETH Blockchain</div>
+        </div>
+        <div style="background:#f8f9fb;border:1px solid #e5e7eb;border-radius:6px;padding:14px 20px;margin-bottom:20px;text-align:center;font-size:15px;font-weight:600">${safe(title)}</div>
+        <style>
+          .crow{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid #f3f4f6;font-size:12px;gap:16px}
+          .ck{color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10px;flex-shrink:0;padding-top:1px}
+          .cv{font-family:monospace;font-size:10px;word-break:break-all;text-align:right}
+        </style>
+        <div class="crow"><span class="ck">Proof ID</span><span class="cv">${safe(proofId)}</span></div>
+        <div class="crow"><span class="ck">Stamped</span><span class="cv" style="font-family:Arial">${safe(stampedAt)}</span></div>
+        ${creatorRow}
+        <div class="crow"><span class="ck">Content Hash (SHA-256)</span><span class="cv">${safe(hash)}</span></div>
+        <div class="crow"><span class="ck">Blockchain Transaction</span><span class="cv">${safe(tx)}</span></div>
+        <div class="crow"><span class="ck">Proof URL</span><span class="cv" style="font-family:Arial">${safe(proofUrl)}</span></div>
+        <div style="text-align:center;margin-top:24px;padding-top:20px;border-top:1px solid #e5e7eb">
+          <p style="font-size:11px;color:#9ca3af;margin-bottom:4px">This proof is permanently recorded on the MegaETH blockchain and cannot be altered or deleted.</p>
+          <p style="font-size:11px;color:#9ca3af;margin-bottom:4px">Verify independently at any time — even without TruthStamp — using the hash and contract address.</p>
+          <p style="font-size:10px;color:#2854E8">Contract: ${safe(cfg?.CONTRACT_ADDRESS??'')} · Network: MegaETH Testnet</p>
+        </div>
+      </div>`;
 
-    // Download approach — three fallbacks in order:
-    // 1. data: URI with <a download> — works in MetaMask WebView, Chrome, Firefox
-    // 2. Blob URL — works in Safari desktop, Chrome mobile
-    // 3. window.open — last resort fallback
-    let downloaded = false;
+    // Show modal
+    const modal = document.getElementById('certModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
 
-    // Try data: URI first (most compatible including MetaMask WebView)
-    try {
-      const encoded = 'data:text/html;charset=utf-8,' + encodeURIComponent(cert);
-      const a       = document.createElement('a');
-      a.href        = encoded;
-      a.download    = `truthstamp-certificate-${proofId.replace('#','')}.html`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      downloaded = true;
-    } catch(e) {
-      console.warn('[Certificate] data URI failed:', e.message);
+    if (window.trackEvent) window.trackEvent('certificate_viewed', {});
+  }
+
+  function closeCertModal() {
+    document.getElementById('certModal').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  function printCert() {
+    // Use the modal content for printing — works in all browsers
+    const content = document.getElementById('cert-content').innerHTML;
+    const win     = window.open('', '_blank');
+    if (win) {
+      win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+        <title>TruthStamp Certificate</title>
+        <style>body{font-family:Arial,sans-serif;padding:40px;max-width:760px;margin:0 auto}
+        @media print{body{padding:20px}}
+        .crow{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid #f3f4f6;font-size:12px;gap:16px}
+        .ck{color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10px;flex-shrink:0;padding-top:1px}
+        .cv{font-family:monospace;font-size:10px;word-break:break-all;text-align:right}
+        </style></head>
+        <body onload="window.print()">${content}</body></html>`);
+      win.document.close();
+    } else {
+      // Fallback for MetaMask — just show browser print dialog on current page
+      window.print();
     }
-
-    // Blob URL fallback (Safari desktop prefers this)
-    if (!downloaded) {
-      try {
-        const blob = new Blob([cert], { type: 'text/html;charset=utf-8' });
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        a.href     = url;
-        a.download = `truthstamp-certificate-${proofId.replace('#','')}.html`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 5000);
-        downloaded = true;
-      } catch(e) {
-        console.warn('[Certificate] Blob URL failed:', e.message);
-      }
-    }
-
-    // Final fallback — open in new tab (works on desktop, blocked in MetaMask)
-    if (!downloaded) {
-      const win = window.open('', '_blank');
-      if (win) { win.document.write(cert); win.document.close(); }
-    }
-
-    if (window.trackEvent) window.trackEvent('certificate_downloaded', {});
   }
   </script>
 </body>
