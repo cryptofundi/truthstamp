@@ -1411,7 +1411,22 @@
     const stampedAt = stampedEl?.textContent ?? '';
     const proofUrl  = window.location.href;
     const cfg       = window.TRUTHSTAMP_CONFIG;
-    const explorer  = cfg?.CONTRACT_EXPLORER ?? 'https://megaeth-testnet-v2.blockscout.com';
+
+    // Creator identity on certificate:
+    // Wallet users  → truncated wallet  e.g. 0x5520…F029  (public, meaningful)
+    // Email users   → public_handle if set, else omit (UUID is internal, meaningless to readers)
+    const creatorNameEl = document.getElementById('creator-name');
+    const rawName       = creatorNameEl?.textContent?.trim() ?? '';
+    // rawName is already resolved by renderProof using resolveNameFromStamp —
+    // so it's already "0x5520…F029" or "cryptolady" or "Creator_da45"
+    // We show wallet addresses and custom handles; hide "Creator_xxxx" fallbacks
+    const showCreator = rawName &&
+                        rawName !== 'Anonymous' &&
+                        !rawName.startsWith('Creator_') &&
+                        rawName !== 'Creator';
+    const creatorRow = showCreator
+      ? `<div class="row"><span class="key">Creator</span><span class="val" style="font-family:Arial;">${safe(rawName)}</span></div>`
+      : '';
 
     const safe = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
@@ -1422,7 +1437,7 @@
   body { font-family: Arial, sans-serif; background:#fff; color:#111; padding:50px; max-width:760px; margin:0 auto; }
   .border { border:3px double #1a1a2e; padding:40px; border-radius:8px; }
   .header { text-align:center; margin-bottom:28px; border-bottom:1px solid #e5e7eb; padding-bottom:20px; }
-  .logo { font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#6366f1; margin-bottom:8px; }
+  .logo { font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:#2854E8; margin-bottom:8px; }
   h1 { font-size:26px; font-weight:700; margin-bottom:6px; }
   .subtitle { color:#6b7280; font-size:13px; }
   .badge { display:inline-block; background:#ecfdf5; color:#065f46; border:1px solid #6ee7b7; border-radius:20px; padding:4px 14px; font-size:12px; font-weight:700; margin:16px 0; }
@@ -1432,10 +1447,10 @@
   .val { font-family:monospace; font-size:10px; word-break:break-all; text-align:right; }
   .footer { text-align:center; margin-top:28px; padding-top:20px; border-top:1px solid #e5e7eb; }
   .footer p { font-size:11px; color:#9ca3af; margin-bottom:4px; }
-  .footer .url { font-size:10px; color:#6366f1; }
+  .footer .url { font-size:10px; color:#2854E8; }
   @media print { body { padding:20px; } }
 </style></head>
-<body onload="window.print()">
+<body>
 <div class="border">
   <div class="header">
     <div class="logo">✦ TruthStamp</div>
@@ -1446,6 +1461,7 @@
   <div class="title-box">${safe(title)}</div>
   <div class="row"><span class="key">Proof ID</span><span class="val">${safe(proofId)}</span></div>
   <div class="row"><span class="key">Stamped</span><span class="val" style="font-family:Arial;">${safe(stampedAt)}</span></div>
+  ${creatorRow}
   <div class="row"><span class="key">Content Hash (SHA-256)</span><span class="val">${safe(hash)}</span></div>
   <div class="row"><span class="key">Blockchain Transaction</span><span class="val">${safe(tx)}</span></div>
   <div class="row"><span class="key">Proof URL</span><span class="val" style="font-family:Arial;">${safe(proofUrl)}</span></div>
@@ -1457,8 +1473,25 @@
 </div>
 </body></html>`;
 
-    const win = window.open('', '_blank');
-    if (win) { win.document.write(cert); win.document.close(); }
+    // Use Blob + <a download> instead of window.open() —
+    // window.open() is blocked by MetaMask's in-app browser WebView.
+    // Blob URL works in MetaMask, Chrome mobile, Safari, and desktop.
+    try {
+      const blob = new Blob([cert], { type: 'text/html;charset=utf-8' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `truthstamp-certificate-${proofId.replace('#','')}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch(e) {
+      // Final fallback for browsers that block Blob URLs (very rare)
+      const win = window.open('', '_blank');
+      if (win) { win.document.write(cert); win.document.close(); }
+    }
+
     if (window.trackEvent) window.trackEvent('certificate_downloaded', {});
   }
   </script>
