@@ -353,6 +353,18 @@
   </style>
 </head>
 <body>
+  <!-- Auth gate overlay — shown until admin access is confirmed -->
+  <div id="auth-gate" style="
+    position:fixed;inset:0;z-index:9999;
+    background:#fff;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:16px;font-family:'Inter',system-ui,sans-serif;
+  ">
+    <div style="width:40px;height:40px;background:#2854E8;border-radius:10px;display:grid;place-items:center;font-weight:800;font-size:18px;color:#fff">T</div>
+    <p id="auth-gate-msg" style="font-size:14px;color:#5F5E5A;margin:0">Checking access…</p>
+    <div id="auth-gate-spinner" style="width:24px;height:24px;border:3px solid #e5e7eb;border-top-color:#2854E8;border-radius:50%;animation:spin .7s linear infinite"></div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+  </div>
 
   <div class="admin-layout">
 
@@ -1612,9 +1624,68 @@
       document.getElementById('ban-reason').value = '';
     }
 
+    // ── Admin auth gate — wallet-based, works across testnet + production ──────
+    // No hardcoded UUIDs. Checks profiles.is_admin = TRUE for the signed-in user.
+    // To grant access: UPDATE profiles SET is_admin = TRUE WHERE LOWER(wallet_address) = LOWER('0xYourWallet');
+
+    async function checkAdminAccess() {
+      const gate    = document.getElementById('auth-gate');
+      const gateMsg = document.getElementById('auth-gate-msg');
+      const spinner = document.getElementById('auth-gate-spinner');
+
+      function deny(reason) {
+        if (spinner) spinner.style.display = 'none';
+        if (gateMsg) {
+          gateMsg.textContent = reason;
+          gateMsg.style.color = '#A32D2D';
+        }
+        // Show redirect link after 2s
+        setTimeout(() => {
+          const link = document.createElement('a');
+          link.href = 'index.html';
+          link.textContent = '← Go to homepage';
+          link.style.cssText = 'font-size:13px;color:#2854E8;margin-top:8px';
+          gate.appendChild(link);
+        }, 2000);
+      }
+
+      try {
+        // Step 1: must be signed in via Supabase
+        const { data: { user }, error: authErr } = await window.tsDB.auth.getUser();
+        if (authErr || !user) {
+          deny('Not signed in. Redirecting…');
+          setTimeout(() => { window.location.href = 'auth.html'; }, 1500);
+          return false;
+        }
+
+        // Step 2: check is_admin on their profile
+        const { data: profile, error: profileErr } = await window.tsDB
+          .from('profiles')
+          .select('is_admin, wallet_address, auth_method')
+          .eq('id', user.id)
+          .single();
+
+        if (profileErr) throw profileErr;
+
+        if (!profile?.is_admin) {
+          deny('Access denied. Admin only.');
+          return false;
+        }
+
+        // ✅ Access granted — hide gate, show admin panel
+        if (gate) gate.style.display = 'none';
+        return true;
+
+      } catch(e) {
+        deny('Error checking access: ' + e.message);
+        return false;
+      }
+    }
+
     // ── Boot ───────────────────────────────────────────────────────────────
-    waitForDB(() => {
-      loadOverviewStats();
+    waitForDB(async () => {
+      const ok = await checkAdminAccess();
+      if (ok) loadOverviewStats();
     });
   </script>
 </body>
