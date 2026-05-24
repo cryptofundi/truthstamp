@@ -1215,56 +1215,93 @@
     }
   }
 
-  // ── Arweave payload viewer ───────────────────────────────────────────────
-  // showArweaveActions: wire up View/Download/Raw buttons once storage_uri known
+  // ── Arweave action buttons ───────────────────────────────────────────────
+  // Button logic per content type:
+  //   text  → View TSP-1 modal | Download JSON | Arweave TX ↗
+  //   file  → View file on Arweave ↗ | Arweave TX ↗
+  //   url   → Arweave TX ↗ only (snapshot link already shown in card)
   function showArweaveActions(storageUri, contentType) {
     if (!storageUri) return;
-    const txId       = storageUri.replace('ar://', '');
-    const arweaveUrl = `https://arweave.net/${txId}`;
-    const actions    = document.getElementById('arweave-actions');
-    const viewBtn    = document.getElementById('arweave-view-btn');
-    const rawBtn     = document.getElementById('arweave-raw-btn');
-    const dlBtn      = document.getElementById('arweave-download-btn');
+    const txId         = storageUri.replace('ar://', '');
+    const arweaveUrl   = `https://arweave.net/${txId}`;
+    const viewblockUrl = `https://viewblock.io/arweave/tx/${txId}`;
+    const actions = document.getElementById('arweave-actions');
+    const viewBtn = document.getElementById('arweave-view-btn');
+    const rawBtn  = document.getElementById('arweave-raw-btn');
+    const dlBtn   = document.getElementById('arweave-download-btn');
     if (!actions) return;
-    actions.style.display = 'flex';
+    actions.style.display       = 'flex';
     actions.dataset.txId        = txId;
     actions.dataset.contentType = contentType || 'text';
 
+    const svgExt = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+    const txBtnHtml = `${svgExt} Arweave TX ↗`;
+
     if (contentType === 'file') {
-      // File stamps: Arweave holds the actual file, not a JSON payload
-      // Hide View JSON and Download JSON — show only "Open file on Arweave"
+      // File: View file (primary) + Arweave TX
       if (viewBtn) viewBtn.style.display = 'none';
       if (dlBtn)   dlBtn.style.display   = 'none';
       if (rawBtn) {
-        rawBtn.href        = arweaveUrl;
-        rawBtn.textContent = '';
-        rawBtn.innerHTML   = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> View file on Arweave ↗';
+        rawBtn.href          = arweaveUrl;
+        rawBtn.className     = 'arweave-btn primary';
+        rawBtn.innerHTML     = `${svgExt} View file on Arweave ↗`;
         rawBtn.style.display = 'inline-flex';
-        rawBtn.className   = 'arweave-btn primary';
+        rawBtn.removeAttribute('download');
       }
+      // Arweave TX button — appended once
+      if (!document.getElementById('arweave-tx-btn')) {
+        const a = document.createElement('a');
+        a.id        = 'arweave-tx-btn';
+        a.className = 'arweave-btn';
+        a.href      = viewblockUrl;
+        a.target    = '_blank';
+        a.rel       = 'noopener';
+        a.innerHTML = txBtnHtml;
+        actions.appendChild(a);
+      } else {
+        document.getElementById('arweave-tx-btn').href = viewblockUrl;
+      }
+
+    } else if (contentType === 'url') {
+      // URL: snapshot link already in card — just Arweave TX
+      if (viewBtn) viewBtn.style.display = 'none';
+      if (dlBtn)   dlBtn.style.display   = 'none';
+      if (rawBtn)  rawBtn.style.display  = 'none';
+      if (!document.getElementById('arweave-tx-btn')) {
+        const a = document.createElement('a');
+        a.id        = 'arweave-tx-btn';
+        a.className = 'arweave-btn primary';
+        a.href      = viewblockUrl;
+        a.target    = '_blank';
+        a.rel       = 'noopener';
+        a.innerHTML = txBtnHtml;
+        actions.appendChild(a);
+      } else {
+        document.getElementById('arweave-tx-btn').href = viewblockUrl;
+      }
+
     } else {
-      // Text / URL stamps: Arweave holds TSP-1 JSON payload
+      // Text: View modal + Download JSON + Arweave TX
       if (viewBtn) viewBtn.style.display = 'inline-flex';
       if (dlBtn) {
-        dlBtn.href    = arweaveUrl;
-        // filename hint — browser uses this for the download dialog
+        dlBtn.href = arweaveUrl;
         dlBtn.setAttribute('download', `truthstamp-proof-${txId.slice(0,8)}.json`);
         dlBtn.style.display = 'inline-flex';
       }
       if (rawBtn) {
-        // Link to Arweave block explorer (viewblock.io) — shows TX metadata, never downloads
-        rawBtn.href = `https://viewblock.io/arweave/tx/${txId}`;
+        rawBtn.href          = viewblockUrl;
+        rawBtn.innerHTML     = `${svgExt} Arweave TX ↗`;
         rawBtn.style.display = 'inline-flex';
-        rawBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Arweave TX ↗';
+        rawBtn.removeAttribute('download');
       }
     }
 
-    // Update modal links
+    // Update modal footer links
     const modalLink = document.getElementById('json-modal-arweave-link');
     const modalDl   = document.getElementById('json-modal-download-link');
     if (modalLink) {
-      modalLink.href        = `https://viewblock.io/arweave/tx/${txId}`;
-      modalLink.innerHTML   = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Arweave TX ↗';
+      modalLink.href      = viewblockUrl;
+      modalLink.innerHTML = `${svgExt} Arweave TX ↗`;
     }
     if (modalDl) modalDl.href = arweaveUrl;
   }
