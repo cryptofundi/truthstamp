@@ -332,15 +332,16 @@
     // IP-based detection — overrides locale guess with real country from IP
     async function detectCurrencyFromIP() {
       try {
-        // ipapi.co returns JSON with country_code field, uses real client IP
-        const res  = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) });
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 4000);
+        const res  = await fetch('https://ipapi.co/json/', { signal: controller.signal });
+        clearTimeout(timer);
         const data = await res.json();
         const code = (data.country_code || '').toUpperCase();
         return code === 'IN' ? 'INR' : 'USD';
       } catch(e) {
-        // API failed or timed out — fall back to locale guess silently
-        console.warn('[Currency] IP detection failed, using locale fallback:', e.message);
-        return null; // null = use whatever locale already set
+        // Silently fall back to locale guess — no console warning needed
+        return null;
       }
     }
 
