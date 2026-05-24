@@ -1818,7 +1818,11 @@
       const confirmRes  = await fetch(`${supabaseUrl}/functions/v1/bitcoin-archive-confirm`, {
         method:  'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ proof_id: Number(proofId), txid }),
+        body:    JSON.stringify({
+          proof_id:     Number(proofId),
+          txid,
+          tsa1_payload: btcPrepareData.tsa1_payload, // fallback if queue lookup fails
+        }),
       });
       const confirmData = await confirmRes.json();
 
