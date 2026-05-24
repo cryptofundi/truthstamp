@@ -778,7 +778,7 @@
 
         // Show Arweave link if revealed on-chain
         if (stamp.storage_uri) {
-          showArweaveActions(stamp.storage_uri);
+          showArweaveActions(stamp.storage_uri, stamp.content_type);
         }
 
         // Amber banner — owner only, not yet revealed on-chain
@@ -894,7 +894,7 @@
         }
 
         if (stamp.storage_uri) {
-          showArweaveActions(stamp.storage_uri);
+          showArweaveActions(stamp.storage_uri, stamp.content_type);
         }
       }
     } // end public/sealed content block
@@ -1195,7 +1195,8 @@
 
       // Show Arweave link in content block
       if (result.arweave_uri) {
-        showArweaveActions(result.arweave_uri);
+        const ct = document.getElementById('stat-type')?.textContent?.toLowerCase() ?? 'text';
+        showArweaveActions(result.arweave_uri, ct);
       }
 
       // Hide amber banner after short delay
@@ -1216,19 +1217,50 @@
 
   // ── Arweave payload viewer ───────────────────────────────────────────────
   // showArweaveActions: wire up View/Download/Raw buttons once storage_uri known
-  function showArweaveActions(storageUri) {
+  function showArweaveActions(storageUri, contentType) {
     if (!storageUri) return;
-    const txId      = storageUri.replace('ar://', '');
+    const txId       = storageUri.replace('ar://', '');
     const arweaveUrl = `https://arweave.net/${txId}`;
-    const actions   = document.getElementById('arweave-actions');
-    const rawBtn    = document.getElementById('arweave-raw-btn');
-    const dlBtn     = document.getElementById('arweave-download-btn');
-    if (actions) actions.style.display = 'flex';
-    if (rawBtn)  rawBtn.href  = arweaveUrl;
-    if (dlBtn)   dlBtn.href   = arweaveUrl;
-    // Store txId for the view modal
-    if (actions) actions.dataset.txId = txId;
-    // Also update modal links
+    const actions    = document.getElementById('arweave-actions');
+    const viewBtn    = document.getElementById('arweave-view-btn');
+    const rawBtn     = document.getElementById('arweave-raw-btn');
+    const dlBtn      = document.getElementById('arweave-download-btn');
+    if (!actions) return;
+    actions.style.display = 'flex';
+    actions.dataset.txId        = txId;
+    actions.dataset.contentType = contentType || 'text';
+
+    if (contentType === 'file') {
+      // File stamps: Arweave holds the actual file, not a JSON payload
+      // Hide View JSON and Download JSON — show only "Open file on Arweave"
+      if (viewBtn) viewBtn.style.display = 'none';
+      if (dlBtn)   dlBtn.style.display   = 'none';
+      if (rawBtn) {
+        rawBtn.href        = arweaveUrl;
+        rawBtn.textContent = '';
+        rawBtn.innerHTML   = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> View file on Arweave ↗';
+        rawBtn.style.display = 'inline-flex';
+        rawBtn.className   = 'arweave-btn primary';
+      }
+    } else {
+      // Text / URL stamps: Arweave holds TSP-1 JSON payload
+      if (viewBtn) viewBtn.style.display = 'inline-flex';
+      if (dlBtn) {
+        dlBtn.href    = arweaveUrl;
+        // filename hint — browser uses this for the download dialog
+        dlBtn.setAttribute('download', `truthstamp-proof-${txId.slice(0,8)}.json`);
+        dlBtn.style.display = 'inline-flex';
+      }
+      if (rawBtn) {
+        rawBtn.href = arweaveUrl;
+        rawBtn.style.display = 'inline-flex';
+        // Label: new stamps (text/plain) open inline; old stamps (application/json) may download
+        // We can't tell which at this point so use a neutral label
+        rawBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Open on Arweave ↗';
+      }
+    }
+
+    // Update modal links
     const modalLink = document.getElementById('json-modal-arweave-link');
     const modalDl   = document.getElementById('json-modal-download-link');
     if (modalLink) modalLink.href = arweaveUrl;
