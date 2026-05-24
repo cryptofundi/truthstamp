@@ -120,6 +120,7 @@
       .pack-grid { grid-template-columns: 1fr; }
     }
   </style>
+  <script src="js/nav.js"></script>
 </head>
 <body>
   <nav class="nav">
@@ -312,19 +313,39 @@
       const decimals = parts[1] ? parts[1].padEnd(18, '0').slice(0, 18) : '0'.repeat(18);
       return whole + BigInt(decimals);
     }
-    // Detect user's likely currency from browser locale and timezone
-    // INR for India, USD for everyone else (Razorpay will convert)
-    function detectCurrency() {
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone ?? '';
+    // ── Currency detection — IP-based (works correctly with VPN) ─────────────
+    // ipapi.co free tier: 1000 req/day, no key needed, returns real IP country.
+    // Locale/timezone only used as instant fallback if IP API fails or is slow.
+    // INR for India (country code IN), USD for everyone else.
+
+    // Instant locale-based guess shown immediately (no flicker on page load)
+    function localeCurrencyGuess() {
+      const tz     = Intl.DateTimeFormat().resolvedOptions().timeZone ?? '';
       const locale = navigator.language ?? '';
       const isIndia = tz.startsWith('Asia/Calcutta') ||
-                      tz.startsWith('Asia/Kolkata') ||
-                      locale.includes('en-IN') ||
-                      locale.includes('hi');
+                      tz.startsWith('Asia/Kolkata')  ||
+                      locale.startsWith('en-IN')      ||
+                      locale.startsWith('hi');
       return isIndia ? 'INR' : 'USD';
     }
 
-    const USER_CURRENCY = detectCurrency();
+    // IP-based detection — overrides locale guess with real country from IP
+    async function detectCurrencyFromIP() {
+      try {
+        // ipapi.co returns JSON with country_code field, uses real client IP
+        const res  = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) });
+        const data = await res.json();
+        const code = (data.country_code || '').toUpperCase();
+        return code === 'IN' ? 'INR' : 'USD';
+      } catch(e) {
+        // API failed or timed out — fall back to locale guess silently
+        console.warn('[Currency] IP detection failed, using locale fallback:', e.message);
+        return null; // null = use whatever locale already set
+      }
+    }
+
+    // Start with locale guess so prices show instantly
+    let USER_CURRENCY = localeCurrencyGuess();
 
     // Pricing in both currencies
     // INR: ₹830, ₹2075, ₹4150, ₹8300
@@ -344,34 +365,55 @@
       }
     };
 
-    const PACKS = {
-      starter:  { name: 'Starter',  credits: 50,  ...PACK_PRICING[USER_CURRENCY].starter  },
-      standard: { name: 'Standard', credits: 125, ...PACK_PRICING[USER_CURRENCY].standard },
-      pro:      { name: 'Pro Pack', credits: 300, ...PACK_PRICING[USER_CURRENCY].pro      },
-      power:    { name: 'Power',    credits: 700, ...PACK_PRICING[USER_CURRENCY].power    },
-    };
+    // PACKS as a function so it always uses current USER_CURRENCY
+    function getPacks() {
+      return {
+        starter:  { name: 'Starter',  credits: 50,  ...PACK_PRICING[USER_CURRENCY].starter  },
+        standard: { name: 'Standard', credits: 125, ...PACK_PRICING[USER_CURRENCY].standard },
+        pro:      { name: 'Pro Pack', credits: 300, ...PACK_PRICING[USER_CURRENCY].pro      },
+        power:    { name: 'Power',    credits: 700, ...PACK_PRICING[USER_CURRENCY].power    },
+      };
+    }
 
-    // Update price display on page load based on detected currency
+    // Update price display — called on load and again after IP check resolves
     function updatePriceDisplay() {
       const prices = PACK_PRICING[USER_CURRENCY];
-      document.querySelector('#pack-starter .pack-price').textContent    = prices.starter.display;
-      document.querySelector('#pack-starter .pack-per-credit').textContent = prices.starter.perCredit + ' per credit';
-      document.querySelector('#pack-standard .pack-price').textContent   = prices.standard.display;
+      document.querySelector('#pack-starter .pack-price').textContent       = prices.starter.display;
+      document.querySelector('#pack-starter .pack-per-credit').textContent  = prices.starter.perCredit + ' per credit';
+      document.querySelector('#pack-standard .pack-price').textContent      = prices.standard.display;
       document.querySelector('#pack-standard .pack-per-credit').textContent = prices.standard.perCredit + ' per credit';
-      document.querySelector('#pack-pro .pack-price').textContent        = prices.pro.display;
-      document.querySelector('#pack-pro .pack-per-credit').textContent   = prices.pro.perCredit + ' per credit';
-      document.querySelector('#pack-power .pack-price').textContent      = prices.power.display;
-      document.querySelector('#pack-power .pack-per-credit').textContent = prices.power.perCredit + ' per credit';
+      document.querySelector('#pack-pro .pack-price').textContent           = prices.pro.display;
+      document.querySelector('#pack-pro .pack-per-credit').textContent      = prices.pro.perCredit + ' per credit';
+      document.querySelector('#pack-power .pack-price').textContent         = prices.power.display;
+      document.querySelector('#pack-power .pack-per-credit').textContent    = prices.power.perCredit + ' per credit';
 
-      // Show currency note for non-INR users
-      if (USER_CURRENCY !== 'INR') {
-        const note = document.getElementById('currency-note');
-        if (note) {
-          note.textContent = `Prices shown in USD. Charged in INR at current exchange rate via Razorpay.`;
+      // If a pack was already selected, update the checkout summary too
+      if (selectedPack) {
+        const pack = getPacks()[selectedPack];
+        const priceEl = document.getElementById('checkout-price-display');
+        if (priceEl) priceEl.textContent = pack.display;
+      }
+
+      // Currency note
+      const note = document.getElementById('currency-note');
+      if (note) {
+        if (USER_CURRENCY === 'USD') {
+          note.textContent = '💱 Prices in USD. Razorpay handles international payments securely.';
           note.style.display = 'block';
+        } else {
+          note.style.display = 'none';
         }
       }
     }
+
+    // Run IP detection in background — updates UI if currency differs from locale guess
+    (async function initCurrencyFromIP() {
+      const ipCurrency = await detectCurrencyFromIP();
+      if (ipCurrency && ipCurrency !== USER_CURRENCY) {
+        USER_CURRENCY = ipCurrency;
+        updatePriceDisplay(); // silently refresh prices
+      }
+    })();
 
     let selectedPack = null;
 
@@ -403,7 +445,7 @@
       document.getElementById(`pack-${packId}`)?.classList.add('selected');
       selectedPack = packId;
 
-      const pack = PACKS[packId];
+      const pack = getPacks()[packId];
       document.getElementById('checkout-selected-text').textContent =
         `${pack.name} — ${pack.credits} credits`;
       document.getElementById('checkout-price-display').textContent = pack.display;
@@ -471,7 +513,7 @@
           throw new Error(orderData.error ?? 'Failed to create order');
         }
 
-        const pack = PACKS[selectedPack];
+        const pack = getPacks()[selectedPack];
 
         // Step 2: Open Razorpay modal
         const options = {
@@ -517,7 +559,7 @@
         showError(err instanceof Error ? err.message : 'Payment failed. Please try again.');
         btn.disabled = false;
         btn.style.opacity = '1';
-        btn.textContent = `Pay ${PACKS[selectedPack].display} — Get ${PACKS[selectedPack].credits} credits`;
+        btn.textContent = `Pay ${getPacks()[selectedPack].display} — Get ${getPacks()[selectedPack].credits} credits`;
       }
     }
 
@@ -568,7 +610,7 @@
           window.trackEvent('purchase_completed', {
             pack_id: selectedPack,
             credits: result.credits_added,
-            amount: PACKS[selectedPack].amountPaise,
+            amount: getPacks()[selectedPack].amountPaise,
           });
         }
 
@@ -579,7 +621,7 @@
         showError(`Payment verified by Razorpay but credit update failed: ${err.message}. Please contact support with your payment ID: ${razorpayResponse.razorpay_payment_id}`);
         btn.disabled = false;
         btn.style.opacity = '1';
-        btn.textContent = `Pay ${PACKS[selectedPack].display} — Get ${PACKS[selectedPack].credits} credits`;
+        btn.textContent = `Pay ${getPacks()[selectedPack].display} — Get ${getPacks()[selectedPack].credits} credits`;
       }
     }
 
@@ -598,7 +640,7 @@
         return;
       }
 
-      const pack = PACKS[selectedPack];
+      const pack = getPacks()[selectedPack];
       const cryptoBtn = document.getElementById('crypto-pay-btn');
       const originalText = cryptoBtn.innerHTML;
       hideError();
