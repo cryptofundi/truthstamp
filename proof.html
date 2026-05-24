@@ -1252,19 +1252,21 @@
         dlBtn.style.display = 'inline-flex';
       }
       if (rawBtn) {
-        rawBtn.href = arweaveUrl;
+        // Link to Arweave block explorer (viewblock.io) — shows TX metadata, never downloads
+        rawBtn.href = `https://viewblock.io/arweave/tx/${txId}`;
         rawBtn.style.display = 'inline-flex';
-        // Label: new stamps (text/plain) open inline; old stamps (application/json) may download
-        // We can't tell which at this point so use a neutral label
-        rawBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Open on Arweave ↗';
+        rawBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Arweave TX ↗';
       }
     }
 
     // Update modal links
     const modalLink = document.getElementById('json-modal-arweave-link');
     const modalDl   = document.getElementById('json-modal-download-link');
-    if (modalLink) modalLink.href = arweaveUrl;
-    if (modalDl)   modalDl.href  = arweaveUrl;
+    if (modalLink) {
+      modalLink.href        = `https://viewblock.io/arweave/tx/${txId}`;
+      modalLink.innerHTML   = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Arweave TX ↗';
+    }
+    if (modalDl) modalDl.href = arweaveUrl;
   }
 
   async function viewArweavePayload() {
