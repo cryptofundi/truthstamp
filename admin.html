@@ -483,7 +483,7 @@
               <p class="admin-panel-title">Recent stamps</p>
               <p class="admin-panel-desc">Latest stamps created on the platform</p>
             </div>
-            <a href="#" onclick="showSection('stamps',document.querySelector('[onclick*=stamps]'));return false" class="btn btn-ghost btn-sm">View all →</a>
+            <a href="#" onclick="showSection('stamps',document.querySelector('[data-section=stamps]'));return false" class="btn btn-ghost btn-sm">View all →</a>
           </div>
           <table class="admin-table">
             <thead><tr><th>Proof #</th><th>Preview</th><th>Creator</th><th>Type</th><th>Created</th></tr></thead>
@@ -1358,7 +1358,7 @@
 
     function viewUserStamps(userId) {
       document.getElementById('stamp-search').value = userId;
-      showSection('stamps', document.querySelector('[onclick*='stamps']'));
+      showSection('stamps', document.querySelector('[onclick*="stamps"]'));
       if (!window._stampsLoaded) loadStamps(); else filterStamps();
     }
 
