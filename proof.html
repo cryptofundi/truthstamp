@@ -883,6 +883,12 @@
           + arweaveHtml
           + '</div>';
 
+        // Show Arweave TX button for URL stamps (snapshot link is in card above,
+        // but TX proof is shown via the arweave-actions container below)
+        if (stamp.storage_uri) {
+          showArweaveActions(stamp.storage_uri, stamp.content_type);
+        }
+
       } else {
         // Text or other content
         if (text) {
