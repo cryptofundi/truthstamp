@@ -1412,23 +1412,20 @@
     const proofUrl  = window.location.href;
     const cfg       = window.TRUTHSTAMP_CONFIG;
 
+    const safe = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
     // Creator identity on certificate:
     // Wallet users  → truncated wallet  e.g. 0x5520…F029  (public, meaningful)
     // Email users   → public_handle if set, else omit (UUID is internal, meaningless to readers)
     const creatorNameEl = document.getElementById('creator-name');
     const rawName       = creatorNameEl?.textContent?.trim() ?? '';
-    // rawName is already resolved by renderProof using resolveNameFromStamp —
-    // so it's already "0x5520…F029" or "cryptolady" or "Creator_da45"
-    // We show wallet addresses and custom handles; hide "Creator_xxxx" fallbacks
-    const showCreator = rawName &&
-                        rawName !== 'Anonymous' &&
-                        !rawName.startsWith('Creator_') &&
-                        rawName !== 'Creator';
-    const creatorRow = showCreator
+    const showCreator   = rawName &&
+                          rawName !== 'Anonymous' &&
+                          !rawName.startsWith('Creator_') &&
+                          rawName !== 'Creator';
+    const creatorRow    = showCreator
       ? `<div class="row"><span class="key">Creator</span><span class="val" style="font-family:Arial;">${safe(rawName)}</span></div>`
       : '';
-
-    const safe = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
     const cert = `<!DOCTYPE html><html><head><meta charset="UTF-8">
 <title>TruthStamp Certificate ${proofId}</title>
