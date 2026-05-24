@@ -1470,21 +1470,46 @@
 </div>
 </body></html>`;
 
-    // Use Blob + <a download> instead of window.open() —
-    // window.open() is blocked by MetaMask's in-app browser WebView.
-    // Blob URL works in MetaMask, Chrome mobile, Safari, and desktop.
+    // Download approach — three fallbacks in order:
+    // 1. data: URI with <a download> — works in MetaMask WebView, Chrome, Firefox
+    // 2. Blob URL — works in Safari desktop, Chrome mobile
+    // 3. window.open — last resort fallback
+    let downloaded = false;
+
+    // Try data: URI first (most compatible including MetaMask WebView)
     try {
-      const blob = new Blob([cert], { type: 'text/html;charset=utf-8' });
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href     = url;
-      a.download = `truthstamp-certificate-${proofId.replace('#','')}.html`;
+      const encoded = 'data:text/html;charset=utf-8,' + encodeURIComponent(cert);
+      const a       = document.createElement('a');
+      a.href        = encoded;
+      a.download    = `truthstamp-certificate-${proofId.replace('#','')}.html`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      downloaded = true;
     } catch(e) {
-      // Final fallback for browsers that block Blob URLs (very rare)
+      console.warn('[Certificate] data URI failed:', e.message);
+    }
+
+    // Blob URL fallback (Safari desktop prefers this)
+    if (!downloaded) {
+      try {
+        const blob = new Blob([cert], { type: 'text/html;charset=utf-8' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = `truthstamp-certificate-${proofId.replace('#','')}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        downloaded = true;
+      } catch(e) {
+        console.warn('[Certificate] Blob URL failed:', e.message);
+      }
+    }
+
+    // Final fallback — open in new tab (works on desktop, blocked in MetaMask)
+    if (!downloaded) {
       const win = window.open('', '_blank');
       if (win) { win.document.write(cert); win.document.close(); }
     }
