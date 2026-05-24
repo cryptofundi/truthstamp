@@ -323,22 +323,23 @@
         <!-- Content -->
         <blockquote class="proof-content-block" id="content-block">
           <p class="proof-content-text" id="content-text"></p>
-          <!-- Arweave view + download — shown when stamp has storage_uri -->
-          <div class="arweave-actions" id="arweave-actions" style="display:none;">
-            <button class="arweave-btn primary" id="arweave-view-btn" onclick="viewArweavePayload()">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              View TSP-1 payload
-            </button>
-            <a class="arweave-btn" id="arweave-download-btn" href="#" target="_blank" rel="noopener" download="truthstamp-payload.json">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 3v12"/></svg>
-              Download JSON
-            </a>
-            <a class="arweave-btn" id="arweave-raw-btn" href="#" target="_blank" rel="noopener">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-              Raw on Arweave ↗
-            </a>
-          </div>
         </blockquote>
+
+        <!-- Arweave actions — OUTSIDE content-block so URL/file innerHTML rewrites don't destroy it -->
+        <div class="arweave-actions" id="arweave-actions" style="display:none;">
+          <button class="arweave-btn primary" id="arweave-view-btn" onclick="viewArweavePayload()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            View TSP-1 payload
+          </button>
+          <a class="arweave-btn" id="arweave-download-btn" href="#" target="_blank" rel="noopener" download="truthstamp-payload.json">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 3v12"/></svg>
+            Download JSON
+          </a>
+          <a class="arweave-btn" id="arweave-raw-btn" href="#" target="_blank" rel="noopener">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Arweave TX ↗
+          </a>
+        </div>
 
         <!-- Stats -->
         <div class="stat-grid">
