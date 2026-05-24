@@ -402,6 +402,154 @@
         </div>
       </article>
 
+      <!-- ── Bitcoin Archive Card ─────────────────────────────────────────── -->
+      <!-- Shown only for public/revealed stamps that aren't already archived  -->
+      <div id="btc-archive-card" style="display:none;">
+        <article style="
+          background:var(--color-surface);
+          border:1px solid var(--color-border);
+          border-radius:var(--radius-xl);
+          padding:var(--space-6) var(--space-7);
+          margin-bottom:var(--space-5);
+        ">
+          <!-- Header -->
+          <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4);">
+            <div style="
+              width:36px;height:36px;border-radius:var(--radius-md);
+              background:#FEF3C7;display:grid;place-items:center;
+              font-size:18px;flex-shrink:0;
+            ">₿</div>
+            <div>
+              <p style="font-size:var(--text-base);font-weight:700;margin:0 0 2px;color:var(--color-text)">
+                Archive permanently to Bitcoin
+              </p>
+              <p style="font-size:var(--text-xs);color:var(--color-text-muted);margin:0">
+                Optional · The strongest permanence layer · You pay Bitcoin network fees
+              </p>
+            </div>
+          </div>
+
+          <!-- What this does -->
+          <div style="
+            background:var(--color-surface-alt);border-radius:var(--radius-md);
+            padding:var(--space-4);margin-bottom:var(--space-4);
+            font-size:var(--text-sm);color:var(--color-text-secondary);line-height:1.65;
+          ">
+            Embeds a TSA-1 canonical proof manifest into a Bitcoin transaction via OP_RETURN.
+            Permanently recorded in the Bitcoin blockchain — independently verifiable
+            by anyone, forever, without TruthStamp.
+            <a href="https://mempool.space" target="_blank" rel="noopener"
+               style="color:var(--brand-primary);text-decoration:none;"> Verify on mempool.space ↗</a>
+          </div>
+
+          <!-- Already archived state -->
+          <div id="btc-already-archived" style="display:none;">
+            <div style="
+              background:#ECFDF5;border:1px solid rgba(16,185,129,.25);
+              border-radius:var(--radius-md);padding:var(--space-4);
+              display:flex;align-items:flex-start;gap:var(--space-3);
+            ">
+              <span style="font-size:18px;flex-shrink:0">✅</span>
+              <div>
+                <p style="font-size:var(--text-sm);font-weight:600;color:#065F46;margin:0 0 4px">
+                  Archived on Bitcoin
+                </p>
+                <p id="btc-txid-display" style="font-family:var(--font-mono);font-size:var(--text-xs);color:#065F46;margin:0 0 8px;word-break:break-all"></p>
+                <a id="btc-mempool-link" href="#" target="_blank" rel="noopener"
+                   style="font-size:var(--text-xs);color:var(--brand-primary);font-weight:500">
+                  View on mempool.space ↗
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Archive action UI -->
+          <div id="btc-archive-action">
+            <!-- Step 1: not connected -->
+            <div id="btc-step-connect">
+              <div style="
+                border:1px dashed var(--color-border);border-radius:var(--radius-md);
+                padding:var(--space-4);margin-bottom:var(--space-4);
+                font-size:var(--text-xs);color:var(--color-text-muted);line-height:1.6;
+              ">
+                ⚡ <strong>Requires:</strong> Unisat Bitcoin wallet browser extension ·
+                5 TruthStamp credits · Bitcoin mainnet
+                <br>
+                <a href="https://unisat.io/download" target="_blank" rel="noopener"
+                   style="color:var(--brand-primary)">Don't have Unisat? Download here →</a>
+              </div>
+              <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:center">
+                <button id="btc-connect-btn" onclick="connectUnisat()" class="btn btn-primary">
+                  Connect Unisat wallet
+                </button>
+                <span style="font-size:var(--text-xs);color:var(--color-text-muted)">
+                  5 credits will be deducted after successful archive
+                </span>
+              </div>
+            </div>
+
+            <!-- Step 2: connected, ready to archive -->
+            <div id="btc-step-archive" style="display:none;">
+              <div style="
+                background:var(--brand-primary-light);border-radius:var(--radius-md);
+                padding:var(--space-4);margin-bottom:var(--space-4);
+              ">
+                <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+                  <span style="font-size:var(--text-xs);color:var(--brand-primary-dark);font-weight:600">
+                    ✓ Unisat connected
+                  </span>
+                  <span id="btc-wallet-addr" style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--brand-primary-dark)"></span>
+                </div>
+                <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:var(--text-xs);color:var(--brand-primary-dark)">
+                  <span>Est. network fee: <strong id="btc-fee-display">calculating…</strong></span>
+                  <span>Platform: <strong>5 credits</strong></span>
+                </div>
+              </div>
+
+              <!-- TSA-1 payload preview -->
+              <div style="
+                background:var(--color-surface-alt);border-radius:var(--radius-md);
+                padding:var(--space-3) var(--space-4);margin-bottom:var(--space-4);
+              ">
+                <p style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted);margin:0 0 4px">
+                  TSA-1 payload to be embedded in Bitcoin TX
+                </p>
+                <p id="btc-payload-preview" style="font-family:var(--font-mono);font-size:11px;color:var(--color-text-secondary);margin:0;word-break:break-all"></p>
+              </div>
+
+              <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:center">
+                <button id="btc-archive-btn" onclick="archiveToBitcoin()" style="
+                  background:#F59E0B;color:#fff;border:none;font-family:var(--font-sans);
+                  font-size:var(--text-sm);font-weight:700;padding:10px 20px;
+                  border-radius:var(--radius-md);cursor:pointer;
+                  display:inline-flex;align-items:center;gap:6px;
+                  transition:background .15s;
+                ">
+                  ₿ Archive to Bitcoin · 5 credits
+                </button>
+                <button onclick="resetBtcFlow()" style="
+                  background:none;border:none;color:var(--color-text-muted);
+                  font-size:var(--text-xs);cursor:pointer;font-family:var(--font-sans);
+                ">Disconnect</button>
+              </div>
+            </div>
+
+            <!-- Step 3: processing -->
+            <div id="btc-step-processing" style="display:none;">
+              <div style="display:flex;align-items:center;gap:var(--space-3);padding:var(--space-4);background:var(--color-surface-alt);border-radius:var(--radius-md)">
+                <div style="width:20px;height:20px;border:2px solid var(--color-border);border-top-color:var(--brand-primary);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0"></div>
+                <p id="btc-processing-msg" style="font-size:var(--text-sm);color:var(--color-text-secondary);margin:0">
+                  Preparing archive transaction…
+                </p>
+              </div>
+            </div>
+
+            <!-- Result message -->
+            <div id="btc-result-msg" style="display:none;margin-top:var(--space-3)"></div>
+          </div>
+        </article>
+      </div>
+
       <!-- Footer CTA for non-logged-in users -->
       <div class="text-center mt-8" id="footer-cta" style="display:none;">
         <p class="text-secondary" style="font-size: var(--text-sm); margin: 0 0 var(--space-3);">Want to drop your own receipts?</p>
@@ -510,7 +658,7 @@
       const contractAddress = window.TRUTHSTAMP_CONFIG?.CONTRACT_ADDRESS ?? '';
       // Try with contract_address filter first (requires migration 012)
       // Fall back to proof_id only if contract_address column missing from view
-      let query = window.tsDB.from('stamps_with_creator').select('*').eq('proof_id', proofId);
+      let query = window.tsDB.from('stamps_with_creator').select('*, bitcoin_txid, bitcoin_archive_status').eq('proof_id', proofId);
       if (contractAddress) query = query.eq('contract_address', contractAddress);
 
       [stampResult, authResult] = await Promise.all([
@@ -1001,6 +1149,9 @@
     if (window.trackEvent) {
       window.trackEvent('proof_viewed', { proof_id: stamp.proof_id, visibility: stamp.visibility });
     }
+
+    // Bitcoin archive card — shown for eligible stamps
+    initBitcoinArchiveCard(stamp);
   }
 
   // ── Client-side decryption (mirrors stamp.html logic) ───────────────────
@@ -1515,6 +1666,212 @@
       // Fallback for MetaMask — just show browser print dialog on current page
       window.print();
     }
+  }
+  // ── Bitcoin Archive (Unisat) ──────────────────────────────────────────────
+  const PLATFORM_BTC_ADDRESS = 'bc1pdpqg3ekdz64p36kf484sj68htrar57yf552kcc3jvl50cmg7gdjslvyesr';
+  const DUST_SATS            = 546;
+  let   btcPrepareData       = null; // holds response from bitcoin-archive-prepare
+
+  // Show/hide Bitcoin archive card based on stamp eligibility
+  function initBitcoinArchiveCard(stamp) {
+    const card = document.getElementById('btc-archive-card');
+    if (!card) return;
+
+    const isPublic   = stamp.visibility === 'public';
+    const isRevealed = stamp.visibility === 'sealed' && stamp.revealed;
+    if (!isPublic && !isRevealed) return; // don't show for sealed/hash-only
+
+    card.style.display = 'block';
+
+    // Already archived?
+    if (stamp.bitcoin_archive_status === 'confirmed' && stamp.bitcoin_txid) {
+      showBtcArchived(stamp.bitcoin_txid);
+    }
+  }
+
+  function showBtcArchived(txid) {
+    document.getElementById('btc-archive-action').style.display   = 'none';
+    document.getElementById('btc-already-archived').style.display = 'block';
+    const txidEl  = document.getElementById('btc-txid-display');
+    const linkEl  = document.getElementById('btc-mempool-link');
+    if (txidEl) txidEl.textContent = txid;
+    if (linkEl) linkEl.href = `https://mempool.space/tx/${txid}`;
+  }
+
+  async function connectUnisat() {
+    const btn = document.getElementById('btc-connect-btn');
+    if (!window.unisat) {
+      showBtcResult(
+        '⚠️ Unisat wallet not detected. <a href="https://unisat.io/download" target="_blank" rel="noopener" style="color:var(--brand-primary)">Install Unisat →</a>',
+        '#FEF3C7'
+      );
+      return;
+    }
+
+    try {
+      if (btn) { btn.disabled = true; btn.textContent = 'Connecting…'; }
+
+      // Request wallet access
+      const accounts = await window.unisat.requestAccounts();
+      if (!accounts?.length) throw new Error('No accounts returned');
+
+      const btcAddress = accounts[0];
+
+      // Check network — must be mainnet
+      const network = await window.unisat.getNetwork();
+      if (network !== 'livenet' && network !== 'mainnet') {
+        throw new Error('Please switch Unisat to Bitcoin Mainnet and try again.');
+      }
+
+      // Show connected state
+      document.getElementById('btc-step-connect').style.display  = 'none';
+      document.getElementById('btc-step-archive').style.display  = 'block';
+
+      const addrEl = document.getElementById('btc-wallet-addr');
+      if (addrEl) addrEl.textContent = btcAddress.slice(0,8) + '…' + btcAddress.slice(-6);
+
+      // Prepare archive tx
+      await prepareBitcoinArchive();
+
+    } catch(e) {
+      showBtcResult('❌ ' + e.message, '#FEE2E2');
+      if (btn) { btn.disabled = false; btn.textContent = 'Connect Unisat wallet'; }
+    }
+  }
+
+  async function prepareBitcoinArchive() {
+    showBtcProcessing('Preparing TSA-1 archive payload…');
+    document.getElementById('btc-archive-btn').style.display = 'none';
+
+    try {
+      const proofId = new URLSearchParams(window.location.search).get('id');
+      const session = await window.tsDB.auth.getSession();
+      const token   = session?.data?.session?.access_token;
+      if (!token) throw new Error('Please sign in to TruthStamp to archive.');
+
+      const supabaseUrl = window.TRUTHSTAMP_CONFIG?.SUPABASE_URL;
+      const res  = await fetch(`${supabaseUrl}/functions/v1/bitcoin-archive-prepare`, {
+        method:  'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ proof_id: Number(proofId) }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Preparation failed');
+
+      btcPrepareData = data;
+      hideBtcProcessing();
+
+      // Show payload preview
+      const payloadEl = document.getElementById('btc-payload-preview');
+      if (payloadEl) payloadEl.textContent = data.tsa1_payload;
+
+      // Show fee estimate
+      const feeEl = document.getElementById('btc-fee-display');
+      if (feeEl) {
+        feeEl.textContent = data.fee_usd_estimate > 0
+          ? `~$${data.fee_usd_estimate} USD`
+          : `~${data.fee_sats_per_vbyte} sat/vB`;
+      }
+
+      document.getElementById('btc-archive-btn').style.display = 'inline-flex';
+
+    } catch(e) {
+      hideBtcProcessing();
+      showBtcResult('❌ ' + e.message, '#FEE2E2');
+    }
+  }
+
+  async function archiveToBitcoin() {
+    if (!btcPrepareData) { await prepareBitcoinArchive(); return; }
+
+    const btn = document.getElementById('btc-archive-btn');
+    btn.disabled = true;
+    showBtcProcessing('Sending to Bitcoin — please confirm in Unisat wallet…');
+
+    try {
+      // Unisat sendBitcoin with memo (OP_RETURN) support
+      // This sends dust to platform address + embeds OP_RETURN data
+      let txid;
+      if (typeof window.unisat.sendBitcoin === 'function') {
+        txid = await window.unisat.sendBitcoin(
+          PLATFORM_BTC_ADDRESS,
+          DUST_SATS,
+          {
+            feeRate: btcPrepareData.fee_sats_per_vbyte,
+            memo:    btcPrepareData.tsa1_payload, // Unisat encodes as OP_RETURN
+          }
+        );
+      } else {
+        throw new Error('Unisat sendBitcoin not available. Please update your Unisat extension.');
+      }
+
+      if (!txid) throw new Error('No transaction ID returned from Unisat');
+
+      showBtcProcessing(`Transaction broadcast! TXID: ${txid.slice(0,16)}… Confirming with TruthStamp…`);
+
+      // Confirm with backend
+      const proofId = new URLSearchParams(window.location.search).get('id');
+      const session = await window.tsDB.auth.getSession();
+      const token   = session?.data?.session?.access_token;
+      const supabaseUrl = window.TRUTHSTAMP_CONFIG?.SUPABASE_URL;
+
+      const confirmRes  = await fetch(`${supabaseUrl}/functions/v1/bitcoin-archive-confirm`, {
+        method:  'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ proof_id: Number(proofId), txid }),
+      });
+      const confirmData = await confirmRes.json();
+
+      hideBtcProcessing();
+
+      if (!confirmRes.ok) {
+        // TX was broadcast but confirmation had an issue — show txid anyway
+        if (confirmRes.status === 404 && confirmData.retry) {
+          showBtcResult(
+            `⏳ TX broadcast successfully (${txid.slice(0,12)}…) but not yet visible in mempool. ` +
+            `Wait 1-2 minutes then <a href="" style="color:var(--brand-primary)">refresh this page</a>.`,
+            '#FEF3C7'
+          );
+        } else {
+          throw new Error(confirmData.error ?? 'Confirmation failed');
+        }
+        btn.disabled = false;
+        return;
+      }
+
+      // Success
+      showBtcArchived(txid);
+      showBtcResult(
+        `✅ ${confirmData.message} · <a href="https://mempool.space/tx/${txid}" target="_blank" rel="noopener" style="color:var(--brand-primary)">View on mempool.space ↗</a>` +
+        `<br><span style="font-size:11px;color:var(--color-text-muted)">${confirmData.credits_deducted} credits deducted · ${confirmData.credits_remaining} remaining</span>`,
+        '#ECFDF5'
+      );
+
+    } catch(e) {
+      hideBtcProcessing();
+      showBtcResult('❌ ' + escapeHtml(e.message), '#FEE2E2');
+      btn.disabled = false;
+    }
+  }
+
+  function resetBtcFlow() {
+    document.getElementById('btc-step-connect').style.display = 'block';
+    document.getElementById('btc-step-archive').style.display = 'none';
+    document.getElementById('btc-result-msg').style.display   = 'none';
+    btcPrepareData = null;
+  }
+
+  function showBtcProcessing(msg) {
+    document.getElementById('btc-step-processing').style.display = 'block';
+    document.getElementById('btc-processing-msg').textContent    = msg;
+  }
+  function hideBtcProcessing() {
+    document.getElementById('btc-step-processing').style.display = 'none';
+  }
+  function showBtcResult(html, bg) {
+    const el = document.getElementById('btc-result-msg');
+    el.innerHTML   = `<div style="padding:var(--space-3) var(--space-4);background:${bg};border-radius:var(--radius-md);font-size:var(--text-sm);line-height:1.6">${html}</div>`;
+    el.style.display = 'block';
   }
   </script>
 </body>
