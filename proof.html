@@ -2022,18 +2022,29 @@
   }
 
   function resetBtcFlow() {
-    document.getElementById('btc-step-connect').style.display = 'block';
-    document.getElementById('btc-step-archive').style.display = 'none';
-    document.getElementById('btc-result-msg').style.display   = 'none';
+    const connectStep = document.getElementById('btc-step-connect');
+    const archiveStep = document.getElementById('btc-step-archive');
+    const processStep = document.getElementById('btc-step-processing');
+    const resultMsg   = document.getElementById('btc-result-msg');
+    const connectBtn  = document.getElementById('btc-connect-btn');
+
+    if (connectStep)  { connectStep.style.display  = 'block'; }
+    if (archiveStep)  { archiveStep.style.display   = 'none';  }
+    if (processStep)  { processStep.style.display   = 'none';  }
+    if (resultMsg)    { resultMsg.style.display      = 'none';  }
+    if (connectBtn)   { connectBtn.disabled = false; connectBtn.textContent = 'Connect Unisat wallet'; }
     btcPrepareData = null;
   }
 
   function showBtcProcessing(msg) {
-    document.getElementById('btc-step-processing').style.display = 'block';
-    document.getElementById('btc-processing-msg').textContent    = msg;
+    const el  = document.getElementById('btc-step-processing');
+    const txt = document.getElementById('btc-processing-msg');
+    if (el)  el.style.display  = 'block';
+    if (txt) txt.innerHTML = msg; // innerHTML so links render
   }
   function hideBtcProcessing() {
-    document.getElementById('btc-step-processing').style.display = 'none';
+    const el = document.getElementById('btc-step-processing');
+    if (el) el.style.display = 'none';
   }
   function showBtcResult(html, bg) {
     const el = document.getElementById('btc-result-msg');
