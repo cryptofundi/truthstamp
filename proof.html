@@ -1697,14 +1697,18 @@
 
     const isPublic   = stamp.visibility === 'public';
     const isRevealed = stamp.visibility === 'sealed' && stamp.revealed;
-    if (!isPublic && !isRevealed) return; // don't show for sealed/hash-only
+    if (!isPublic && !isRevealed) return;
 
     card.style.display = 'block';
 
-    // Already archived?
+    // Already confirmed in DB — show badge immediately
     if (stamp.bitcoin_archive_status === 'confirmed' && stamp.bitcoin_txid) {
       showBtcArchived(stamp.bitcoin_txid);
+      return; // don't check localStorage — already done
     }
+
+    // Check localStorage for any pending TX from a previous session
+    checkPendingBitcoinArchive();
   }
 
   function showBtcArchived(txid) {
@@ -1825,12 +1829,46 @@
 
       if (!txid) throw new Error('No transaction ID returned from Unisat');
 
-      showBtcProcessing(`Transaction broadcast! TXID: ${txid.slice(0,16)}… Confirming with TruthStamp…`);
+      showBtcProcessing(`Transaction broadcast! TXID: ${txid.slice(0,16)}… Verifying on Bitcoin network…`);
 
-      // Confirm with backend
-      const proofId = new URLSearchParams(window.location.search).get('id');
-      const session = await window.tsDB.auth.getSession();
-      const token   = session?.data?.session?.access_token;
+      // Store txid in localStorage immediately — so if user leaves and comes back
+      // we can auto-confirm without them having to re-enter it
+      const proofId2 = new URLSearchParams(window.location.search).get('id');
+      localStorage.setItem(`btc_pending_${proofId2}`, JSON.stringify({
+        txid,
+        tsa1_payload: btcPrepareData.tsa1_payload,
+        stored_at:    Date.now(),
+      }));
+
+      // Try to confirm immediately, then poll if not visible yet
+      await confirmTxWithRetry(txid, btcPrepareData.tsa1_payload, proofId2);
+
+    } catch(e) {
+      hideBtcProcessing();
+      showBtcResult('❌ ' + escapeHtml(e.message), '#FEE2E2');
+      btn.disabled = false;
+    }
+  }
+
+  // ── Bitcoin TX confirmation with auto-retry polling ───────────────────────
+  // Polls mempool.space every 30s for up to 20 minutes after broadcast.
+  // Persists txid in localStorage so page refresh auto-resumes polling.
+
+  async function confirmTxWithRetry(txid, tsa1Payload, proofId, attempt) {
+    attempt = attempt || 1;
+    const MAX_ATTEMPTS = 40; // 40 × 30s = 20 minutes
+    const POLL_MS      = 30000;
+
+    showBtcProcessing(
+      attempt === 1
+        ? `Confirming TX on Bitcoin network…`
+        : `TX pending in mempool · checking again (attempt ${attempt}/${MAX_ATTEMPTS})…`
+    );
+
+    try {
+      const session     = await window.tsDB.auth.getSession();
+      const token       = session?.data?.session?.access_token;
+      if (!token) throw new Error('Session expired — please sign in again.');
       const supabaseUrl = window.TRUTHSTAMP_CONFIG?.SUPABASE_URL;
 
       const confirmRes  = await fetch(`${supabaseUrl}/functions/v1/bitcoin-archive-confirm`, {
@@ -1839,40 +1877,102 @@
         body:    JSON.stringify({
           proof_id:     Number(proofId),
           txid,
-          tsa1_payload: btcPrepareData.tsa1_payload, // fallback if queue lookup fails
+          tsa1_payload: tsa1Payload,
         }),
       });
-      const confirmData = await confirmRes.json();
+      const data = await confirmRes.json();
 
-      hideBtcProcessing();
-
-      if (!confirmRes.ok) {
-        // TX was broadcast but confirmation had an issue — show txid anyway
-        if (confirmRes.status === 404 && confirmData.retry) {
-          showBtcResult(
-            `⏳ TX broadcast successfully (${txid.slice(0,12)}…) but not yet visible in mempool. ` +
-            `Wait 1-2 minutes then <a href="" style="color:var(--brand-primary)">refresh this page</a>.`,
-            '#FEF3C7'
-          );
-        } else {
-          throw new Error(confirmData.error ?? 'Confirmation failed');
-        }
-        btn.disabled = false;
+      if (confirmRes.ok) {
+        // ✅ Success
+        localStorage.removeItem(`btc_pending_${proofId}`);
+        hideBtcProcessing();
+        showBtcArchived(txid);
+        showBtcResult(
+          `✅ ${data.message} · <a href="https://mempool.space/tx/${txid}" target="_blank" rel="noopener" style="color:var(--brand-primary)">View on mempool.space ↗</a>` +
+          `<br><span style="font-size:11px;color:var(--color-text-muted)">${data.credits_deducted} credits deducted · ${data.credits_remaining} remaining</span>`,
+          '#ECFDF5'
+        );
         return;
       }
 
-      // Success
-      showBtcArchived(txid);
-      showBtcResult(
-        `✅ ${confirmData.message} · <a href="https://mempool.space/tx/${txid}" target="_blank" rel="noopener" style="color:var(--brand-primary)">View on mempool.space ↗</a>` +
-        `<br><span style="font-size:11px;color:var(--color-text-muted)">${confirmData.credits_deducted} credits deducted · ${confirmData.credits_remaining} remaining</span>`,
-        '#ECFDF5'
-      );
+      // 404 retry — TX not visible in mempool yet, keep polling
+      if ((confirmRes.status === 404 && data.retry) || confirmRes.status === 503) {
+        if (attempt >= MAX_ATTEMPTS) {
+          hideBtcProcessing();
+          localStorage.removeItem(`btc_pending_${proofId}`);
+          showBtcResult(
+            `⚠️ TX broadcast but not confirmed after 20 minutes. ` +
+            `Use the manual field below with txid: <code style="font-family:monospace;font-size:11px">${txid}</code>`,
+            '#FEF3C7'
+          );
+          return;
+        }
+        // Schedule next attempt — show countdown
+        let secs = POLL_MS / 1000;
+        const countdown = setInterval(() => {
+          secs--;
+          const btn2 = document.getElementById('btc-archive-btn');
+          showBtcProcessing(
+            `TX in mempool · confirming in ${secs}s… ` +
+            `<a href="https://mempool.space/tx/${txid}" target="_blank" rel="noopener" ` +
+            `style="color:var(--brand-primary);font-size:11px">track on mempool.space ↗</a>`
+          );
+          if (secs <= 0) clearInterval(countdown);
+        }, 1000);
+
+        setTimeout(() => {
+          clearInterval(countdown);
+          confirmTxWithRetry(txid, tsa1Payload, proofId, attempt + 1);
+        }, POLL_MS);
+        return;
+      }
+
+      // Other error — stop retrying
+      hideBtcProcessing();
+      throw new Error(data.error ?? 'Confirmation failed');
 
     } catch(e) {
       hideBtcProcessing();
       showBtcResult('❌ ' + escapeHtml(e.message), '#FEE2E2');
-      btn.disabled = false;
+      const btn2 = document.getElementById('btc-archive-btn');
+      if (btn2) btn2.disabled = false;
+    }
+  }
+
+  // ── On page load: check localStorage for any pending Bitcoin TX ───────────
+  // If user broadcast a TX then left/refreshed, auto-resume polling
+  function checkPendingBitcoinArchive() {
+    const proofId = new URLSearchParams(window.location.search).get('id');
+    if (!proofId) return;
+    const key     = `btc_pending_${proofId}`;
+    const stored  = localStorage.getItem(key);
+    if (!stored) return;
+
+    try {
+      const { txid, tsa1_payload, stored_at } = JSON.parse(stored);
+      // Give up if stored more than 24 hours ago
+      if (Date.now() - stored_at > 86400000) {
+        localStorage.removeItem(key);
+        return;
+      }
+      // Show the archive card and auto-resume confirm
+      const card = document.getElementById('btc-archive-card');
+      if (card) card.style.display = 'block';
+      // Show archive action section
+      document.getElementById('btc-step-connect').style.display  = 'none';
+      document.getElementById('btc-step-archive').style.display  = 'none';
+      // Auto-fill manual txid field as fallback
+      const manualInput = document.getElementById('btc-manual-txid');
+      if (manualInput) manualInput.value = txid;
+      // Resume polling
+      showBtcProcessing(
+        `Resuming confirmation for TX ${txid.slice(0,12)}… ` +
+        `<a href="https://mempool.space/tx/${txid}" target="_blank" rel="noopener" ` +
+        `style="color:var(--brand-primary);font-size:11px">track ↗</a>`
+      );
+      confirmTxWithRetry(txid, tsa1_payload, proofId, 1);
+    } catch(e) {
+      localStorage.removeItem(key);
     }
   }
 
