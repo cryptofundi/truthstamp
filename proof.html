@@ -472,19 +472,24 @@
                 padding:var(--space-4);margin-bottom:var(--space-4);
                 font-size:var(--text-xs);color:var(--color-text-muted);line-height:1.6;
               ">
-                ⚡ <strong>Requires:</strong> Unisat Bitcoin wallet browser extension ·
+                ⚡ <strong>Requires:</strong> A Bitcoin wallet browser extension ·
                 5 TruthStamp credits · Bitcoin mainnet
-                <br>
-                <a href="https://unisat.io/download" target="_blank" rel="noopener"
-                   style="color:var(--brand-primary)">Don't have Unisat? Download here →</a>
               </div>
-              <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:center">
-                <button id="btc-connect-btn" onclick="connectUnisat()" class="btn btn-primary">
-                  Connect Unisat wallet
+              <!-- Wallet choice buttons -->
+              <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:center;margin-bottom:var(--space-3)">
+                <button id="btc-connect-unisat" onclick="connectWallet('unisat')" class="btn btn-primary"
+                  style="display:inline-flex;align-items:center;gap:6px;">
+                  <span style="font-size:15px">🟠</span> Connect Unisat
                 </button>
-                <span style="font-size:var(--text-xs);color:var(--color-text-muted)">
-                  5 credits will be deducted after successful archive
-                </span>
+                <button id="btc-connect-xverse" onclick="connectWallet('xverse')" class="btn btn-secondary"
+                  style="display:inline-flex;align-items:center;gap:6px;">
+                  <span style="font-size:15px">🟣</span> Connect Xverse
+                </button>
+              </div>
+              <div style="font-size:var(--text-xs);color:var(--color-text-muted);line-height:1.6">
+                5 credits will be deducted after successful archive ·
+                <a href="https://unisat.io/download" target="_blank" rel="noopener" style="color:var(--brand-primary)">Get Unisat</a> ·
+                <a href="https://www.xverse.app/download" target="_blank" rel="noopener" style="color:var(--brand-primary)">Get Xverse</a>
               </div>
             </div>
 
@@ -1169,7 +1174,7 @@
     }
 
     // Bitcoin archive card — shown for eligible stamps
-    initBitcoinArchiveCard(stamp);
+    initBitcoinArchiveCard(stamp, currentUser);
   }
 
   // ── Client-side decryption (mirrors stamp.html logic) ───────────────────
@@ -1691,7 +1696,7 @@
   let   btcPrepareData       = null; // holds response from bitcoin-archive-prepare
 
   // Show/hide Bitcoin archive card based on stamp eligibility
-  function initBitcoinArchiveCard(stamp) {
+  function initBitcoinArchiveCard(stamp, currentUser) {
     const card = document.getElementById('btc-archive-card');
     if (!card) return;
 
@@ -1701,13 +1706,22 @@
 
     card.style.display = 'block';
 
-    // Already confirmed in DB — show badge immediately
+    // Already confirmed — show green badge, hide archive action for everyone
     if (stamp.bitcoin_archive_status === 'confirmed' && stamp.bitcoin_txid) {
       showBtcArchived(stamp.bitcoin_txid);
-      return; // don't check localStorage — already done
+      document.getElementById('btc-archive-action').style.display = 'none';
+      return;
     }
 
-    // Check localStorage for any pending TX from a previous session
+    // Not archived yet:
+    // Logged-in users → show archive action (they can archive)
+    // Non-logged-in  → hide entire card (nothing useful to show)
+    if (!currentUser) {
+      card.style.display = 'none';
+      return;
+    }
+
+    // Logged in — show archive action and check for pending TX
     checkPendingBitcoinArchive();
   }
 
@@ -1720,8 +1734,72 @@
     if (linkEl) linkEl.href = `https://mempool.space/tx/${txid}`;
   }
 
+  let activeBtcWallet = null; // 'unisat' | 'xverse'
+
+  // Dispatcher — routes to correct wallet
+  async function connectWallet(wallet) {
+    activeBtcWallet = wallet;
+    if (wallet === 'unisat') await connectUnisat();
+    else if (wallet === 'xverse') await connectXverse();
+  }
+
+  async function connectXverse() {
+    const btn = document.getElementById('btc-connect-xverse');
+    // Xverse injects window.XverseProviders.BitcoinProvider
+    const xverse = window.XverseProviders?.BitcoinProvider
+                ?? window.BitcoinProvider
+                ?? null;
+
+    if (!xverse) {
+      showBtcResult(
+        '⚠️ Xverse wallet not detected. <a href="https://www.xverse.app/download" target="_blank" rel="noopener" style="color:var(--brand-primary)">Install Xverse →</a>',
+        '#FEF3C7'
+      );
+      return;
+    }
+
+    try {
+      if (btn) { btn.disabled = true; btn.textContent = 'Connecting…'; }
+
+      // Request wallet access — Xverse uses getAddresses
+      const response = await xverse.request('getAddresses', {
+        purposes: ['payment'],
+        message:  'TruthStamp needs your Bitcoin address to archive a proof.',
+      });
+
+      if (response.status !== 'success')
+        throw new Error(response.error?.message ?? 'Xverse connection failed');
+
+      // Get the payment (native segwit / taproot) address
+      const paymentAddr = response.result.addresses.find(
+        a => a.purpose === 'payment'
+      );
+      if (!paymentAddr) throw new Error('No payment address returned from Xverse');
+
+      const btcAddress = paymentAddr.address;
+
+      // Check network — Xverse should be on mainnet
+      // Xverse addresses starting with bc1 are mainnet
+      if (!btcAddress.startsWith('bc1') && !btcAddress.startsWith('1') && !btcAddress.startsWith('3'))
+        throw new Error('Please switch Xverse to Bitcoin Mainnet and try again.');
+
+      // Show connected state
+      document.getElementById('btc-step-connect').style.display  = 'none';
+      document.getElementById('btc-step-archive').style.display  = 'block';
+
+      const addrEl = document.getElementById('btc-wallet-addr');
+      if (addrEl) addrEl.textContent = btcAddress.slice(0,8) + '…' + btcAddress.slice(-6);
+
+      await prepareBitcoinArchive();
+
+    } catch(e) {
+      showBtcResult('❌ ' + e.message, '#FEE2E2');
+      if (btn) { btn.disabled = false; btn.innerHTML = '<span style="font-size:15px">🟣</span> Connect Xverse'; }
+    }
+  }
+
   async function connectUnisat() {
-    const btn = document.getElementById('btc-connect-btn');
+    const btn = document.getElementById('btc-connect-unisat');
     if (!window.unisat) {
       showBtcResult(
         '⚠️ Unisat wallet not detected. <a href="https://unisat.io/download" target="_blank" rel="noopener" style="color:var(--brand-primary)">Install Unisat →</a>',
@@ -1733,31 +1811,25 @@
     try {
       if (btn) { btn.disabled = true; btn.textContent = 'Connecting…'; }
 
-      // Request wallet access
       const accounts = await window.unisat.requestAccounts();
       if (!accounts?.length) throw new Error('No accounts returned');
 
       const btcAddress = accounts[0];
-
-      // Check network — must be mainnet
-      const network = await window.unisat.getNetwork();
-      if (network !== 'livenet' && network !== 'mainnet') {
+      const network    = await window.unisat.getNetwork();
+      if (network !== 'livenet' && network !== 'mainnet')
         throw new Error('Please switch Unisat to Bitcoin Mainnet and try again.');
-      }
 
-      // Show connected state
       document.getElementById('btc-step-connect').style.display  = 'none';
       document.getElementById('btc-step-archive').style.display  = 'block';
 
       const addrEl = document.getElementById('btc-wallet-addr');
       if (addrEl) addrEl.textContent = btcAddress.slice(0,8) + '…' + btcAddress.slice(-6);
 
-      // Prepare archive tx
       await prepareBitcoinArchive();
 
     } catch(e) {
       showBtcResult('❌ ' + e.message, '#FEE2E2');
-      if (btn) { btn.disabled = false; btn.textContent = 'Connect Unisat wallet'; }
+      if (btn) { btn.disabled = false; btn.innerHTML = '<span style="font-size:15px">🟠</span> Connect Unisat'; }
     }
   }
 
@@ -1814,17 +1886,42 @@
       // Unisat sendBitcoin with memo (OP_RETURN) support
       // This sends dust to platform address + embeds OP_RETURN data
       let txid;
-      if (typeof window.unisat.sendBitcoin === 'function') {
+      if (activeBtcWallet === 'xverse') {
+        // Xverse: use sendTransfer for payment + OP_RETURN via signPsbt
+        // Xverse supports sendBtc via request API
+        const xverse = window.XverseProviders?.BitcoinProvider ?? window.BitcoinProvider;
+        if (!xverse) throw new Error('Xverse wallet not found. Please reconnect.');
+
+        // Xverse sendBtc — sends to platform address
+        // OP_RETURN via memo/opReturn field in newer Xverse versions
+        const sendRes = await xverse.request('sendBtcTransaction', {
+          recipients: [
+            { address: PLATFORM_BTC_ADDRESS, amount: DUST_SATS },
+          ],
+          senderAddress: document.getElementById('btc-wallet-addr')?.textContent?.replace('…','') ?? '',
+          memo: btcPrepareData.tsa1_payload, // Xverse encodes as OP_RETURN if supported
+        });
+
+        if (sendRes.status !== 'success')
+          throw new Error(sendRes.error?.message ?? 'Xverse transaction failed');
+
+        txid = sendRes.result?.txid ?? sendRes.result?.txId ?? sendRes.result;
+        if (!txid || typeof txid !== 'string')
+          throw new Error('No txid returned from Xverse. Check your wallet for the transaction.');
+
+      } else {
+        // Unisat (default)
+        if (typeof window.unisat?.sendBitcoin !== 'function')
+          throw new Error('Unisat sendBitcoin not available. Please update your Unisat extension.');
+
         txid = await window.unisat.sendBitcoin(
           PLATFORM_BTC_ADDRESS,
           DUST_SATS,
           {
             feeRate: btcPrepareData.fee_sats_per_vbyte,
-            memo:    btcPrepareData.tsa1_payload, // Unisat encodes as OP_RETURN
+            memo:    btcPrepareData.tsa1_payload,
           }
         );
-      } else {
-        throw new Error('Unisat sendBitcoin not available. Please update your Unisat extension.');
       }
 
       if (!txid) throw new Error('No transaction ID returned from Unisat');
@@ -2022,18 +2119,21 @@
   }
 
   function resetBtcFlow() {
-    const connectStep = document.getElementById('btc-step-connect');
-    const archiveStep = document.getElementById('btc-step-archive');
-    const processStep = document.getElementById('btc-step-processing');
-    const resultMsg   = document.getElementById('btc-result-msg');
-    const connectBtn  = document.getElementById('btc-connect-btn');
+    const connectStep  = document.getElementById('btc-step-connect');
+    const archiveStep  = document.getElementById('btc-step-archive');
+    const processStep  = document.getElementById('btc-step-processing');
+    const resultMsg    = document.getElementById('btc-result-msg');
+    const unisatBtn    = document.getElementById('btc-connect-unisat');
+    const xverseBtn    = document.getElementById('btc-connect-xverse');
 
-    if (connectStep)  { connectStep.style.display  = 'block'; }
-    if (archiveStep)  { archiveStep.style.display   = 'none';  }
-    if (processStep)  { processStep.style.display   = 'none';  }
-    if (resultMsg)    { resultMsg.style.display      = 'none';  }
-    if (connectBtn)   { connectBtn.disabled = false; connectBtn.textContent = 'Connect Unisat wallet'; }
-    btcPrepareData = null;
+    if (connectStep) connectStep.style.display = 'block';
+    if (archiveStep) archiveStep.style.display  = 'none';
+    if (processStep) processStep.style.display  = 'none';
+    if (resultMsg)   resultMsg.style.display     = 'none';
+    if (unisatBtn)   { unisatBtn.disabled = false; unisatBtn.innerHTML = '<span style="font-size:15px">🟠</span> Connect Unisat'; }
+    if (xverseBtn)   { xverseBtn.disabled = false; xverseBtn.innerHTML = '<span style="font-size:15px">🟣</span> Connect Xverse'; }
+    activeBtcWallet = null;
+    btcPrepareData  = null;
   }
 
   function showBtcProcessing(msg) {
