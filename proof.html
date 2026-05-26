@@ -1752,12 +1752,12 @@
     try {
       if (btn) { btn.disabled = true; btn.textContent = 'Connecting…'; }
 
-      // Xverse injects window.XverseProviders directly — no library needed
-      // Give the extension a moment to inject if page just loaded
-      let provider = window.XverseProviders?.BitcoinProvider ?? window.BitcoinProvider ?? null;
+      // Xverse injects window.XverseProviders — use wallet_connect which handles
+      // permissions + returns addresses in one call. No library needed.
+      let provider = window.XverseProviders?.BitcoinProvider ?? null;
       if (!provider) {
         await new Promise(r => setTimeout(r, 500));
-        provider = window.XverseProviders?.BitcoinProvider ?? window.BitcoinProvider ?? null;
+        provider = window.XverseProviders?.BitcoinProvider ?? null;
       }
       if (!provider) {
         showBtcResult(
@@ -1768,21 +1768,26 @@
         return;
       }
 
-      // Request Bitcoin payment address using XverseProviders
-      const res = await provider.request('getAddresses', {
-        purposes: ['payment'],
-        message:  'TruthStamp needs your Bitcoin address to archive a proof.',
+      // wallet_connect: requests permission + returns addresses in one step
+      // User sees Xverse connection prompt, selects account, approves
+      const res = await provider.request('wallet_connect', {
+        addresses: ['payment'],
+        message:   'Connect to TruthStamp to archive proofs to Bitcoin.',
+        network:   'Mainnet',
       });
 
       if (res.status !== 'success')
         throw new Error(res.error?.message ?? 'Xverse connection failed or was cancelled.');
 
-      const paymentAddr = res.result?.addresses?.find(a => a.purpose === 'payment');
+      // wallet_connect returns addresses directly in result.addresses
+      const addresses = res.result?.addresses ?? [];
+      const paymentAddr = addresses.find(a => a.purpose === 'payment');
       if (!paymentAddr) throw new Error('No Bitcoin payment address returned from Xverse.');
 
       const addr = paymentAddr.address;
       window._xversePaymentAddress = addr;
-      window._xverseProvider       = provider; // cache for archiveToBitcoin()
+      window._xversePublicKey      = paymentAddr.publicKey;
+      window._xverseProvider       = provider;
 
       // Validate mainnet
       if (!addr.startsWith('bc1') && !addr.startsWith('1') && !addr.startsWith('3'))
@@ -1923,7 +1928,8 @@
           PLATFORM_BTC_ADDRESS,
           DUST_SATS,
           btcPrepareData.op_return_hex,
-          btcPrepareData.fee_sats_per_vbyte
+          btcPrepareData.fee_sats_per_vbyte,
+          window._xversePublicKey
         );
 
         showBtcProcessing('Please confirm the transaction in Xverse…');
@@ -2109,10 +2115,7 @@
   // Constructs a PSBT hex that Xverse can sign.
   // Input: one UTXO from sender
   // Outputs: OP_RETURN (TSA-1 data) + dust to platform + change back to sender
-  async function buildOpReturnPsbt(senderAddr, utxo, platformAddr, dustSats, opReturnHex, feeRate) {
-    // We use the bitcoin-archive-prepare edge function to build the PSBT
-    // since raw PSBT construction in pure JS requires bitcoinjs-lib
-    // Instead: fetch raw PSBT from our backend which has the library
+  async function buildOpReturnPsbt(senderAddr, utxo, platformAddr, dustSats, opReturnHex, feeRate, publicKey) {
     try {
       const session     = await window.tsDB.auth.getSession();
       const token       = session?.data?.session?.access_token;
@@ -2126,6 +2129,7 @@
           proof_id:       Number(proofId),
           wallet_type:    'xverse',
           sender_address: senderAddr,
+          sender_pubkey:  publicKey ?? '',
           utxo_txid:      utxo.txid,
           utxo_vout:      utxo.vout,
           utxo_value:     utxo.value,
