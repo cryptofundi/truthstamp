@@ -234,12 +234,7 @@
       .action-row { flex-direction: column; }
     }
   </style>
-  <!-- sats-connect for Xverse wallet -->
-  <script type="module">
-    import { request as satsRequest, AddressPurpose } from 'https://cdn.jsdelivr.net/npm/sats-connect@2/+esm';
-    window._satsRequest        = satsRequest;
-    window._satsAddressPurpose = AddressPurpose;
-  </script>
+  <!-- sats-connect loaded on demand inside connectXverse() -->
 </head>
 <body>
   <nav class="nav">
@@ -1756,34 +1751,38 @@
   async function connectXverse() {
     const btn = document.getElementById('btc-connect-xverse');
     try {
-      if (btn) { btn.disabled = true; btn.textContent = 'Connecting…'; }
+      if (btn) { btn.disabled = true; btn.textContent = 'Loading Xverse…'; }
 
-      // Wait for sats-connect to load (it's a module script, may not be ready immediately)
-      let satsRequest = window._satsRequest;
-      let retries = 0;
-      while (!satsRequest && retries < 20) {
-        await new Promise(r => setTimeout(r, 150));
-        satsRequest = window._satsRequest;
-        retries++;
+      // Dynamic import at call time — avoids all pre-loading race conditions
+      let satsRequest, AddressPurpose;
+      try {
+        const mod = await import('https://cdn.jsdelivr.net/npm/sats-connect@2/+esm');
+        satsRequest    = mod.request ?? mod.default?.request;
+        AddressPurpose = mod.AddressPurpose ?? mod.default?.AddressPurpose;
+      } catch(e) {
+        throw new Error('Could not load Xverse library. Check your internet connection and try again.');
       }
-      if (!satsRequest) throw new Error('Xverse (sats-connect) not loaded. Please refresh and try again.');
+      if (!satsRequest) throw new Error('Xverse (sats-connect) failed to initialise. Please refresh and try again.');
+
+      if (btn) btn.textContent = 'Connecting…';
 
       // Request Bitcoin payment address
       const res = await satsRequest('getAddresses', {
-        purposes: [window._satsAddressPurpose?.Payment ?? 'payment'],
+        purposes: [AddressPurpose?.Payment ?? 'payment'],
         message:  'TruthStamp needs your Bitcoin address to archive a proof.',
       });
 
       if (res.status !== 'success')
-        throw new Error(res.error?.message ?? 'Xverse connection failed');
+        throw new Error(res.error?.message ?? 'Xverse connection failed or was cancelled.');
 
       const paymentAddr = res.result?.addresses?.find(a => a.purpose === 'payment');
       if (!paymentAddr) throw new Error('No Bitcoin payment address returned from Xverse.');
 
-      window._xversePaymentAddress = paymentAddr.address;
-
-      // Validate mainnet address
       const addr = paymentAddr.address;
+      window._xversePaymentAddress = addr;
+      window._satsRequest          = satsRequest; // cache for archiveToBitcoin()
+
+      // Validate mainnet
       if (!addr.startsWith('bc1') && !addr.startsWith('1') && !addr.startsWith('3'))
         throw new Error('Please switch Xverse to Bitcoin Mainnet and try again.');
 
@@ -1891,7 +1890,7 @@
       let txid;
       if (activeBtcWallet === 'xverse') {
         const satsRequest = window._satsRequest;
-        if (!satsRequest) throw new Error('Xverse not loaded. Please refresh the page.');
+        if (!satsRequest) throw new Error('Xverse session expired. Please reconnect.');
 
         const senderAddress = window._xversePaymentAddress;
         if (!senderAddress) throw new Error('Xverse address not found. Please reconnect.');
