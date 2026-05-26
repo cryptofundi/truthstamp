@@ -234,7 +234,6 @@
       .action-row { flex-direction: column; }
     }
   </style>
-  <!-- sats-connect loaded on demand inside connectXverse() -->
 </head>
 <body>
   <nav class="nav">
@@ -1751,24 +1750,27 @@
   async function connectXverse() {
     const btn = document.getElementById('btc-connect-xverse');
     try {
-      if (btn) { btn.disabled = true; btn.textContent = 'Loading Xverse…'; }
+      if (btn) { btn.disabled = true; btn.textContent = 'Connecting…'; }
 
-      // Dynamic import at call time — avoids all pre-loading race conditions
-      let satsRequest, AddressPurpose;
-      try {
-        const mod = await import('https://cdn.jsdelivr.net/npm/sats-connect@2/+esm');
-        satsRequest    = mod.request ?? mod.default?.request;
-        AddressPurpose = mod.AddressPurpose ?? mod.default?.AddressPurpose;
-      } catch(e) {
-        throw new Error('Could not load Xverse library. Check your internet connection and try again.');
+      // Xverse injects window.XverseProviders directly — no library needed
+      // Give the extension a moment to inject if page just loaded
+      let provider = window.XverseProviders?.BitcoinProvider ?? window.BitcoinProvider ?? null;
+      if (!provider) {
+        await new Promise(r => setTimeout(r, 500));
+        provider = window.XverseProviders?.BitcoinProvider ?? window.BitcoinProvider ?? null;
       }
-      if (!satsRequest) throw new Error('Xverse (sats-connect) failed to initialise. Please refresh and try again.');
+      if (!provider) {
+        showBtcResult(
+          '⚠️ Xverse wallet not detected. <a href="https://www.xverse.app/download" target="_blank" rel="noopener" style="color:var(--brand-primary)">Install Xverse →</a>',
+          '#FEF3C7'
+        );
+        if (btn) { btn.disabled = false; btn.innerHTML = '<span style="font-size:15px">🟣</span> Connect Xverse'; }
+        return;
+      }
 
-      if (btn) btn.textContent = 'Connecting…';
-
-      // Request Bitcoin payment address
-      const res = await satsRequest('getAddresses', {
-        purposes: [AddressPurpose?.Payment ?? 'payment'],
+      // Request Bitcoin payment address using XverseProviders
+      const res = await provider.request('getAddresses', {
+        purposes: ['payment'],
         message:  'TruthStamp needs your Bitcoin address to archive a proof.',
       });
 
@@ -1780,7 +1782,7 @@
 
       const addr = paymentAddr.address;
       window._xversePaymentAddress = addr;
-      window._satsRequest          = satsRequest; // cache for archiveToBitcoin()
+      window._xverseProvider       = provider; // cache for archiveToBitcoin()
 
       // Validate mainnet
       if (!addr.startsWith('bc1') && !addr.startsWith('1') && !addr.startsWith('3'))
@@ -1889,8 +1891,8 @@
       // This sends dust to platform address + embeds OP_RETURN data
       let txid;
       if (activeBtcWallet === 'xverse') {
-        const satsRequest = window._satsRequest;
-        if (!satsRequest) throw new Error('Xverse session expired. Please reconnect.');
+        const xverseProvider = window._xverseProvider;
+        if (!xverseProvider) throw new Error('Xverse session expired. Please reconnect.');
 
         const senderAddress = window._xversePaymentAddress;
         if (!senderAddress) throw new Error('Xverse address not found. Please reconnect.');
@@ -1927,7 +1929,7 @@
         showBtcProcessing('Please confirm the transaction in Xverse…');
 
         // Ask Xverse to sign the PSBT
-        const signRes = await satsRequest('signPsbt', {
+        const signRes = await xverseProvider.request('signPsbt', {
           psbt:       psbtHex,
           signInputs: { [senderAddress]: [0] },
           broadcast:  true, // Xverse broadcasts after signing
