@@ -2021,16 +2021,35 @@
       if (!token) throw new Error('Session expired — please sign in again.');
       const supabaseUrl = window.TRUTHSTAMP_CONFIG?.SUPABASE_URL;
 
-      const confirmRes  = await fetch(`${supabaseUrl}/functions/v1/bitcoin-archive-confirm`, {
-        method:  'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          proof_id:     Number(proofId),
-          txid,
-          tsa1_payload: tsa1Payload,
-        }),
-      });
-      const data = await confirmRes.json();
+      // Use AbortController timeout — prevents "Load failed" on slow networks
+      const controller = new AbortController();
+      const timer      = setTimeout(() => controller.abort(), 20000); // 20s timeout
+
+      let confirmRes, data;
+      try {
+        confirmRes = await fetch(`${supabaseUrl}/functions/v1/bitcoin-archive-confirm`, {
+          method:  'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ proof_id: Number(proofId), txid, tsa1_payload: tsa1Payload }),
+          signal:  controller.signal,
+        });
+        clearTimeout(timer);
+        data = await confirmRes.json();
+      } catch(fetchErr) {
+        clearTimeout(timer);
+        // Network error or timeout — treat as retry, not fatal
+        if (attempt >= MAX_ATTEMPTS) {
+          hideBtcProcessing();
+          showBtcResult(
+            `⚠️ Network error after ${MAX_ATTEMPTS} attempts. ` +
+            `Paste txid in the manual field below: <code style="font-family:monospace;font-size:11px">${txid}</code>`,
+            '#FEF3C7'
+          );
+          return;
+        }
+        scheduleRetry(txid, tsa1Payload, proofId, attempt);
+        return;
+      }
 
       if (confirmRes.ok) {
         // ✅ Success
@@ -2052,34 +2071,22 @@
           localStorage.removeItem(`btc_pending_${proofId}`);
           showBtcResult(
             `⚠️ TX broadcast but not confirmed after 20 minutes. ` +
-            `Use the manual field below with txid: <code style="font-family:monospace;font-size:11px">${txid}</code>`,
+            `Use the manual field below: <code style="font-family:monospace;font-size:11px">${txid}</code>`,
             '#FEF3C7'
           );
           return;
         }
-        // Schedule next attempt — show countdown
-        let secs = POLL_MS / 1000;
-        const countdown = setInterval(() => {
-          secs--;
-          const btn2 = document.getElementById('btc-archive-btn');
-          showBtcProcessing(
-            `TX in mempool · confirming in ${secs}s… ` +
-            `<a href="https://mempool.space/tx/${txid}" target="_blank" rel="noopener" ` +
-            `style="color:var(--brand-primary);font-size:11px">track on mempool.space ↗</a>`
-          );
-          if (secs <= 0) clearInterval(countdown);
-        }, 1000);
-
-        setTimeout(() => {
-          clearInterval(countdown);
-          confirmTxWithRetry(txid, tsa1Payload, proofId, attempt + 1);
-        }, POLL_MS);
+        scheduleRetry(txid, tsa1Payload, proofId, attempt);
         return;
       }
 
-      // Other error — stop retrying
+      // Other server error — show message but keep txid available
       hideBtcProcessing();
-      throw new Error(data.error ?? 'Confirmation failed');
+      showBtcResult(
+        `⚠️ ${escapeHtml(data.error ?? 'Confirmation error')}. ` +
+        `TX was broadcast — paste txid in the manual field: <code style="font-family:monospace;font-size:11px">${txid}</code>`,
+        '#FEF3C7'
+      );
 
     } catch(e) {
       hideBtcProcessing();
@@ -2087,6 +2094,24 @@
       const btn2 = document.getElementById('btc-archive-btn');
       if (btn2) btn2.disabled = false;
     }
+  }
+
+  function scheduleRetry(txid, tsa1Payload, proofId, attempt) {
+    const POLL_MS = 30000;
+    let secs = POLL_MS / 1000;
+    const countdown = setInterval(() => {
+      secs--;
+      showBtcProcessing(
+        `TX in mempool · next check in ${secs}s (${attempt + 1}/40)… ` +
+        `<a href="https://mempool.space/tx/${txid}" target="_blank" rel="noopener" ` +
+        `style="color:var(--brand-primary);font-size:11px">track ↗</a>`
+      );
+      if (secs <= 0) clearInterval(countdown);
+    }, 1000);
+    setTimeout(() => {
+      clearInterval(countdown);
+      confirmTxWithRetry(txid, tsa1Payload, proofId, attempt + 1);
+    }, POLL_MS);
   }
 
   // ── On page load: check localStorage for any pending Bitcoin TX ───────────
