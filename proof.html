@@ -413,7 +413,7 @@
           margin-bottom:var(--space-5);
         ">
           <!-- Header -->
-          <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4);">
+          <div id="btc-card-header" style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4);">
             <div style="
               width:36px;height:36px;border-radius:var(--radius-md);
               background:#FEF3C7;display:grid;place-items:center;
@@ -430,7 +430,7 @@
           </div>
 
           <!-- What this does -->
-          <div style="
+          <div id="btc-card-desc" style="
             background:var(--color-surface-alt);border-radius:var(--radius-md);
             padding:var(--space-4);margin-bottom:var(--space-4);
             font-size:var(--text-sm);color:var(--color-text-secondary);line-height:1.65;
@@ -1704,24 +1704,28 @@
     const isRevealed = stamp.visibility === 'sealed' && stamp.revealed;
     if (!isPublic && !isRevealed) return;
 
-    card.style.display = 'block';
-
-    // Already confirmed — show green badge, hide archive action for everyone
+    // Already archived — show card but only the green badge
     if (stamp.bitcoin_archive_status === 'confirmed' && stamp.bitcoin_txid) {
+      card.style.display = 'block';
+      // Hide header, description, and archive action — show only badge
+      const header  = document.getElementById('btc-card-header');
+      const desc    = document.getElementById('btc-card-desc');
+      const action  = document.getElementById('btc-archive-action');
+      if (header) header.style.display = 'none';
+      if (desc)   desc.style.display   = 'none';
+      if (action) action.style.display = 'none';
       showBtcArchived(stamp.bitcoin_txid);
-      document.getElementById('btc-archive-action').style.display = 'none';
       return;
     }
 
-    // Not archived yet:
-    // Logged-in users → show archive action (they can archive)
-    // Non-logged-in  → hide entire card (nothing useful to show)
+    // Not archived + not logged in → hide entire card
     if (!currentUser) {
       card.style.display = 'none';
       return;
     }
 
-    // Logged in — show archive action and check for pending TX
+    // Logged in + not archived → show full card with archive action
+    card.style.display = 'block';
     checkPendingBitcoinArchive();
   }
 
@@ -1887,26 +1891,29 @@
       // This sends dust to platform address + embeds OP_RETURN data
       let txid;
       if (activeBtcWallet === 'xverse') {
-        // Xverse: use sendTransfer for payment + OP_RETURN via signPsbt
-        // Xverse supports sendBtc via request API
         const xverse = window.XverseProviders?.BitcoinProvider ?? window.BitcoinProvider;
         if (!xverse) throw new Error('Xverse wallet not found. Please reconnect.');
 
-        // Xverse sendBtc — sends to platform address
-        // OP_RETURN via memo/opReturn field in newer Xverse versions
-        const sendRes = await xverse.request('sendBtcTransaction', {
+        // Xverse correct method: sendBtc (not sendBtcTransaction)
+        const sendRes = await xverse.request('sendBtc', {
           recipients: [
-            { address: PLATFORM_BTC_ADDRESS, amount: DUST_SATS },
+            {
+              address: PLATFORM_BTC_ADDRESS,
+              amount:  DUST_SATS,
+            },
           ],
-          senderAddress: document.getElementById('btc-wallet-addr')?.textContent?.replace('…','') ?? '',
-          memo: btcPrepareData.tsa1_payload, // Xverse encodes as OP_RETURN if supported
+          memo: btcPrepareData.tsa1_payload, // OP_RETURN data
         });
 
         if (sendRes.status !== 'success')
           throw new Error(sendRes.error?.message ?? 'Xverse transaction failed');
 
-        txid = sendRes.result?.txid ?? sendRes.result?.txId ?? sendRes.result;
-        if (!txid || typeof txid !== 'string')
+        // Xverse returns txid in result.txid or result directly
+        txid = sendRes.result?.txid
+            ?? sendRes.result?.txId
+            ?? (typeof sendRes.result === 'string' ? sendRes.result : null);
+
+        if (!txid)
           throw new Error('No txid returned from Xverse. Check your wallet for the transaction.');
 
       } else {
