@@ -1944,14 +1944,23 @@
         const signRes = await xverseProvider.request('signPsbt', {
           psbt:       psbtHex,
           signInputs: { [senderAddress]: [0] },
-          broadcast:  true, // Xverse broadcasts after signing
+          broadcast:  true,
         });
 
-        if (signRes.status !== 'success')
+        // Xverse returns JSON-RPC 2.0: { jsonrpc, result } not { status, result }
+        if (signRes.error)
           throw new Error(signRes.error?.message ?? 'Xverse signing failed or was cancelled');
 
-        txid = signRes.result?.txid ?? signRes.result?.txId;
-        if (!txid) throw new Error('No txid returned from Xverse after signing.');
+        const signResult = signRes.result ?? signRes;
+        txid = signResult?.txid
+            ?? signResult?.txId
+            ?? signResult?.broadcastTxId
+            ?? signResult?.transaction?.txid;
+
+        if (!txid) {
+          alert('TX broadcast but txid field unclear.\nFull response: ' + JSON.stringify(signRes).slice(0, 500) + '\n\nCopy your txid from Xverse and paste in the manual field below.');
+          throw new Error('Transaction broadcast by Xverse — use the manual txid field below to confirm.');
+        }
 
       } else {
         // Unisat (default)
