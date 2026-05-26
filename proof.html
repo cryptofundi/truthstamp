@@ -1768,31 +1768,26 @@
         return;
       }
 
-      // wallet_connect: requests permission + returns addresses in one step
+      // wallet_connect: Xverse returns JSON-RPC 2.0 format { jsonrpc, result } not { status }
       const res = await provider.request('wallet_connect', {
         addresses: ['payment'],
         message:   'Connect to TruthStamp to archive proofs to Bitcoin.',
         network:   'Mainnet',
       });
 
-      alert('Xverse response:\nstatus=' + res.status + '\nresult keys=' + Object.keys(res.result ?? {}).join(', ') + '\nfull=' + JSON.stringify(res).slice(0, 500));
-
-      if (res.status !== 'success')
+      // Xverse returns { jsonrpc: "2.0", result: { addresses, id, walletType, network } }
+      // NOT { status: "success", result: ... }
+      const result = res.result ?? res;
+      if (!result || res.error) {
         throw new Error(res.error?.message ?? 'Xverse connection failed or was cancelled.');
+      }
 
-      const addresses = res.result?.addresses
-                     ?? res.result?.addressses
-                     ?? (Array.isArray(res.result) ? res.result : []);
-
-      alert('Addresses found: ' + addresses.length + '\n' + JSON.stringify(addresses).slice(0, 400));
-
+      const addresses = result.addresses ?? [];
       const paymentAddr = addresses.find(a =>
         a.purpose === 'payment' || a.purpose === 'Payment'
       );
-      if (!paymentAddr) {
-        alert('No payment address. Full result: ' + JSON.stringify(res.result).slice(0, 500));
+      if (!paymentAddr)
         throw new Error('No Bitcoin payment address returned. Make sure Xverse is on Mainnet.');
-      }
 
       const addr = paymentAddr.address;
       window._xversePaymentAddress = addr;
