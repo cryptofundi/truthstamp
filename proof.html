@@ -490,6 +490,8 @@
                 5 credits will be deducted after successful archive ·
                 <a href="https://unisat.io/download" target="_blank" rel="noopener" style="color:var(--brand-primary)">Get Unisat</a> ·
                 <a href="https://www.xverse.app/download" target="_blank" rel="noopener" style="color:var(--brand-primary)">Get Xverse</a>
+                <br>
+                <span style="color:#92400E">⚠️ Xverse requires confirmed Bitcoin funds (no recent pending TXs). Unisat works instantly on desktop.</span>
               </div>
             </div>
 
@@ -1913,12 +1915,18 @@
         const utxoRes  = await fetch(`${MEMPOOL_API}/address/${senderAddress}/utxo`);
         if (!utxoRes.ok) throw new Error('Failed to fetch UTXOs from mempool.space');
         const utxos    = await utxoRes.json();
-        if (!utxos.length) throw new Error('No UTXOs found. Your Bitcoin wallet may have zero balance.');
+        if (!utxos.length) throw new Error('No UTXOs found. Make sure your Xverse wallet has Bitcoin on Mainnet and try again.');
 
         // Fetch raw tx hex for each UTXO (needed for PSBT non-witness inputs)
         // Use only confirmed UTXOs, pick largest first for simplicity
         const confirmed = utxos.filter(u => u.status?.confirmed).sort((a,b) => b.value - a.value);
-        if (!confirmed.length) throw new Error('No confirmed UTXOs. Please wait for pending transactions to confirm.');
+        if (!confirmed.length) throw new Error(
+          '⏳ Your Bitcoin wallet has pending transactions. ' +
+          'Bitcoin requires confirmed funds before signing. ' +
+          'Wait 10-60 minutes for your last transaction to confirm, then try again. ' +
+          'Your proof is already permanently sealed on MegaETH + Arweave — ' +
+          'Bitcoin archive is an optional extra layer.'
+        );
 
         // Build minimal PSBT using bitcoinjs-lib via CDN
         showBtcProcessing('Building Bitcoin archive transaction…');
@@ -1995,7 +2003,18 @@
 
     } catch(e) {
       hideBtcProcessing();
-      showBtcResult('❌ ' + escapeHtml(e.message), '#FEE2E2');
+      // Pending UTXO — show amber info box, not red error
+      if (e.message.includes('confirmed funds') || e.message.includes('confirmed UTXOs') || e.message.includes('pending')) {
+        const el = document.getElementById('btc-result-msg');
+        el.innerHTML = `<div style="padding:var(--space-4);background:#FEF3C7;border:1px solid #F59E0B;border-radius:var(--radius-md);font-size:var(--text-sm);line-height:1.7">
+          <p style="font-weight:600;color:#92400E;margin:0 0 6px">⏳ Pending transactions — please wait</p>
+          <p style="color:#92400E;margin:0 0 8px">Bitcoin requires confirmed funds before signing. Your last transaction needs 1 confirmation (~10–60 minutes).</p>
+          <p style="color:#78350F;margin:0;font-size:var(--text-xs)">Your proof is already permanently sealed on MegaETH + Arweave. Bitcoin archive is optional — try again after your wallet confirms.</p>
+        </div>`;
+        el.style.display = 'block';
+      } else {
+        showBtcResult('❌ ' + escapeHtml(e.message), '#FEE2E2');
+      }
       btn.disabled = false;
     }
   }
