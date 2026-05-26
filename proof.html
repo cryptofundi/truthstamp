@@ -234,6 +234,12 @@
       .action-row { flex-direction: column; }
     }
   </style>
+  <!-- sats-connect for Xverse wallet -->
+  <script type="module">
+    import { request as satsRequest, AddressPurpose } from 'https://cdn.jsdelivr.net/npm/sats-connect@2/+esm';
+    window._satsRequest        = satsRequest;
+    window._satsAddressPurpose = AddressPurpose;
+  </script>
 </head>
 <body>
   <nav class="nav">
@@ -1749,50 +1755,43 @@
 
   async function connectXverse() {
     const btn = document.getElementById('btc-connect-xverse');
-    // Xverse injects window.XverseProviders.BitcoinProvider
-    const xverse = window.XverseProviders?.BitcoinProvider
-                ?? window.BitcoinProvider
-                ?? null;
-
-    if (!xverse) {
-      showBtcResult(
-        '⚠️ Xverse wallet not detected. <a href="https://www.xverse.app/download" target="_blank" rel="noopener" style="color:var(--brand-primary)">Install Xverse →</a>',
-        '#FEF3C7'
-      );
-      return;
-    }
-
     try {
       if (btn) { btn.disabled = true; btn.textContent = 'Connecting…'; }
 
-      // Request wallet access — Xverse uses getAddresses
-      const response = await xverse.request('getAddresses', {
-        purposes: ['payment'],
+      // Wait for sats-connect to load (it's a module script, may not be ready immediately)
+      let satsRequest = window._satsRequest;
+      let retries = 0;
+      while (!satsRequest && retries < 20) {
+        await new Promise(r => setTimeout(r, 150));
+        satsRequest = window._satsRequest;
+        retries++;
+      }
+      if (!satsRequest) throw new Error('Xverse (sats-connect) not loaded. Please refresh and try again.');
+
+      // Request Bitcoin payment address
+      const res = await satsRequest('getAddresses', {
+        purposes: [window._satsAddressPurpose?.Payment ?? 'payment'],
         message:  'TruthStamp needs your Bitcoin address to archive a proof.',
       });
 
-      if (response.status !== 'success')
-        throw new Error(response.error?.message ?? 'Xverse connection failed');
+      if (res.status !== 'success')
+        throw new Error(res.error?.message ?? 'Xverse connection failed');
 
-      // Get the payment (native segwit / taproot) address
-      const paymentAddr = response.result.addresses.find(
-        a => a.purpose === 'payment'
-      );
-      if (!paymentAddr) throw new Error('No payment address returned from Xverse');
+      const paymentAddr = res.result?.addresses?.find(a => a.purpose === 'payment');
+      if (!paymentAddr) throw new Error('No Bitcoin payment address returned from Xverse.');
 
-      const btcAddress = paymentAddr.address;
+      window._xversePaymentAddress = paymentAddr.address;
 
-      // Check network — Xverse should be on mainnet
-      // Xverse addresses starting with bc1 are mainnet
-      if (!btcAddress.startsWith('bc1') && !btcAddress.startsWith('1') && !btcAddress.startsWith('3'))
+      // Validate mainnet address
+      const addr = paymentAddr.address;
+      if (!addr.startsWith('bc1') && !addr.startsWith('1') && !addr.startsWith('3'))
         throw new Error('Please switch Xverse to Bitcoin Mainnet and try again.');
 
       // Show connected state
-      document.getElementById('btc-step-connect').style.display  = 'none';
-      document.getElementById('btc-step-archive').style.display  = 'block';
-
+      document.getElementById('btc-step-connect').style.display = 'none';
+      document.getElementById('btc-step-archive').style.display = 'block';
       const addrEl = document.getElementById('btc-wallet-addr');
-      if (addrEl) addrEl.textContent = btcAddress.slice(0,8) + '…' + btcAddress.slice(-6);
+      if (addrEl) addrEl.textContent = addr.slice(0,8) + '…' + addr.slice(-6);
 
       await prepareBitcoinArchive();
 
@@ -1891,30 +1890,55 @@
       // This sends dust to platform address + embeds OP_RETURN data
       let txid;
       if (activeBtcWallet === 'xverse') {
-        const xverse = window.XverseProviders?.BitcoinProvider ?? window.BitcoinProvider;
-        if (!xverse) throw new Error('Xverse wallet not found. Please reconnect.');
+        const satsRequest = window._satsRequest;
+        if (!satsRequest) throw new Error('Xverse not loaded. Please refresh the page.');
 
-        // Xverse correct method: sendBtc (not sendBtcTransaction)
-        const sendRes = await xverse.request('sendBtc', {
-          recipients: [
-            {
-              address: PLATFORM_BTC_ADDRESS,
-              amount:  DUST_SATS,
-            },
-          ],
-          memo: btcPrepareData.tsa1_payload, // OP_RETURN data
+        const senderAddress = window._xversePaymentAddress;
+        if (!senderAddress) throw new Error('Xverse address not found. Please reconnect.');
+
+        // Fetch UTXOs for sender from mempool.space to build PSBT
+        showBtcProcessing('Fetching UTXOs from Bitcoin network…');
+        const utxoRes  = await fetch(`${MEMPOOL_API}/address/${senderAddress}/utxo`);
+        if (!utxoRes.ok) throw new Error('Failed to fetch UTXOs from mempool.space');
+        const utxos    = await utxoRes.json();
+        if (!utxos.length) throw new Error('No UTXOs found. Your Bitcoin wallet may have zero balance.');
+
+        // Fetch raw tx hex for each UTXO (needed for PSBT non-witness inputs)
+        // Use only confirmed UTXOs, pick largest first for simplicity
+        const confirmed = utxos.filter(u => u.status?.confirmed).sort((a,b) => b.value - a.value);
+        if (!confirmed.length) throw new Error('No confirmed UTXOs. Please wait for pending transactions to confirm.');
+
+        // Build minimal PSBT using bitcoinjs-lib via CDN
+        showBtcProcessing('Building Bitcoin archive transaction…');
+
+        // Use mempool.space to build the TX instead — simpler than raw PSBT
+        // Strategy: sendTransfer handles the dust payment, we embed OP_RETURN via the edge function approach
+        // For Xverse, use signPsbt with a pre-built PSBT hex
+
+        // Build PSBT manually (lightweight, no library needed for simple structure)
+        const psbtHex = await buildOpReturnPsbt(
+          senderAddress,
+          confirmed[0],
+          PLATFORM_BTC_ADDRESS,
+          DUST_SATS,
+          btcPrepareData.op_return_hex,
+          btcPrepareData.fee_sats_per_vbyte
+        );
+
+        showBtcProcessing('Please confirm the transaction in Xverse…');
+
+        // Ask Xverse to sign the PSBT
+        const signRes = await satsRequest('signPsbt', {
+          psbt:       psbtHex,
+          signInputs: { [senderAddress]: [0] },
+          broadcast:  true, // Xverse broadcasts after signing
         });
 
-        if (sendRes.status !== 'success')
-          throw new Error(sendRes.error?.message ?? 'Xverse transaction failed');
+        if (signRes.status !== 'success')
+          throw new Error(signRes.error?.message ?? 'Xverse signing failed or was cancelled');
 
-        // Xverse returns txid in result.txid or result directly
-        txid = sendRes.result?.txid
-            ?? sendRes.result?.txId
-            ?? (typeof sendRes.result === 'string' ? sendRes.result : null);
-
-        if (!txid)
-          throw new Error('No txid returned from Xverse. Check your wallet for the transaction.');
+        txid = signRes.result?.txid ?? signRes.result?.txId;
+        if (!txid) throw new Error('No txid returned from Xverse after signing.');
 
       } else {
         // Unisat (default)
@@ -2077,6 +2101,41 @@
       confirmTxWithRetry(txid, tsa1_payload, proofId, 1);
     } catch(e) {
       localStorage.removeItem(key);
+    }
+  }
+
+  // ── Build a minimal PSBT for OP_RETURN + dust output (Xverse) ─────────────
+  // Constructs a PSBT hex that Xverse can sign.
+  // Input: one UTXO from sender
+  // Outputs: OP_RETURN (TSA-1 data) + dust to platform + change back to sender
+  async function buildOpReturnPsbt(senderAddr, utxo, platformAddr, dustSats, opReturnHex, feeRate) {
+    // We use the bitcoin-archive-prepare edge function to build the PSBT
+    // since raw PSBT construction in pure JS requires bitcoinjs-lib
+    // Instead: fetch raw PSBT from our backend which has the library
+    try {
+      const session     = await window.tsDB.auth.getSession();
+      const token       = session?.data?.session?.access_token;
+      const supabaseUrl = window.TRUTHSTAMP_CONFIG?.SUPABASE_URL;
+      const proofId     = new URLSearchParams(window.location.search).get('id');
+
+      const res  = await fetch(`${supabaseUrl}/functions/v1/bitcoin-archive-prepare`, {
+        method:  'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          proof_id:       Number(proofId),
+          wallet_type:    'xverse',
+          sender_address: senderAddr,
+          utxo_txid:      utxo.txid,
+          utxo_vout:      utxo.vout,
+          utxo_value:     utxo.value,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'PSBT build failed');
+      if (!data.psbt_hex) throw new Error('No PSBT returned from server');
+      return data.psbt_hex;
+    } catch(e) {
+      throw new Error('Failed to build PSBT: ' + e.message);
     }
   }
 
