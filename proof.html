@@ -1946,6 +1946,8 @@
           window._xversePublicKey
         );
 
+        alert('PSBT built OK. Length: ' + psbtHex.length + ' chars\nFirst 80 chars: ' + psbtHex.slice(0, 80));
+
         showBtcProcessing('Please confirm the transaction in Xverse…');
 
         // Ask Xverse to sign the PSBT
@@ -2195,8 +2197,14 @@
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'PSBT build failed');
-      if (!data.psbt_hex) throw new Error('No PSBT returned from server');
+      if (!res.ok) {
+        alert('PSBT build error:\n' + JSON.stringify(data).slice(0, 400));
+        throw new Error(data.error ?? 'PSBT build failed');
+      }
+      if (!data.psbt_hex) {
+        alert('No PSBT returned. Response:\n' + JSON.stringify(data).slice(0, 400));
+        throw new Error('No PSBT returned from server');
+      }
       return data.psbt_hex;
     } catch(e) {
       throw new Error('Failed to build PSBT: ' + e.message);
