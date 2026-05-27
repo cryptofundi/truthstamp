@@ -1910,35 +1910,12 @@
         const senderAddress = window._xversePaymentAddress;
         if (!senderAddress) throw new Error('Xverse address not found. Please reconnect.');
 
-        // Fetch UTXOs for sender from mempool.space to build PSBT
-        showBtcProcessing('Fetching UTXOs from Bitcoin network…');
-        const utxoRes  = await fetch(`${MEMPOOL_API}/address/${senderAddress}/utxo`);
-        if (!utxoRes.ok) throw new Error('Failed to fetch UTXOs from mempool.space');
-        const utxos    = await utxoRes.json();
-        if (!utxos.length) throw new Error('No UTXOs found. Make sure your Xverse wallet has Bitcoin on Mainnet and try again.');
-
-        // Fetch raw tx hex for each UTXO (needed for PSBT non-witness inputs)
-        // Use only confirmed UTXOs, pick largest first for simplicity
-        const confirmed = utxos.filter(u => u.status?.confirmed).sort((a,b) => b.value - a.value);
-        if (!confirmed.length) throw new Error(
-          '⏳ Your Bitcoin wallet has pending transactions. ' +
-          'Bitcoin requires confirmed funds before signing. ' +
-          'Wait 10-60 minutes for your last transaction to confirm, then try again. ' +
-          'Your proof is already permanently sealed on MegaETH + Arweave — ' +
-          'Bitcoin archive is an optional extra layer.'
-        );
-
-        // Build minimal PSBT using bitcoinjs-lib via CDN
+        // UTXO fetching moved to edge function (avoids CORS + mempool.space browser blocks)
         showBtcProcessing('Building Bitcoin archive transaction…');
 
-        // Use mempool.space to build the TX instead — simpler than raw PSBT
-        // Strategy: sendTransfer handles the dust payment, we embed OP_RETURN via the edge function approach
-        // For Xverse, use signPsbt with a pre-built PSBT hex
-
-        // Build PSBT manually (lightweight, no library needed for simple structure)
         const psbtHex = await buildOpReturnPsbt(
           senderAddress,
-          confirmed[0],
+          null,
           PLATFORM_BTC_ADDRESS,
           DUST_SATS,
           btcPrepareData.op_return_hex,
@@ -2176,14 +2153,14 @@
   // Constructs a PSBT hex that Xverse can sign.
   // Input: one UTXO from sender
   // Outputs: OP_RETURN (TSA-1 data) + dust to platform + change back to sender
-  async function buildOpReturnPsbt(senderAddr, utxo, platformAddr, dustSats, opReturnHex, feeRate, publicKey) {
+  async function buildOpReturnPsbt(senderAddr, _unused, platformAddr, dustSats, opReturnHex, feeRate, publicKey) {
     try {
       const session     = await window.tsDB.auth.getSession();
       const token       = session?.data?.session?.access_token;
       const supabaseUrl = window.TRUTHSTAMP_CONFIG?.SUPABASE_URL;
       const proofId     = new URLSearchParams(window.location.search).get('id');
 
-      const res  = await fetch(`${supabaseUrl}/functions/v1/bitcoin-archive-prepare`, {
+      const res = await fetch(`${supabaseUrl}/functions/v1/bitcoin-archive-prepare`, {
         method:  'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body:    JSON.stringify({
@@ -2191,13 +2168,17 @@
           wallet_type:    'xverse',
           sender_address: senderAddr,
           sender_pubkey:  publicKey ?? '',
-          utxo_txid:      utxo.txid,
-          utxo_vout:      utxo.vout,
-          utxo_value:     utxo.value,
+          // No utxo fields — edge function fetches UTXOs server-side
         }),
       });
       const data = await res.json();
       if (!res.ok) {
+        // Check for pending UTXO error from edge function
+        if (data.error?.includes('pending') || data.error?.includes('confirmed')) {
+          throw new Error(
+            '⏳ pending: ' + data.error
+          );
+        }
         alert('PSBT build error:\n' + JSON.stringify(data).slice(0, 400));
         throw new Error(data.error ?? 'PSBT build failed');
       }
