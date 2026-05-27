@@ -1927,12 +1927,36 @@
 
         showBtcProcessing('Please confirm the transaction in Xverse…');
 
-        // Ask Xverse to sign the PSBT
-        const signRes = await xverseProvider.request('signPsbt', {
-          psbt:       psbtHex,
-          signInputs: { [senderAddress]: [0] },
-          broadcast:  true,
+        // Xverse signPsbt — wrap in a timeout so it doesn't hang forever
+        const signPromise = xverseProvider.request('signPsbt', {
+          psbt:              psbtHex,
+          signInputs:        { [senderAddress]: [0] },
+          allowedSignHash:   [0x01], // SIGHASH_ALL
+          broadcast:         true,
         });
+
+        // 3-minute timeout — if Xverse doesn't respond, show manual fallback
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('TIMEOUT')), 180000)
+        );
+
+        let signRes;
+        try {
+          signRes = await Promise.race([signPromise, timeoutPromise]);
+        } catch(raceErr) {
+          if (raceErr.message === 'TIMEOUT') {
+            hideBtcProcessing();
+            showBtcResult(
+              `⚠️ Xverse did not open a confirmation popup. This can happen if Xverse is already open or busy.<br>` +
+              `<strong>Try:</strong> Open Xverse manually, check for a pending approval, or disconnect and reconnect.<br>` +
+              `If you already approved a TX in Xverse, paste the txid in the manual field below.`,
+              '#FEF3C7'
+            );
+            btn.disabled = false;
+            return;
+          }
+          throw raceErr;
+        }
 
         // Xverse returns JSON-RPC 2.0: { jsonrpc, result } not { status, result }
         if (signRes.error)
