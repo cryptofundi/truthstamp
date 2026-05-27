@@ -1927,11 +1927,14 @@
 
         showBtcProcessing('Please confirm the transaction in Xverse…');
 
-        // Xverse signPsbt — wrap in a timeout so it doesn't hang forever
-        // Do NOT pass signInputs — Xverse auto-detects which inputs belong to the wallet
-        // signInputs with P2SH address causes Xverse to hang silently
+        // Xverse signPsbt — correct parameter format
+        // Xverse requires 'inputsToSign' as array, NOT 'signInputs' as object
         const signPromise = xverseProvider.request('signPsbt', {
-          psbt:      psbtHex,
+          psbt:         psbtHex,
+          inputsToSign: [{
+            address:    senderAddress,
+            signingIndexes: [0],
+          }],
           broadcast: true,
         });
 
