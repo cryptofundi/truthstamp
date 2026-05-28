@@ -1707,8 +1707,10 @@
     const isRevealed = stamp.visibility === 'sealed' && stamp.revealed;
     if (!isPublic && !isRevealed) return;
 
-    // Already archived — show green badge to EVERYONE (logged in or not)
-    if (stamp.bitcoin_archive_status === 'confirmed' && stamp.bitcoin_txid) {
+    // Already archived (confirmed or pending in mempool) — show green badge to EVERYONE
+    const isBitcoinArchived = stamp.bitcoin_txid &&
+      (stamp.bitcoin_archive_status === 'confirmed' || stamp.bitcoin_archive_status === 'pending' || stamp.bitcoin_archive_status === 'broadcast');
+    if (isBitcoinArchived) {
       card.style.display = 'block';
       const header = document.getElementById('btc-card-header');
       const desc   = document.getElementById('btc-card-desc');
@@ -1716,7 +1718,7 @@
       if (header) header.style.display = 'none';
       if (desc)   desc.style.display   = 'none';
       if (action) action.style.display = 'none';
-      showBtcArchived(stamp.bitcoin_txid);
+      showBtcArchived(stamp.bitcoin_txid, stamp.bitcoin_archive_status);
       return;
     }
 
@@ -1737,13 +1739,29 @@
     checkPendingBitcoinArchive();
   }
 
-  function showBtcArchived(txid) {
+  function showBtcArchived(txid, status) {
     document.getElementById('btc-archive-action').style.display   = 'none';
     document.getElementById('btc-already-archived').style.display = 'block';
-    const txidEl  = document.getElementById('btc-txid-display');
-    const linkEl  = document.getElementById('btc-mempool-link');
+    const txidEl   = document.getElementById('btc-txid-display');
+    const linkEl   = document.getElementById('btc-mempool-link');
+    const titleEl  = document.querySelector('#btc-already-archived p');
+    const isPending = status === 'pending' || status === 'broadcast';
     if (txidEl) txidEl.textContent = txid;
     if (linkEl) linkEl.href = `https://mempool.space/tx/${txid}`;
+    // Update badge title based on confirmation status
+    const badgeTitle = document.querySelector('#btc-already-archived p[style*="font-weight"]');
+    if (badgeTitle) {
+      badgeTitle.textContent = isPending
+        ? '⏳ Bitcoin archive pending confirmation'
+        : '✅ Archived on Bitcoin';
+      badgeTitle.style.color = isPending ? '#92400E' : '#065F46';
+    }
+    // Update badge background for pending
+    const badge = document.getElementById('btc-already-archived');
+    if (badge && isPending) {
+      badge.style.background = '#FEF3C7';
+      badge.style.borderColor = 'rgba(245,158,11,.25)';
+    }
   }
 
   let activeBtcWallet = null; // 'unisat' | 'xverse'
@@ -2083,7 +2101,7 @@
         // ✅ Success
         localStorage.removeItem(`btc_pending_${proofId}`);
         hideBtcProcessing();
-        showBtcArchived(txid);
+        showBtcArchived(txid, data.confirmed ? 'confirmed' : 'pending');
         showBtcResult(
           `✅ ${data.message} · <a href="https://mempool.space/tx/${txid}" target="_blank" rel="noopener" style="color:var(--brand-primary)">View on mempool.space ↗</a>` +
           `<br><span style="font-size:11px;color:var(--color-text-muted)">${data.credits_deducted} credits deducted · ${data.credits_remaining} remaining</span>`,
@@ -2253,7 +2271,7 @@
         return;
       }
 
-      showBtcArchived(txid);
+      showBtcArchived(txid, data.confirmed ? 'confirmed' : 'pending');
       showBtcResult(
         `✅ ${data.message} · <a href="https://mempool.space/tx/${txid}" target="_blank" rel="noopener" style="color:var(--brand-primary)">View on mempool.space ↗</a>` +
         `<br><span style="font-size:11px;color:var(--color-text-muted)">${data.credits_deducted} credits deducted · ${data.credits_remaining} remaining</span>`,
