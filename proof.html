@@ -1707,13 +1707,12 @@
     const isRevealed = stamp.visibility === 'sealed' && stamp.revealed;
     if (!isPublic && !isRevealed) return;
 
-    // Already archived — show card but only the green badge
+    // Already archived — show green badge to EVERYONE (logged in or not)
     if (stamp.bitcoin_archive_status === 'confirmed' && stamp.bitcoin_txid) {
       card.style.display = 'block';
-      // Hide header, description, and archive action — show only badge
-      const header  = document.getElementById('btc-card-header');
-      const desc    = document.getElementById('btc-card-desc');
-      const action  = document.getElementById('btc-archive-action');
+      const header = document.getElementById('btc-card-header');
+      const desc   = document.getElementById('btc-card-desc');
+      const action = document.getElementById('btc-archive-action');
       if (header) header.style.display = 'none';
       if (desc)   desc.style.display   = 'none';
       if (action) action.style.display = 'none';
@@ -1721,13 +1720,19 @@
       return;
     }
 
-    // Not archived + not logged in → hide entire card
-    if (!currentUser) {
+    // Not archived yet — only the OWNER can archive
+    const isOwner = !!(currentUser?.id && (
+      currentUser.id === stamp.creator_profile_id ||
+      currentUser.id === stamp.creator_identity
+    ));
+
+    // Hide card for: non-logged-in users AND logged-in non-owners
+    if (!currentUser || !isOwner) {
       card.style.display = 'none';
       return;
     }
 
-    // Logged in + not archived → show full card with archive action
+    // Owner + not archived → show archive action
     card.style.display = 'block';
     checkPendingBitcoinArchive();
   }
@@ -1922,8 +1927,6 @@
           btcPrepareData.fee_sats_per_vbyte,
           window._xversePublicKey
         );
-
-        alert('PSBT built OK. Length: ' + psbtHex.length + ' chars\nFirst 80 chars: ' + psbtHex.slice(0, 80));
 
         showBtcProcessing('Please confirm the transaction in Xverse…');
 
@@ -2206,11 +2209,9 @@
             '⏳ pending: ' + data.error
           );
         }
-        alert('PSBT build error:\n' + JSON.stringify(data).slice(0, 400));
         throw new Error(data.error ?? 'PSBT build failed');
       }
       if (!data.psbt_hex) {
-        alert('No PSBT returned. Response:\n' + JSON.stringify(data).slice(0, 400));
         throw new Error('No PSBT returned from server');
       }
       return data.psbt_hex;
