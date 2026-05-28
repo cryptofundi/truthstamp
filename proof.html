@@ -507,10 +507,9 @@
                   </span>
                   <span id="btc-wallet-addr" style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--brand-primary-dark)"></span>
                 </div>
-                <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:var(--text-xs);color:var(--brand-primary-dark)">
-                  <span>Est. network fee: <strong id="btc-fee-display">calculating…</strong></span>
-                  <span>Platform: <strong>5 credits</strong></span>
-                </div>
+                <div id="btc-wallet-note" style="display:none;margin-top:8px;font-size:var(--text-xs);color:#92400E;background:#FEF3C7;padding:6px 10px;border-radius:var(--radius-md)">
+                ⚠️ Xverse archives are verified via Bitcoin payment proof. For full OP_RETURN on-chain verification, use Unisat wallet.
+              </div>
               </div>
 
               <!-- TSA-1 payload preview -->
@@ -1829,6 +1828,9 @@
       document.getElementById('btc-step-archive').style.display = 'block';
       const addrEl = document.getElementById('btc-wallet-addr');
       if (addrEl) addrEl.textContent = addr.slice(0,8) + '…' + addr.slice(-6);
+      // Show Xverse limitation note
+      const noteEl = document.getElementById('btc-wallet-note');
+      if (noteEl) noteEl.style.display = 'block';
 
       await prepareBitcoinArchive();
 
