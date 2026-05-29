@@ -234,10 +234,15 @@ button { cursor: pointer; font-family: var(--font-sans); border: none; }
 .hero-how-text { font-size:12.5px;color:var(--text-sec);line-height:1.4; }
 .hero-how-text strong { color:var(--text);display:block;font-size:13px; }
 .hero-how-arrow { color:var(--text-muted);font-size:16px;padding:0 6px;flex-shrink:0; }
+.hero-how-divider { width:1px;background:var(--border);align-self:stretch;margin:0 12px;flex-shrink:0; }
+.hero-how-link { font-size:13px;font-weight:600;color:var(--brand);white-space:nowrap;flex-shrink:0;transition:gap .15s; }
+.hero-how-link:hover { opacity:.8; }
 @media(max-width:900px){
   .hero-how { padding:12px 14px; }
   .hero-how-arrow { display:none; }
   .hero-how-step { flex:1;min-width:90px;flex-direction:column;align-items:flex-start;gap:6px; }
+  .hero-how-divider { display:none; }
+  .hero-how-link { width:100%;padding-top:10px;border-top:1px solid var(--border);margin-top:4px; }
 }
 
 /* ── SEALED SECTION — purple gradient only here ── */
@@ -433,6 +438,8 @@ footer { background:var(--surface);border-top:1px solid var(--border);padding:48
         <div class="hero-how-num">3</div>
         <div class="hero-how-text"><strong>Get your proof</strong><br>Permanent · shareable · forever</div>
       </div>
+      <div class="hero-how-divider"></div>
+      <a href="how-it-works.html" class="hero-how-link">How it works →</a>
     </div>
   </div>
   <div class="hero-right">
