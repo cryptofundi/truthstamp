@@ -130,7 +130,7 @@ button { cursor: pointer; font-family: var(--font-sans); border: none; }
 .today-bar-cta:hover { background:rgba(40,84,232,.18); }
 
 /* ── FEATURED STAMPS ── */
-.section { padding:64px 28px;max-width:1280px;margin:0 auto; }
+.section { padding:40px 28px;max-width:1280px;margin:0 auto; }
 .section-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:28px; }
 .section-title { font-size:22px;font-weight:700;letter-spacing:-.4px; }
 .section-view-all { color:var(--brand);font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:4px;transition:gap .15s; }
@@ -198,6 +198,34 @@ button { cursor: pointer; font-family: var(--font-sans); border: none; }
 .step-title { font-size:17px;font-weight:700;margin-bottom:10px; }
 .step-desc  { font-size:14px;color:var(--text-sec);line-height:1.6; }
 
+
+/* ── BITCOIN LAYER SECTION ── */
+.btc-layer-section { padding:72px 28px;max-width:1280px;margin:0 auto; }
+.btc-layer-inner { display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center; }
+.btc-layer-eyebrow { display:inline-flex;align-items:center;gap:6px;background:#FEF3C7;color:#92400E;font-size:12px;font-weight:700;letter-spacing:.3px;padding:4px 12px;border-radius:999px;border:1px solid rgba(146,64,14,.2);margin-bottom:16px; }
+.btc-layer-title { font-size:clamp(28px,3vw,38px);font-weight:700;letter-spacing:-.8px;line-height:1.15;margin-bottom:14px; }
+.btc-layer-desc { font-size:15px;color:var(--text-sec);line-height:1.65;max-width:420px;margin-bottom:28px; }
+.btc-layer-cta { display:inline-flex;align-items:center;gap:6px;background:var(--brand);color:#fff;font-size:14px;font-weight:600;padding:11px 22px;border-radius:var(--r-md);box-shadow:var(--shadow-brand);transition:background .15s,transform .1s; }
+.btc-layer-cta:hover { background:var(--brand-dark);transform:translateY(-1px); }
+.layer-stack { display:flex;flex-direction:column;gap:0; }
+.layer-arrow { text-align:center;color:var(--text-muted);font-size:18px;line-height:1;padding:2px 0; }
+.layer-item { display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;transition:box-shadow .2s; }
+.layer-item:hover { box-shadow:var(--shadow-md); }
+.layer-icon { width:40px;height:40px;border-radius:var(--r-md);display:grid;place-items:center;font-size:18px;font-weight:700;flex-shrink:0; }
+.layer-mega .layer-icon    { background:var(--brand-light);color:var(--brand); }
+.layer-arweave .layer-icon { background:#F3E8FF;color:#7C3AED; }
+.layer-btc .layer-icon     { background:#FEF3C7;color:#92400E; }
+.layer-info { flex:1; }
+.layer-name { font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px; }
+.layer-desc { font-size:12px;color:var(--text-muted);line-height:1.4; }
+.layer-badge { font-size:11px;font-weight:600;color:var(--text-muted);background:var(--surface-alt);padding:3px 9px;border-radius:999px;white-space:nowrap; }
+.layer-badge-btc { background:#FEF3C7;color:#92400E; }
+@media(max-width:900px){
+  .btc-layer-section { padding:48px 16px; }
+  .btc-layer-inner { grid-template-columns:1fr;gap:32px; }
+  .btc-layer-desc { max-width:100%; }
+}
+
 /* ── SEALED SECTION — purple gradient only here ── */
 .sealed-section { margin:0 auto 64px;max-width:1224px;background:linear-gradient(135deg,var(--purple-hero) 0%,var(--purple-mid) 100%);border-radius:var(--r-xl);padding:60px 48px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;overflow:hidden;position:relative; }
 .sealed-section::before { content:'';position:absolute;top:-60px;right:-60px;width:300px;height:300px;background:rgba(255,255,255,.06);border-radius:50%; }
@@ -219,7 +247,7 @@ button { cursor: pointer; font-family: var(--font-sans); border: none; }
 .sealed-dot { width:6px;height:6px;background:#4ADE80;border-radius:50%; }
 
 /* ── PERMANENCE BAND ── */
-.perm-section { background:var(--brand);padding:64px 28px;text-align:center; }
+.perm-section { background:var(--brand);padding:40px 28px;text-align:center; }
 .perm-title { font-size:clamp(24px,3vw,36px);font-weight:700;color:#fff;letter-spacing:-.6px;margin-bottom:14px; }
 .perm-sub { font-size:16px;color:rgba(255,255,255,.82);max-width:500px;margin:0 auto 32px;line-height:1.6; }
 .btn-perm { display:inline-block;background:#fff;color:var(--brand-dark);font-size:14.5px;font-weight:700;padding:12px 28px;border-radius:var(--r-md);transition:transform .15s,box-shadow .15s; }
@@ -362,7 +390,7 @@ footer { background:var(--surface);border-top:1px solid var(--border);padding:48
   <div class="hero-left">
     <div class="hero-eyebrow">
       <span class="hero-eyebrow-dot"></span>
-      Built on MegaETH &amp; Arweave
+      Built on MegaETH · Arweave · Bitcoin
     </div>
     <h1 class="hero-title">
       Permanent proof<br>
@@ -394,13 +422,14 @@ footer { background:var(--surface);border-top:1px solid var(--border);padding:48
       <div class="cube-platforms">
         <div class="platform-tag">⚡ MEGAETH</div>
         <div class="platform-tag">Ⓐ ARWEAVE</div>
+        <div class="platform-tag">₿ BITCOIN</div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- TODAY BAR — live from Supabase -->
-<div class="today-bar" style="margin:0 28px 56px;max-width:1224px;margin-left:auto;margin-right:auto;">
+<div class="today-bar" style="margin:0 28px 32px;max-width:1224px;margin-left:auto;margin-right:auto;">
   <div class="today-label">
     📡 TruthStamp Protocol
     <div class="live-chip"><span class="live-dot"></span>LIVE</div>
@@ -452,6 +481,49 @@ footer { background:var(--surface);border-top:1px solid var(--border);padding:48
     <div class="step"><div class="step-num">1</div><div class="step-title">Drop your thought</div><p class="step-desc">Paste a draft, a prediction, an article — whatever you want to lock in time. Text, file, or URL.</p></div>
     <div class="step"><div class="step-num">2</div><div class="step-title">Choose visibility</div><p class="step-desc">Public for receipts you want to share. Sealed for predictions that auto-reveal on a date you set. Hash-only for total privacy.</p></div>
     <div class="step"><div class="step-num">3</div><div class="step-title">Receive your proof</div><p class="step-desc">Sealed permanently in about a second. You get a proof URL that works forever — independently verifiable, even if we don't.</p></div>
+  </div>
+</section>
+
+
+<!-- BITCOIN ARCHIVE LAYER — the strongest permanence option -->
+<section class="btc-layer-section">
+  <div class="btc-layer-inner">
+    <div class="btc-layer-left">
+      <div class="btc-layer-eyebrow">₿ Optional · Maximum permanence</div>
+      <div class="btc-layer-title">Archive to Bitcoin.</div>
+      <p class="btc-layer-desc">For proofs that need the ultimate timestamp — anchor them directly in the Bitcoin blockchain via <strong>OP_RETURN</strong>. Independently verifiable by anyone, forever, using any Bitcoin block explorer. No TruthStamp required.</p>
+      <a href="auth.html" class="btc-layer-cta">Create a stamp →</a>
+    </div>
+    <div class="btc-layer-right">
+      <div class="layer-stack">
+        <div class="layer-item layer-mega">
+          <div class="layer-icon">⚡</div>
+          <div class="layer-info">
+            <div class="layer-name">MegaETH</div>
+            <div class="layer-desc">On-chain proof registry · sub-second stamping</div>
+          </div>
+          <div class="layer-badge">Layer 1</div>
+        </div>
+        <div class="layer-arrow">↓</div>
+        <div class="layer-item layer-arweave">
+          <div class="layer-icon">Ⓐ</div>
+          <div class="layer-info">
+            <div class="layer-name">Arweave</div>
+            <div class="layer-desc">Permanent content storage · 200+ year guarantee</div>
+          </div>
+          <div class="layer-badge">Layer 2</div>
+        </div>
+        <div class="layer-arrow">↓</div>
+        <div class="layer-item layer-btc">
+          <div class="layer-icon">₿</div>
+          <div class="layer-info">
+            <div class="layer-name">Bitcoin</div>
+            <div class="layer-desc">TSA-1 canonical manifest · OP_RETURN anchor · optional</div>
+          </div>
+          <div class="layer-badge layer-badge-btc">Layer 3</div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -531,7 +603,7 @@ footer { background:var(--surface);border-top:1px solid var(--border);padding:48
       </div>
     </div>
     <div class="footer-bottom">
-      <span class="footer-copy">© 2026 TruthStamp · Built on MegaETH &amp; Arweave</span>
+      <span class="footer-copy">© 2026 TruthStamp · Built on MegaETH · Arweave · Bitcoin</span>
       <div class="footer-socials">
         <a href="https://x.com/truthstamp" target="_blank" rel="noopener">𝕏</a>
         <a href="#" title="Discord">💬</a>
