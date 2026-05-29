@@ -726,8 +726,10 @@ function renderFeed() {
   let filtered = allStamps;
   if (currentChip !== 'all') {
     filtered = allStamps.filter(s => {
+      if (currentChip === 'text') return s.content_type === 'text';
       if (currentChip === 'url')  return s.content_type === 'url';
       if (currentChip === 'file') return s.content_type === 'file';
+      if (currentChip === '__multi__') return (window._drawerActiveTypes || []).includes(s.content_type);
       return getCategories(s.tags).includes(currentChip);
     });
   }
@@ -917,13 +919,48 @@ function closeMobSearch() {
   renderFeed();
 }
 document.getElementById('mobSearchInput').addEventListener('input', function() {
-  document.getElementById('searchInput').value = this.value.trim();
-  renderFeed();
+  const q = this.value.trim();
+  document.getElementById('searchInput').value = q;
+  if (/^\d+$/.test(q) && q.length > 0) {
+    searchByProofId(parseInt(q, 10));
+  } else {
+    renderFeed();
+  }
 });
 document.getElementById('mobSearchInput').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') { e.preventDefault(); this.blur(); }
 });
-document.getElementById('searchInput').addEventListener('input', renderFeed);
+document.getElementById('searchInput').addEventListener('input', function() {
+  const q = this.value.trim();
+  // If query is purely numeric, do a direct DB lookup for that proof ID
+  if (/^\d+$/.test(q) && q.length > 0) {
+    searchByProofId(parseInt(q, 10));
+  } else {
+    renderFeed();
+  }
+});
+async function searchByProofId(proofId) {
+  const list = document.getElementById('stampList');
+  list.innerHTML = '<div class="feed-loading"><div class="feed-spinner"></div><p>Searching for Proof #' + proofId + '…</p></div>';
+  try {
+    const { data, error } = await window.tsDB
+      .from('stamps_with_creator')
+      .select('proof_id, content_type, visibility, display_title, text_content, file_name, file_size_bytes, tags, block_timestamp, status, storage_uri, sealed_until, revealed, content_hash, tx_hash, creator_identity, creator_address, creator_public_handle, creator_wallet_address')
+      .eq('proof_id', proofId)
+      .eq('contract_address', CONTRACT)
+      .limit(1);
+    if (error) throw error;
+    if (!data || !data.length) {
+      list.innerHTML = '<div class="feed-empty"><div class="feed-empty-icon">🔍</div><h3>Proof #' + proofId + ' not found</h3><p style="font-size:13px;color:var(--text-muted)">No stamp with this proof ID.</p></div>';
+      return;
+    }
+    await prefetchNames(data);
+    list.innerHTML = data.map(s => buildCard(s)).join('');
+    document.getElementById('feedSubtitle').textContent = '1 result for Proof #' + proofId;
+  } catch(e) {
+    list.innerHTML = '<div class="feed-empty"><div class="feed-empty-icon">⚠️</div><h3>Search failed</h3><p style="font-size:13px;color:var(--text-muted)">' + escHtml(e.message) + '</p></div>';
+  }
+}
 document.addEventListener('keydown', e => {
   if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
     e.preventDefault(); document.getElementById('searchInput').focus();
@@ -991,7 +1028,33 @@ function closeFilterDrawer() {
 }
 function toggleOpt(el) { el.querySelector('.drawer-check').classList.toggle('on'); }
 function resetOpts() { document.querySelectorAll('.drawer-check').forEach(c => c.classList.add('on')); }
-function applyDrawerFilters() { closeFilterDrawer(); renderFeed(); }
+function applyDrawerFilters() {
+  closeFilterDrawer();
+  // Read which type options are checked in the drawer
+  const typeOpts   = document.querySelectorAll('.drawer-section .drawer-options:first-of-type .drawer-option');
+  const checkedTypes = [];
+  // Drawer type options: Text, File, URL (in order)
+  const typeMap = ['text', 'file', 'url'];
+  document.querySelectorAll('.drawer-section')[0]
+    ?.querySelectorAll('.drawer-option')
+    .forEach((opt, i) => {
+      if (opt.querySelector('.drawer-check')?.classList.contains('on')) {
+        checkedTypes.push(typeMap[i]);
+      }
+    });
+
+  // If all types checked or none checked — show all
+  if (checkedTypes.length === 0 || checkedTypes.length === 3) {
+    currentChip = 'all';
+  } else if (checkedTypes.length === 1) {
+    currentChip = checkedTypes[0];
+  } else {
+    // Multiple types selected — use custom multi-type filter
+    window._drawerActiveTypes = checkedTypes;
+    currentChip = '__multi__';
+  }
+  renderFeed();
+}
 
 function initExplorer() {
   document.getElementById('loadMoreBtn').style.display = 'none';
