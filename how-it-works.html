@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>How TruthStamp works — TruthStamp</title>
-  <meta name="description" content="Stamp your ideas in 60 seconds. Permanent, verifiable proof on MegaETH and Arweave.">
+  <meta name="description" content="Stamp your ideas in 60 seconds. Permanent, verifiable proof on MegaETH, Arweave, and Bitcoin.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -17,7 +17,6 @@
       margin: 0 auto;
       padding: var(--space-10) var(--space-6) var(--space-16);
     }
-
     /* ── Hero ── */
     .hiw-hero { text-align: center; margin-bottom: var(--space-12); }
     .hiw-eyebrow {
@@ -33,20 +32,20 @@
       font-size: clamp(30px, 4vw, 46px);
       font-weight: 700; letter-spacing: -0.03em; line-height: 1.1;
       margin: 0 0 var(--space-4);
+      text-align: center;
     }
     .hiw-hero-sub {
       font-size: var(--text-lg); color: var(--color-text-secondary);
-      line-height: 1.65; max-width: 520px; margin: 0 auto var(--space-7);
+      line-height: 1.65; max-width: 520px;
+      margin: 0 auto var(--space-7);
       text-align: center;
     }
     .hiw-hero-btns {
       display: flex; justify-content: center; gap: var(--space-3); flex-wrap: wrap;
     }
-
     /* ── TLDR strip ── */
     .tldr {
       display: flex; align-items: stretch; justify-content: center;
-      gap: 0;
       background: var(--color-surface);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-xl);
@@ -58,156 +57,118 @@
       padding: var(--space-6) var(--space-4);
       position: relative;
     }
-    .tldr-step + .tldr-step {
-      border-left: 1px solid var(--color-border);
-    }
+    .tldr-step + .tldr-step { border-left: 1px solid var(--color-border); }
     .tldr-emoji { font-size: 28px; display: block; margin-bottom: var(--space-2); }
-    .tldr-label {
-      font-size: var(--text-sm); font-weight: 700;
-      color: var(--color-text); display: block; margin-bottom: 4px;
-    }
+    .tldr-label { font-size: var(--text-sm); font-weight: 700; color: var(--color-text); display: block; margin-bottom: 4px; }
     .tldr-sub { font-size: var(--text-xs); color: var(--color-text-muted); line-height: 1.4; }
-    /* Arrow between steps */
     .tldr-step:not(:last-child)::after {
-      content: '→';
-      position: absolute; right: -10px; top: 50%;
-      transform: translateY(-50%);
-      font-size: 16px; color: var(--color-text-muted);
-      z-index: 1;
+      content: '→'; position: absolute; right: -10px; top: 50%;
+      transform: translateY(-50%); font-size: 16px; color: var(--color-text-muted); z-index: 1;
     }
-
     /* ── Animated flow ── */
     .flow-section { margin-bottom: var(--space-14); }
-    .flow-title {
-      font-size: var(--text-xl); font-weight: 700; letter-spacing: -0.02em;
-      margin-bottom: var(--space-6); text-align: center;
-    }
+    .flow-title { font-size: var(--text-xl); font-weight: 700; letter-spacing: -0.02em; margin-bottom: var(--space-6); text-align: center; }
     .flow-steps { display: flex; flex-direction: column; gap: var(--space-4); }
     .flow-step {
       display: flex; gap: var(--space-5); align-items: flex-start;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-xl);
-      padding: var(--space-5) var(--space-6);
-      transition: box-shadow .2s, transform .15s;
-      cursor: default;
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl); padding: var(--space-5) var(--space-6);
+      transition: box-shadow .2s, transform .15s; cursor: default;
     }
-    .flow-step:hover {
-      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-      transform: translateY(-1px);
+    .flow-step:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-1px); }
+    /* Bitcoin step gets special amber highlight */
+    .flow-step.btc-step {
+      border-color: rgba(146,64,14,0.2);
+      background: linear-gradient(to right, #FFFBF0, var(--color-surface));
     }
     .flow-num {
       width: 36px; height: 36px; border-radius: 50%;
       background: var(--brand-primary); color: #fff;
       font-weight: 700; font-size: var(--text-sm);
-      display: grid; place-items: center;
-      flex-shrink: 0; margin-top: 2px;
+      display: grid; place-items: center; flex-shrink: 0; margin-top: 2px;
     }
+    .flow-num.btc-num { background: #92400E; }
     .flow-body { flex: 1; min-width: 0; }
-    .flow-step-title {
-      font-size: var(--text-base); font-weight: 700;
-      margin-bottom: 4px; color: var(--color-text);
-    }
-    .flow-step-desc {
-      font-size: var(--text-sm); color: var(--color-text-secondary);
-      line-height: 1.65; margin: 0;
-    }
+    .flow-step-title { font-size: var(--text-base); font-weight: 700; margin-bottom: 4px; color: var(--color-text); }
+    .flow-step-desc { font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.65; margin: 0; }
     .flow-step-tag {
       display: inline-block; margin-top: var(--space-2);
-      padding: 3px 10px;
-      background: var(--brand-primary-light);
-      color: var(--brand-primary-dark);
-      border-radius: var(--radius-full);
-      font-size: 11px; font-weight: 600;
+      padding: 3px 10px; background: var(--brand-primary-light);
+      color: var(--brand-primary-dark); border-radius: var(--radius-full); font-size: 11px; font-weight: 600;
     }
+    .flow-step-tag.btc-tag { background: #FEF3C7; color: #92400E; }
+    .flow-step-tag.optional-tag { background: var(--color-surface-alt); color: var(--color-text-muted); }
     .flow-icon { font-size: 26px; flex-shrink: 0; margin-top: 2px; }
-
+    /* ── Bitcoin layer card ── */
+    .btc-layer-card {
+      margin-top: var(--space-4);
+      background: #FEF3C7;
+      border: 1px solid rgba(146,64,14,0.15);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4) var(--space-5);
+    }
+    .btc-layer-row {
+      display: flex; align-items: center; gap: var(--space-3);
+      flex-wrap: wrap;
+    }
+    .btc-layer-item {
+      display: flex; align-items: center; gap: 6px;
+      font-size: var(--text-xs); font-weight: 600; color: #92400E;
+    }
+    .btc-layer-sep { color: rgba(146,64,14,0.3); font-size: 12px; }
     /* ── Visibility modes ── */
     .modes-section { margin-bottom: var(--space-14); }
-    .modes-title {
-      font-size: var(--text-xl); font-weight: 700; letter-spacing: -0.02em;
-      margin-bottom: var(--space-2); text-align: center;
-    }
-    .modes-sub {
-      font-size: var(--text-sm); color: var(--color-text-muted);
-      text-align: center; margin-bottom: var(--space-6);
-    }
-    .modes-grid {
-      display: grid; grid-template-columns: repeat(3,1fr); gap: var(--space-4);
-    }
+    .modes-title { font-size: var(--text-xl); font-weight: 700; letter-spacing: -0.02em; margin-bottom: var(--space-2); text-align: center; }
+    .modes-sub { font-size: var(--text-sm); color: var(--color-text-muted); text-align: center; margin-bottom: var(--space-6); }
+    .modes-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--space-4); }
     .mode-card {
       border-radius: var(--radius-xl); padding: var(--space-6) var(--space-5);
       border: 2px solid transparent; cursor: default;
       transition: transform .15s, box-shadow .2s;
     }
     .mode-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.09); }
-    .mode-card.public   { background: #E8F8F2; border-color: rgba(29,158,117,0.2); }
-    .mode-card.sealed   { background: #FEF3CD; border-color: rgba(186,117,23,0.2); }
-    .mode-card.hash     { background: var(--brand-primary-light); border-color: rgba(40,84,232,0.15); }
+    .mode-card.public { background: #E8F8F2; border-color: rgba(29,158,117,0.2); }
+    .mode-card.sealed { background: #FEF3CD; border-color: rgba(186,117,23,0.2); }
+    .mode-card.hash   { background: var(--brand-primary-light); border-color: rgba(40,84,232,0.15); }
     .mode-emoji { font-size: 28px; display: block; margin-bottom: var(--space-3); }
     .mode-name  { font-size: var(--text-base); font-weight: 700; margin-bottom: 6px; }
     .mode-desc  { font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.6; margin-bottom: var(--space-3); }
     .mode-best  { font-size: 11.5px; font-weight: 600; color: var(--color-text-muted); }
     .mode-best span { color: var(--color-text); }
-
     /* ── Why not screenshot ── */
     .why-section { margin-bottom: var(--space-14); }
-    .why-title {
-      font-size: var(--text-xl); font-weight: 700; letter-spacing: -0.02em;
-      margin-bottom: var(--space-2); text-align: center;
-    }
-    .why-sub {
-      font-size: var(--text-sm); color: var(--color-text-muted);
-      text-align: center; margin-bottom: var(--space-6);
-    }
+    .why-title { font-size: var(--text-xl); font-weight: 700; letter-spacing: -0.02em; margin-bottom: var(--space-2); text-align: center; }
+    .why-sub { font-size: var(--text-sm); color: var(--color-text-muted); text-align: center; margin-bottom: var(--space-6); }
     .compare-table {
-      width: 100%;
-      border-collapse: collapse;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-xl);
-      overflow: hidden;
-      font-size: var(--text-sm);
+      width: 100%; border-collapse: collapse;
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl); overflow: hidden; font-size: var(--text-sm);
     }
     .compare-table th {
-      padding: var(--space-4) var(--space-5);
-      text-align: left; font-weight: 700;
+      padding: var(--space-4) var(--space-5); text-align: left; font-weight: 700;
       font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .06em;
-      color: var(--color-text-muted);
-      background: var(--color-surface-alt);
+      color: var(--color-text-muted); background: var(--color-surface-alt);
       border-bottom: 1px solid var(--color-border);
     }
     .compare-table th:not(:first-child) { text-align: center; }
     .compare-table td {
-      padding: var(--space-4) var(--space-5);
-      border-bottom: 1px solid var(--color-border);
-      color: var(--color-text-secondary);
-      vertical-align: middle;
+      padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--color-border);
+      color: var(--color-text-secondary); vertical-align: middle;
     }
     .compare-table tr:last-child td { border-bottom: none; }
     .compare-table td:first-child { font-weight: 500; color: var(--color-text); }
     .compare-table td:not(:first-child) { text-align: center; }
+    .compare-table tr.btc-row td { background: #FFFBF0; }
     .yes { color: #1D9E75; font-size: 17px; }
     .no  { color: #A32D2D; font-size: 17px; }
-
     /* ── FAQ strip ── */
     .faq-section { margin-bottom: var(--space-14); }
-    .faq-title {
-      font-size: var(--text-xl); font-weight: 700; letter-spacing: -0.02em;
-      margin-bottom: var(--space-6); text-align: center;
-    }
+    .faq-title { font-size: var(--text-xl); font-weight: 700; letter-spacing: -0.02em; margin-bottom: var(--space-6); text-align: center; }
     .faq-list { display: flex; flex-direction: column; gap: var(--space-3); }
-    .faq-item {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-    }
+    .faq-item { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; }
     .faq-q {
-      width: 100%; text-align: left;
-      padding: var(--space-4) var(--space-5);
-      font-size: var(--text-base); font-weight: 600;
-      color: var(--color-text);
+      width: 100%; text-align: left; padding: var(--space-4) var(--space-5);
+      font-size: var(--text-base); font-weight: 600; color: var(--color-text);
       background: none; border: none; cursor: pointer;
       display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
       transition: background .15s;
@@ -216,52 +177,28 @@
     .faq-q-arrow { font-size: 18px; color: var(--color-text-muted); transition: transform .25s; flex-shrink: 0; }
     .faq-item.open .faq-q-arrow { transform: rotate(45deg); }
     .faq-a {
-      max-height: 0; overflow: hidden;
-      transition: max-height .3s ease, padding .2s;
+      max-height: 0; overflow: hidden; transition: max-height .3s ease, padding .2s;
       font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.7;
       padding: 0 var(--space-5);
     }
     .faq-item.open .faq-a { max-height: 300px; padding: 0 var(--space-5) var(--space-4); }
-
     /* ── CTA ── */
     .hiw-cta {
-      text-align: center;
-      padding: var(--space-10) var(--space-6);
-      background: var(--brand-primary);
-      border-radius: var(--radius-xl);
-      color: #fff;
+      text-align: center; padding: var(--space-10) var(--space-6);
+      background: var(--brand-primary); border-radius: var(--radius-xl); color: #fff;
     }
-    .hiw-cta h2 {
-      font-size: clamp(22px, 3vw, 32px);
-      font-weight: 700; letter-spacing: -0.02em;
-      margin: 0 0 var(--space-3);
-    }
-    .hiw-cta p {
-      font-size: var(--text-base);
-      color: rgba(255,255,255,0.82);
-      margin: 0 0 var(--space-6); line-height: 1.6;
-    }
+    .hiw-cta h2 { font-size: clamp(22px, 3vw, 32px); font-weight: 700; letter-spacing: -0.02em; margin: 0 0 var(--space-3); }
+    .hiw-cta p { font-size: var(--text-base); color: rgba(255,255,255,0.82); margin: 0 0 var(--space-6); line-height: 1.6; }
     .btn-white {
-      display: inline-block;
-      background: #fff; color: var(--brand-primary-dark);
-      font-size: var(--text-base); font-weight: 700;
-      padding: 12px 28px; border-radius: var(--radius-md);
-      transition: transform .15s, box-shadow .15s;
+      display: inline-block; background: #fff; color: var(--brand-primary-dark);
+      font-size: var(--text-base); font-weight: 700; padding: 12px 28px;
+      border-radius: var(--radius-md); transition: transform .15s, box-shadow .15s;
     }
     .btn-white:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
-
     /* ── Footer ── */
-    .hiw-footer {
-      background: var(--color-surface);
-      border-top: 1px solid var(--color-border);
-      padding: 48px 28px 28px;
-      margin-top: var(--space-16);
-    }
+    .hiw-footer { background: var(--color-surface); border-top: 1px solid var(--color-border); padding: 48px 28px 28px; margin-top: var(--space-16); }
     .hiw-footer-inner { max-width: 1280px; margin: 0 auto; }
-    .hiw-footer-grid {
-      display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr;
-      gap: 40px; margin-bottom: 40px;
-    }
+    .hiw-footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
     .hiw-footer-brand { display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px;margin-bottom:12px; }
     .hiw-footer-tagline { font-size:13px;color:var(--color-text-muted);line-height:1.55;max-width:240px; }
     .hiw-footer-col h4 { font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--color-text-muted);margin-bottom:14px; }
@@ -273,7 +210,6 @@
     .hiw-footer-socials { display:flex;gap:16px; }
     .hiw-footer-socials a { font-size:14px;color:var(--color-text-muted);transition:color .15s; }
     .hiw-footer-socials a:hover { color:var(--brand-primary); }
-
     /* ── Mobile ── */
     @media (max-width: 700px) {
       .hiw-shell { padding: var(--space-6) var(--space-4) var(--space-10); }
@@ -285,6 +221,8 @@
       .compare-table th, .compare-table td { padding: var(--space-3); font-size: 11.5px; }
       .hiw-footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; }
       .hiw-footer-bottom { flex-direction: column; align-items: flex-start; }
+      .btc-layer-row { flex-direction: column; align-items: flex-start; gap: 6px; }
+      .btc-layer-sep { display: none; }
     }
   </style>
 </head>
@@ -303,9 +241,7 @@
       </div>
     </div>
   </nav>
-
   <main class="hiw-shell">
-
     <!-- Hero -->
     <div class="hiw-hero">
       <div class="hiw-eyebrow">⚡ 60 seconds. Permanent forever.</div>
@@ -317,7 +253,7 @@
       </div>
     </div>
 
-    <!-- TLDR strip — for the GenZ who won't read -->
+    <!-- TLDR strip -->
     <div class="tldr">
       <div class="tldr-step">
         <span class="tldr-emoji">✍️</span>
@@ -339,13 +275,17 @@
         <span class="tldr-label">Prove it</span>
         <span class="tldr-sub">Anyone can verify. Forever.</span>
       </div>
+      <div class="tldr-step">
+        <span class="tldr-emoji">₿</span>
+        <span class="tldr-label">Archive it</span>
+        <span class="tldr-sub">Optional Bitcoin anchor</span>
+      </div>
     </div>
 
     <!-- Step-by-step flow -->
     <div class="flow-section">
       <div class="flow-title">The full flow, step by step</div>
       <div class="flow-steps">
-
         <div class="flow-step">
           <div class="flow-icon">👤</div>
           <div class="flow-body">
@@ -355,7 +295,6 @@
           </div>
           <div class="flow-num">1</div>
         </div>
-
         <div class="flow-step">
           <div class="flow-icon">📝</div>
           <div class="flow-body">
@@ -364,7 +303,6 @@
           </div>
           <div class="flow-num">2</div>
         </div>
-
         <div class="flow-step">
           <div class="flow-icon">👁️</div>
           <div class="flow-body">
@@ -373,7 +311,6 @@
           </div>
           <div class="flow-num">3</div>
         </div>
-
         <div class="flow-step">
           <div class="flow-icon">⚡</div>
           <div class="flow-body">
@@ -383,7 +320,6 @@
           </div>
           <div class="flow-num">4</div>
         </div>
-
         <div class="flow-step">
           <div class="flow-icon">🔗</div>
           <div class="flow-body">
@@ -393,7 +329,31 @@
           </div>
           <div class="flow-num">5</div>
         </div>
-
+        <!-- Step 6: Bitcoin Archive — optional, highlighted -->
+        <div class="flow-step btc-step">
+          <div class="flow-icon">₿</div>
+          <div class="flow-body">
+            <div class="flow-step-title">Archive to Bitcoin — the strongest permanence layer</div>
+            <p class="flow-step-desc">
+              For proofs that need the ultimate timestamp, you can anchor them directly in the Bitcoin blockchain. We embed a <strong>TSA-1 canonical manifest</strong> into a Bitcoin transaction via <strong>OP_RETURN</strong> — a tamper-proof, permanently indexed record on the world's most secure public ledger.
+              Verifiable by anyone using any Bitcoin block explorer. No TruthStamp required. No account needed to verify.
+            </p>
+            <div class="btc-layer-card">
+              <div class="btc-layer-row">
+                <div class="btc-layer-item">⚡ MegaETH — on-chain proof registry</div>
+                <div class="btc-layer-sep">→</div>
+                <div class="btc-layer-item">Ⓐ Arweave — permanent content storage</div>
+                <div class="btc-layer-sep">→</div>
+                <div class="btc-layer-item">₿ Bitcoin — canonical archive anchor</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:var(--space-2)">
+              <span class="flow-step-tag optional-tag">Optional · 5 credits</span>
+              <span class="flow-step-tag btc-tag">₿ Independently verifiable on Bitcoin forever</span>
+            </div>
+          </div>
+          <div class="flow-num btc-num">6</div>
+        </div>
       </div>
     </div>
 
@@ -467,6 +427,12 @@
             <td><span class="no">✗</span> Partial</td>
             <td><span class="yes">✓</span> Hash-only mode</td>
           </tr>
+          <tr class="btc-row">
+            <td>₿ Anchored in Bitcoin blockchain</td>
+            <td><span class="no">✗</span> No</td>
+            <td><span class="no">✗</span> No</td>
+            <td><span class="yes">✓</span> Optional add-on</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -479,13 +445,19 @@
           <button class="faq-q" onclick="toggleFaq(this)">
             How much does it cost? <span class="faq-q-arrow">+</span>
           </button>
-          <div class="faq-a">You get 10 free credits when you sign up — no card needed. Each stamp costs 1 credit for text, 2 for URLs, 3 for files. Top up anytime from the dashboard.</div>
+          <div class="faq-a">You get 10 free credits when you sign up — no card needed. Each stamp costs 1 credit for text, 2 for URLs, 3 for files. Bitcoin archive is 5 additional credits. Top up anytime from the dashboard.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            What is Bitcoin archive and do I need it? <span class="faq-q-arrow">+</span>
+          </button>
+          <div class="faq-a">Bitcoin archive is an optional extra layer where we embed your TSA-1 proof manifest directly into the Bitcoin blockchain via OP_RETURN. It's the strongest possible permanence — your proof becomes part of Bitcoin's immutable history, independently verifiable by anyone using any block explorer, completely without TruthStamp. Most users don't need it — MegaETH + Arweave is already extremely permanent. But for proofs where you want the absolute maximum, Bitcoin archive adds that final layer.</div>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggleFaq(this)">
             What happens if TruthStamp shuts down? <span class="faq-q-arrow">+</span>
           </button>
-          <div class="faq-a">Nothing changes for your proofs. They live on MegaETH and Arweave — public, decentralized networks that exist independently of us. Your receipts are verifiable forever using open tools, even without our website.</div>
+          <div class="faq-a">Nothing changes for your proofs. They live on MegaETH and Arweave — public, decentralized networks that exist independently of us. Your receipts are verifiable forever using open tools, even without our website. Bitcoin-archived proofs add yet another independent layer.</div>
         </div>
         <div class="faq-item">
           <button class="faq-q" onclick="toggleFaq(this)">
@@ -503,7 +475,7 @@
           <button class="faq-q" onclick="toggleFaq(this)">
             Do I need a crypto wallet? <span class="faq-q-arrow">+</span>
           </button>
-          <div class="faq-a">No. Sign up with email or Google. Connecting a Web3 wallet is optional for power users who want direct on-chain interaction — but most people never need it.</div>
+          <div class="faq-a">No. Sign up with email or Google. Connecting a Web3 wallet is optional for power users who want direct on-chain interaction — but most people never need it. Bitcoin archive requires a Bitcoin wallet (Unisat or Xverse) only if you choose to use that feature.</div>
         </div>
       </div>
     </div>
@@ -514,10 +486,8 @@
       <p>10 free credits on signup. Takes 60 seconds. No card needed.</p>
       <a href="auth.html" class="btn-white">Start free →</a>
     </div>
-
   </main>
 
-  <!-- Footer — same as index.html -->
   <footer class="hiw-footer">
     <div class="hiw-footer-inner">
       <div class="hiw-footer-grid">
@@ -552,7 +522,7 @@
         </div>
       </div>
       <div class="hiw-footer-bottom">
-        <span class="hiw-footer-copy">© 2026 TruthStamp · Built on MegaETH &amp; Arweave</span>
+        <span class="hiw-footer-copy">© 2026 TruthStamp · Built on MegaETH · Arweave · Bitcoin</span>
         <div class="hiw-footer-socials">
           <a href="https://x.com/truthstamp" target="_blank" rel="noopener">𝕏</a>
           <a href="#" title="Discord">💬</a>
@@ -566,9 +536,7 @@
     function toggleFaq(btn) {
       const item = btn.closest('.faq-item');
       const isOpen = item.classList.contains('open');
-      // Close all
       document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
-      // Open clicked if it wasn't open
       if (!isOpen) item.classList.add('open');
     }
   </script>
