@@ -310,6 +310,7 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
   <button class="mob-tab" data-feed="trending">Trending</button>
   <button class="mob-tab" data-feed="reveals">Reveals</button>
   <button class="mob-tab" data-feed="upcoming">Upcoming</button>
+  <button class="mob-tab" data-feed="bitcoin">₿ Bitcoin</button>
 </div>
 <div class="layout">
   <aside class="sidebar">
@@ -319,6 +320,7 @@ footer{border-top:1px solid var(--border);padding:18px 24px;display:flex;align-i
       <button class="sidebar-item" data-feed="trending"><div class="sidebar-item-left"><span class="sidebar-icon">🔥</span>Trending</div><span class="sidebar-count">—</span></button>
       <button class="sidebar-item" data-feed="reveals"><div class="sidebar-item-left"><span class="sidebar-icon">🔓</span>Reveals</div><span class="sidebar-count" id="cnt-reveals">—</span></button>
       <button class="sidebar-item" data-feed="upcoming"><div class="sidebar-item-left"><span class="sidebar-icon">⏰</span>Upcoming seals</div><span class="sidebar-count" id="cnt-sealed">—</span></button>
+      <button class="sidebar-item" data-feed="bitcoin"><div class="sidebar-item-left"><span class="sidebar-icon">₿</span>Bitcoin Archived</div><span class="sidebar-count" id="cnt-bitcoin">—</span></button>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-label">Type</div>
@@ -667,6 +669,8 @@ function buildCard(s) {
   if (isSealed)   badges += `<span class="badge badge-sealed">sealed</span>`;
   if (isRevealed) badges += `<span class="badge badge-revealed">revealed</span>`;
   if (isHashOnly) badges += `<span class="badge badge-hash">private</span>`;
+  if (s.bitcoin_txid && (s.bitcoin_archive_status === 'confirmed' || s.bitcoin_archive_status === 'pending'))
+    badges += `<span class="badge" style="background:#FEF3C7;color:#92400E" title="Archived on Bitcoin">₿</span>`;
   if (categories.length)
     badges += `<span class="badge" style="background:var(--brand-bg);color:var(--brand)">${escHtml(categories[0])}</span>`;
 
@@ -695,11 +699,12 @@ async function loadStamps(reset = true) {
   try {
     let query = window.tsDB
       .from('stamps_with_creator')
-      .select('proof_id, content_type, visibility, display_title, text_content, file_name, file_size_bytes, tags, block_timestamp, status, storage_uri, sealed_until, revealed, content_hash, tx_hash, creator_identity, creator_address, creator_public_handle, creator_wallet_address')
+      .select('proof_id, content_type, visibility, display_title, text_content, file_name, file_size_bytes, tags, block_timestamp, status, storage_uri, sealed_until, revealed, content_hash, tx_hash, creator_identity, creator_address, creator_public_handle, creator_wallet_address, bitcoin_txid, bitcoin_archive_status')
       .eq('status', 'confirmed').in('visibility', ['public','sealed','hash_only'])
       .eq('is_hidden', false).eq('contract_address', CONTRACT);
-    if (currentFeed === 'reveals') query = query.eq('visibility','sealed').eq('revealed', true);
+    if (currentFeed === 'reveals')  query = query.eq('visibility','sealed').eq('revealed', true);
     else if (currentFeed === 'upcoming') query = query.eq('visibility','sealed').eq('revealed', false);
+    else if (currentFeed === 'bitcoin')  query = query.not('bitcoin_txid','is',null).in('bitcoin_archive_status',['confirmed','pending']);
     else if (currentFeed === 'trending') query = query.order('view_count', {ascending:false});
     if (currentFeed !== 'trending') query = query.order('block_timestamp', {ascending: sortAsc});
     query = query.range(offset, offset + PAGE_SIZE - 1);
@@ -862,6 +867,8 @@ async function loadSidebarCounts() {
     });
     const set = (id,v) => { const e=el(id); if(e) e.textContent=v; };
     set('cnt-text',text); set('cnt-file',file); set('cnt-url',url); set('cnt-pred',pred);
+    // Bitcoin count fetched separately
+    window.tsDB.from('stamps').select('*',{count:'exact',head:true}).eq('status','confirmed').eq('contract_address',CONTRACT).not('bitcoin_txid','is',null).in('bitcoin_archive_status',['confirmed','pending']).then(({count})=>set('cnt-bitcoin',count??0)).catch(()=>{});
     document.querySelectorAll('[data-cat]').forEach(btn => {
       const m = {Predictions:pred,Research:research,Creative:creative,News:news,Crypto:crypto};
       const sp = btn.querySelector('.sidebar-count');
@@ -875,7 +882,7 @@ document.querySelectorAll('[data-feed]').forEach(btn => {
     document.querySelectorAll('[data-feed]').forEach(b => b.classList.remove('active'));
     document.querySelectorAll(`[data-feed="${btn.dataset.feed}"]`).forEach(b => b.classList.add('active'));
     currentFeed = btn.dataset.feed;
-    const titles = {latest:'Latest stamps',trending:'Trending',reveals:'Recent reveals',upcoming:'Upcoming seals'};
+    const titles = {latest:'Latest stamps',trending:'Trending',reveals:'Recent reveals',upcoming:'Upcoming seals',bitcoin:'₿ Bitcoin Archived'};
     document.getElementById('feedTitle').textContent = titles[currentFeed] || 'Latest stamps';
     loadStamps();
   });
@@ -918,11 +925,13 @@ function closeMobSearch() {
   document.getElementById('searchInput').value = '';
   renderFeed();
 }
+let _mobSearchTimer = null;
 document.getElementById('mobSearchInput').addEventListener('input', function() {
   const q = this.value.trim();
   document.getElementById('searchInput').value = q;
+  clearTimeout(_mobSearchTimer);
   if (/^\d+$/.test(q) && q.length > 0) {
-    searchByProofId(parseInt(q, 10));
+    _mobSearchTimer = setTimeout(() => searchByProofId(parseInt(q, 10)), 400);
   } else {
     renderFeed();
   }
@@ -930,11 +939,13 @@ document.getElementById('mobSearchInput').addEventListener('input', function() {
 document.getElementById('mobSearchInput').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') { e.preventDefault(); this.blur(); }
 });
+let _searchTimer = null;
 document.getElementById('searchInput').addEventListener('input', function() {
   const q = this.value.trim();
-  // If query is purely numeric, do a direct DB lookup for that proof ID
+  clearTimeout(_searchTimer);
   if (/^\d+$/.test(q) && q.length > 0) {
-    searchByProofId(parseInt(q, 10));
+    // Debounce 400ms so rapid typing doesn't fire multiple DB calls
+    _searchTimer = setTimeout(() => searchByProofId(parseInt(q, 10)), 400);
   } else {
     renderFeed();
   }
@@ -945,13 +956,16 @@ async function searchByProofId(proofId) {
   try {
     const { data, error } = await window.tsDB
       .from('stamps_with_creator')
-      .select('proof_id, content_type, visibility, display_title, text_content, file_name, file_size_bytes, tags, block_timestamp, status, storage_uri, sealed_until, revealed, content_hash, tx_hash, creator_identity, creator_address, creator_public_handle, creator_wallet_address')
+      .select('proof_id, content_type, visibility, display_title, text_content, file_name, file_size_bytes, tags, block_timestamp, status, storage_uri, sealed_until, revealed, content_hash, tx_hash, creator_identity, creator_address, creator_public_handle, creator_wallet_address, bitcoin_txid, bitcoin_archive_status')
       .eq('proof_id', proofId)
       .eq('contract_address', CONTRACT)
+      .eq('status', 'confirmed')
+      .eq('is_hidden', false)
+      .in('visibility', ['public','sealed','hash_only'])
       .limit(1);
     if (error) throw error;
     if (!data || !data.length) {
-      list.innerHTML = '<div class="feed-empty"><div class="feed-empty-icon">🔍</div><h3>Proof #' + proofId + ' not found</h3><p style="font-size:13px;color:var(--text-muted)">No stamp with this proof ID.</p></div>';
+      list.innerHTML = '<div class="feed-empty"><div class="feed-empty-icon">🔍</div><h3>Proof #' + proofId + ' not found</h3><p style="font-size:13px;color:var(--text-muted)">No public stamp with this proof ID.</p></div>';
       return;
     }
     await prefetchNames(data);
