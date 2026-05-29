@@ -897,14 +897,18 @@
             ` : ''}
           </div>`;
       } else {
-        // ── Reveal date has passed — show content to EVERYONE ─────────────
+        // ── Reveal date has passed ────────────────────────────────────────
         let text = stamp.text_content || '';
 
-        // Try decrypt from encrypted_content (owner only — has the key)
-        const decryptUserId = currentUser?.id ?? null;
-        if (!text && stamp.encrypted_content && decryptUserId) {
+        // If stamp is already revealed AND text_content is set — use it directly
+        // No decryption needed — text_content is plaintext after owner reveals
+        if (stamp.revealed && text) {
+          // text is already set from stamp.text_content — fall through to render
+        }
+        // Owner: try to decrypt from encrypted_content (before on-chain reveal)
+        else if (!stamp.revealed && !text && stamp.encrypted_content && currentUser?.id) {
           try {
-            const decrypted = await decryptForUser(stamp.encrypted_content, decryptUserId);
+            const decrypted = await decryptForUser(stamp.encrypted_content, currentUser.id);
             try {
               const parsed = JSON.parse(decrypted);
               text = parsed.content ?? decrypted;
@@ -924,9 +928,8 @@
             console.warn('[TruthStamp] sealed decrypt failed:', e);
           }
         }
-
-        // If still no text (non-owner, content not yet cached) — ask server to decrypt
-        if (!text) {
+        // Non-owner and seal passed but text_content not yet set — call server decrypt
+        else if (!stamp.revealed && !text && !currentUser?.id) {
           try {
             const { data: fnData, error: fnErr } = await window.tsDB.functions.invoke(
               'decrypt-sealed',
@@ -959,17 +962,14 @@
         } else if (text) {
           contentText.textContent = text;
         } else if (!isOwner) {
-          // Non-owner, seal date passed, server decrypt also failed
+          // Non-owner, seal date passed, content not yet available
+          const msg = stamp.revealed
+            ? `Content was revealed on-chain. <a href="" style="color:var(--brand-primary)">Refresh</a> to see it.`
+            : `Seal date has passed.<br><span style="font-size:var(--text-xs); color:var(--color-text-muted);">Content will be permanently visible after the owner clicks <strong>Reveal on-chain</strong>.</span>`;
           contentBlock.innerHTML = `
             <div class="proof-content-hash-only">
-              <div style="font-size: 2rem; margin-bottom: 8px;">🔓</div>
-              <p style="margin: 0; color: var(--color-text-secondary); line-height: 1.6;">
-                Seal date has passed.<br>
-                <span style="font-size:var(--text-xs); color:var(--color-text-muted);">
-                  Content will be permanently visible after the owner clicks
-                  <strong>Reveal on-chain</strong>.
-                </span>
-              </p>
+              <div style="font-size: 2rem; margin-bottom: 8px;">${stamp.revealed ? '🔓' : '⏳'}</div>
+              <p style="margin: 0; color: var(--color-text-secondary); line-height: 1.6;">${msg}</p>
             </div>`;
         } else {
           // Owner but decrypt failed
