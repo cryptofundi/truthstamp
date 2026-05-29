@@ -26,6 +26,8 @@ window.TRUTHSTAMP_CONFIG = {
   // Where users are sent after successful auth
   POST_AUTH_REDIRECT: 'dashboard.html',
 
+  //Wallet Connect
+  WALLETCONNECT_PROJECT_ID: '0e3055deec7af463ce29d476c2ba634d',
   // Where users are sent if they visit a protected page without auth
   LOGIN_REDIRECT: 'auth.html'
 };
