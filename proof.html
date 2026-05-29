@@ -897,51 +897,40 @@
             ` : ''}
           </div>`;
       } else {
-        // ── Reveal date has passed ────────────────────────────────────────
+        // ── Reveal date has passed — show content ─────────────────────────
+        // New stamps: text_content is stored directly (since fix)
+        // Old stamps: encrypted_content only — need decrypt
         let text = stamp.text_content || '';
 
-        // If stamp is already revealed AND text_content is set — use it directly
-        // No decryption needed — text_content is plaintext after owner reveals
-        if (stamp.revealed && text) {
-          // text is already set from stamp.text_content — fall through to render
-        }
-        // Owner: try to decrypt from encrypted_content (before on-chain reveal)
-        else if (!stamp.revealed && !text && stamp.encrypted_content && currentUser?.id) {
-          try {
-            const decrypted = await decryptForUser(stamp.encrypted_content, currentUser.id);
+        // If text_content is already set — use it directly, no decrypt needed
+        if (!text) {
+          // Old stamp: try owner client-side decrypt first
+          if (stamp.encrypted_content && currentUser?.id) {
             try {
-              const parsed = JSON.parse(decrypted);
-              text = parsed.content ?? decrypted;
-            } catch { text = decrypted; }
-            // Auto-cache to DB so non-owners can see on next load
-            if (text && !stamp.text_content) {
-              try {
-                await window.tsDB.from('stamps').update({
-                  text_content:  text,
-                  display_title: text.slice(0, 60),
-                })
-                .eq('proof_id', stamp.proof_id)
-                .eq('contract_address', window.TRUTHSTAMP_CONFIG?.CONTRACT_ADDRESS ?? '');
-              } catch(e) { console.warn('[TruthStamp] Auto-cache failed:', e); }
-            }
-          } catch(e) {
-            console.warn('[TruthStamp] sealed decrypt failed:', e);
+              const decrypted = await decryptForUser(stamp.encrypted_content, currentUser.id);
+              try { const p = JSON.parse(decrypted); text = p.content ?? decrypted; }
+              catch { text = decrypted; }
+              // Cache to DB so non-owners can see it on next load
+              if (text) {
+                try {
+                  await window.tsDB.from('stamps').update({
+                    text_content: text,
+                    display_title: text.slice(0, 60),
+                  })
+                  .eq('proof_id', stamp.proof_id)
+                  .eq('contract_address', window.TRUTHSTAMP_CONFIG?.CONTRACT_ADDRESS ?? '');
+                } catch(e) { console.warn('[TruthStamp] cache failed:', e); }
+              }
+            } catch(e) { console.warn('[TruthStamp] client decrypt failed:', e); }
           }
-        }
-        // Non-owner and seal passed but text_content not yet set — call server decrypt
-        else if (!stamp.revealed && !text && !currentUser?.id) {
-          try {
-            const { data: fnData, error: fnErr } = await window.tsDB.functions.invoke(
-              'decrypt-sealed',
-              { body: { proof_id: stamp.proof_id } }
-            );
-            if (!fnErr && fnData?.success && fnData?.content) {
-              text = fnData.content;
-            } else {
-              console.warn('[TruthStamp] decrypt-sealed failed:', fnErr?.message ?? fnData?.error);
-            }
-          } catch(e) {
-            console.warn('[TruthStamp] decrypt-sealed error:', e.message);
+          // Still no text — try server-side decrypt (handles old encrypted stamps for non-owners)
+          if (!text) {
+            try {
+              const { data: fnData, error: fnErr } = await window.tsDB.functions.invoke(
+                'decrypt-sealed', { body: { proof_id: stamp.proof_id } }
+              );
+              if (!fnErr && fnData?.success && fnData?.content) text = fnData.content;
+            } catch(e) { console.warn('[TruthStamp] decrypt-sealed error:', e.message); }
           }
         }
 
