@@ -226,6 +226,20 @@ button { cursor: pointer; font-family: var(--font-sans); border: none; }
   .btc-layer-desc { max-width:100%; }
 }
 
+
+/* ── HERO HOW-IT-WORKS STRIP ── */
+.hero-how { display:flex;align-items:center;gap:0;margin-top:28px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 18px;flex-wrap:wrap;gap:4px; }
+.hero-how-step { display:flex;align-items:center;gap:10px;flex:1;min-width:130px; }
+.hero-how-num { width:26px;height:26px;background:var(--brand);color:#fff;border-radius:50%;font-size:12px;font-weight:700;display:grid;place-items:center;flex-shrink:0; }
+.hero-how-text { font-size:12.5px;color:var(--text-sec);line-height:1.4; }
+.hero-how-text strong { color:var(--text);display:block;font-size:13px; }
+.hero-how-arrow { color:var(--text-muted);font-size:16px;padding:0 6px;flex-shrink:0; }
+@media(max-width:900px){
+  .hero-how { padding:12px 14px; }
+  .hero-how-arrow { display:none; }
+  .hero-how-step { flex:1;min-width:90px;flex-direction:column;align-items:flex-start;gap:6px; }
+}
+
 /* ── SEALED SECTION — purple gradient only here ── */
 .sealed-section { margin:0 auto 64px;max-width:1224px;background:linear-gradient(135deg,var(--purple-hero) 0%,var(--purple-mid) 100%);border-radius:var(--r-xl);padding:60px 48px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;overflow:hidden;position:relative; }
 .sealed-section::before { content:'';position:absolute;top:-60px;right:-60px;width:300px;height:300px;background:rgba(255,255,255,.06);border-radius:50%; }
@@ -402,6 +416,24 @@ footer { background:var(--surface);border-top:1px solid var(--border);padding:48
       <a href="explorer.html" class="btn-hero-secondary">Explore public proofs</a>
     </div>
     <p class="hero-note">🎁 10 free credits on sign up · No credit card required</p>
+
+    <!-- Compact how it works strip -->
+    <div class="hero-how">
+      <div class="hero-how-step">
+        <div class="hero-how-num">1</div>
+        <div class="hero-how-text"><strong>Drop your content</strong><br>Text, file, or URL</div>
+      </div>
+      <div class="hero-how-arrow">→</div>
+      <div class="hero-how-step">
+        <div class="hero-how-num">2</div>
+        <div class="hero-how-text"><strong>Choose visibility</strong><br>Public, sealed, or private</div>
+      </div>
+      <div class="hero-how-arrow">→</div>
+      <div class="hero-how-step">
+        <div class="hero-how-num">3</div>
+        <div class="hero-how-text"><strong>Get your proof</strong><br>Permanent · shareable · forever</div>
+      </div>
+    </div>
   </div>
   <div class="hero-right">
     <div class="feat-pill"><div class="feat-pill-icon">🔒</div><div><div class="feat-pill-title">Immutable</div><div class="feat-pill-sub">Stored forever</div></div></div>
