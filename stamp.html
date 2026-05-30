@@ -456,7 +456,11 @@
           <span class="text-secondary" id="stamp-cost-label">Estimated cost</span>
           <span style="font-weight: 500;" id="stamp-credit-display">Loading...</span>
         </div>
-        <button class="btn btn-primary btn-block btn-lg btn-stamp-action" onclick="handleStamp()">Stamp this thought · ~1 second</button>
+        <button class="btn btn-primary btn-block btn-lg btn-stamp-action" onclick="handleStamp()">Stamp it · 15–30 seconds</button>
+        <p style="margin-top:var(--space-3); font-size:var(--text-xs); color:var(--color-text-muted); text-align:center; line-height:1.6;">
+          ⏱ Takes 15–30 seconds to seal on MegaETH &amp; Arweave.<br>
+          After stamping, allow 2–5 minutes for Arweave nodes to propagate your proof.
+        </p>
       </div>
     </div>
   </main>
@@ -661,8 +665,10 @@
               // Don't send display_title for hash-only — server sets 'Private stamp'
               // For hash-only: send user title if provided, never send content as title
               display_title: visibility === 'hash_only'
-                ? (title || undefined)  // send title if given, let server use 'Private stamp' fallback
-                : (title || text.slice(0, 60)),
+                ? (title || undefined)
+                : visibility === 'sealed'
+                  ? (title || 'Sealed stamp')  // don't expose content as title for sealed
+                  : (title || text.slice(0, 60)),
               encrypted_content: encryptedContent,
             }),
           }
