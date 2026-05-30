@@ -492,43 +492,11 @@
         fileArea.style.display = 'block';
         updateCreditCost('file');
         setSealedHint('file');
-        disableSealedForFiles();
       } else if (tab === 'url') {
         premium.style.display = 'block';
         updateCreditCost('url');
         setSealedHint('url');
-        enableSealedOption();
       }
-    }
-
-    function disableSealedForFiles() {
-      const sealedCard = document.getElementById('vis-sealed');
-      if (!sealedCard) return;
-      sealedCard.disabled = true;
-      sealedCard.style.opacity = '0.45';
-      sealedCard.style.cursor = 'not-allowed';
-      sealedCard.title = 'Sealed is not available for file stamps. Use Public or Hash-only.';
-      if (sealedCard.classList.contains('selected')) selectVisibility('public');
-      let note = document.getElementById('file-sealed-note');
-      if (!note) {
-        note = document.createElement('p');
-        note.id = 'file-sealed-note';
-        note.style.cssText = 'font-size:11px;color:var(--color-text-muted);margin-top:6px;';
-        note.textContent = '⚠️ File stamps cannot be sealed. Choose Public or Hash-only.';
-        sealedCard.parentNode?.insertBefore(note, sealedCard.nextSibling);
-      }
-      note.style.display = 'block';
-    }
-
-    function enableSealedOption() {
-      const sealedCard = document.getElementById('vis-sealed');
-      if (!sealedCard) return;
-      sealedCard.disabled = false;
-      sealedCard.style.opacity = '';
-      sealedCard.style.cursor = '';
-      sealedCard.title = '';
-      const note = document.getElementById('file-sealed-note');
-      if (note) note.style.display = 'none';
     }
 
     function setSealedHint(type) {
