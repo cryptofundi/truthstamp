@@ -425,11 +425,14 @@
             placeholder="da45f6e8-3b44-46a5-b372-3a7fb197c0a9 or 0x5b7721..."
             oninput="onIdInput()">
           <p class="id-hint">
-            📍 Find your ID on any proof page under <strong style="color:var(--text-2);">Technical Details → Creator identity</strong>.
-            Wallet users: your wallet address. Email users: your UUID.
+            📍 This is your <strong style="color:var(--text-2);">account UUID</strong> — the internal user ID used as the encryption key.
+            Find it in <strong style="color:var(--text-2);">Dashboard → Settings</strong>, or it auto-fills below when you're logged in.
+            <br><br>
+            ⚠️ Wallet users: enter your <strong style="color:var(--amber);">UUID, not your wallet address</strong>.
+            Your wallet address appears as Creator Identity on the proof page, but encryption uses the UUID.
             <br><br>
             <span id="autofill-hint" style="color:var(--green); display:none;">
-              ✓ Auto-filled from your active session — verify it matches your proof page.
+              ✓ Auto-filled from your active session (UUID).
             </span>
           </p>
         </div>
@@ -496,20 +499,9 @@
         if (window.tsDB) {
           const { data: { user } } = await window.tsDB.auth.getUser();
           if (user) {
-            // Try wallet address first, fall back to UUID
-            let identity = user.id;
-            try {
-              const { data: profile } = await window.tsDB
-                .from('profiles')
-                .select('wallet_address, auth_method')
-                .eq('id', user.id)
-                .maybeSingle();
-              if (profile?.auth_method === 'wallet' && profile?.wallet_address) {
-                identity = profile.wallet_address;
-              }
-            } catch { /* use UUID */ }
-
-            document.getElementById('user-id-input').value = identity;
+            // Always use user.id (UUID) — encryption key is ALWAYS derived from UUID.
+            // Wallet address is the on-chain creator identity but NOT the encryption key.
+            document.getElementById('user-id-input').value = user.id;
             document.getElementById('autofill-hint').style.display = 'block';
             updateDecryptBtn();
           }
@@ -544,9 +536,11 @@
       reader.onload = e => {
         try {
           loadedPackage = JSON.parse(e.target.result);
-          // Validate it looks like a recovery package
-          if (!loadedPackage.encrypted_payload) {
-            showError('This doesn\'t look like a TruthStamp recovery package.\nMissing encrypted_payload field.');
+          // Accept text/url packages (have encrypted_payload) AND file packages (have file_name/arweave_uri)
+          const isFilePkg = loadedPackage._type === 'file' || !!loadedPackage.file_name;
+          const isTextPkg = !!loadedPackage.encrypted_payload;
+          if (!isFilePkg && !isTextPkg && !loadedPackage.proof_id) {
+            showError("This doesn't look like a TruthStamp recovery package.");
             loadedPackage = null;
             return;
           }
@@ -556,10 +550,16 @@
           fl.classList.add('show');
           document.getElementById('file-name-display').textContent = file.name;
           document.getElementById('file-size-display').textContent =
-            `${(file.size / 1024).toFixed(1)} KB · Proof #${loadedPackage.proof_id ?? '?'}`;
+            `${(file.size / 1024).toFixed(1)} KB · Proof #${loadedPackage.proof_id ?? '?'}` +
+            (isFilePkg ? ' · File stamp' : '');
           document.getElementById('step-1').classList.add('done');
           clearError();
-          updateDecryptBtn();
+          // File packages: render immediately, no decryption needed
+          if (isFilePkg) {
+            renderFilePackage(loadedPackage);
+          } else {
+            updateDecryptBtn();
+          }
         } catch(err) {
           showError('Failed to parse JSON file: ' + err.message);
         }
@@ -579,12 +579,67 @@
 
     function onIdInput() { updateDecryptBtn(); }
 
+    function isFilePackage() {
+      return loadedPackage && (loadedPackage._type === 'file' || !!loadedPackage.file_name);
+    }
+
     function updateDecryptBtn() {
       const hasFile = !!loadedPackage;
       const hasId   = document.getElementById('user-id-input').value.trim().length > 0;
+      // File packages don't need a user ID — disable decrypt button, it's not needed
+      if (isFilePackage()) {
+        document.getElementById('decrypt-btn').disabled = true;
+        document.getElementById('decrypt-btn').innerHTML =
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> File — see Arweave link above';
+        return;
+      }
       document.getElementById('decrypt-btn').disabled = !(hasFile && hasId);
       if (hasId) document.getElementById('step-2').classList.add('done');
       else document.getElementById('step-2').classList.remove('done');
+    }
+
+    function renderFilePackage(pkg) {
+      // File recovery packages don't decrypt — show Arweave link and metadata
+      document.getElementById('step-1').classList.add('done');
+      document.getElementById('step-2').classList.add('done');
+      document.getElementById('step-3').classList.add('done');
+      const arweaveUrl = pkg.arweave_url ?? (pkg.arweave_uri ? 'https://arweave.net/' + pkg.arweave_uri.replace('ar://', '') : null);
+      document.getElementById('result-meta').innerHTML = `
+        <div class="meta-item">
+          <p class="meta-key">Proof ID</p>
+          <p class="meta-val highlight">#${pkg.proof_id ?? '—'}</p>
+        </div>
+        <div class="meta-item">
+          <p class="meta-key">File name</p>
+          <p class="meta-val">${esc(pkg.file_name ?? '—')}</p>
+        </div>
+        <div class="meta-item">
+          <p class="meta-key">File type</p>
+          <p class="meta-val">${esc(pkg.file_mime_type ?? '—')}</p>
+        </div>
+        <div class="meta-item">
+          <p class="meta-key">File size</p>
+          <p class="meta-val">${pkg.file_size_bytes ? (pkg.file_size_bytes / 1024).toFixed(1) + ' KB' : '—'}</p>
+        </div>
+        <div class="meta-item">
+          <p class="meta-key">Content hash</p>
+          <p class="meta-val" style="font-size:10px;">${esc(pkg.content_hash ?? '—')}</p>
+        </div>
+        <div class="meta-item">
+          <p class="meta-key">MegaETH TX</p>
+          <p class="meta-val">${pkg.megaeth_tx_url ? '<a href="' + pkg.megaeth_tx_url + '" target="_blank" style="color:var(--green)">View on explorer ↗</a>' : '—'}</p>
+        </div>`;
+      const contentEl = document.getElementById('content-display');
+      if (arweaveUrl) {
+        contentEl.innerHTML = '<a href="' + arweaveUrl + '" target="_blank" rel="noopener" style="color:var(--green); word-break:break-all;">' + arweaveUrl + ' ↗</a>';
+      } else {
+        contentEl.textContent = 'File is on Arweave but the URI was not stored in this recovery package. Check the proof page for the Arweave link.';
+      }
+      document.querySelector('.content-label').textContent = 'Arweave file link';
+      document.getElementById('raw-json').textContent = JSON.stringify(pkg, null, 2);
+      document.getElementById('result-panel').classList.add('show');
+      document.getElementById('result-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      updateDecryptBtn();
     }
 
     // ── Core decryption ───────────────────────────────────────────────────────
