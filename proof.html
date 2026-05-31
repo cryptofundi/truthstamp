@@ -8,7 +8,6 @@
   <meta property="og:title" content="Verified receipt — TruthStamp">
   <meta property="og:description" content="Independently verifiable proof. Permanent. Tamper-proof.">
   <meta property="og:type" content="article">
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -19,228 +18,67 @@
   <script src="js/config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/nav.js"></script>
-
   <style>
     .proof-shell { max-width: 680px; margin: 0 auto; padding: var(--space-8) var(--space-5); }
-
-    /* Loading / error states */
-    .state-card {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      padding: var(--space-12) var(--space-6);
-      text-align: center;
-    }
+    .state-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-12) var(--space-6); text-align: center; }
     .state-icon { font-size: 2.5rem; margin-bottom: var(--space-3); }
     .state-title { font-size: var(--text-xl); font-weight: 600; margin: 0 0 var(--space-2); }
     .state-desc { font-size: var(--text-base); color: var(--color-text-secondary); margin: 0; }
-    .spinner {
-      width: 32px; height: 32px;
-      border: 3px solid var(--color-border);
-      border-top-color: var(--brand-primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto var(--space-4);
-    }
+    .spinner { width: 32px; height: 32px; border: 3px solid var(--color-border); border-top-color: var(--brand-primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto var(--space-4); }
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes ts-spin { to { transform: rotate(360deg); } }
-
-    /* URL bar */
-    .url-bar {
-      display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
-      padding: var(--space-3) var(--space-4);
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      margin-bottom: var(--space-4);
-      flex-wrap: wrap;
-    }
+    .url-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-bottom: var(--space-4); flex-wrap: wrap; }
     .url-text { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-text-secondary); word-break: break-all; }
-
-    /* Main proof card */
-    .proof-card {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-xl);
-      padding: var(--space-7);
-      margin-bottom: var(--space-5);
-    }
-
-    /* Visibility badge */
-    .visibility-banner {
-      display: flex; align-items: center; gap: var(--space-2);
-      padding: var(--space-3) var(--space-4);
-      border-radius: var(--radius-md);
-      font-size: var(--text-sm);
-      font-weight: 500;
-      margin-bottom: var(--space-5);
-    }
+    .proof-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: var(--space-7); margin-bottom: var(--space-5); }
+    .visibility-banner { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); font-size: var(--text-sm); font-weight: 500; margin-bottom: var(--space-5); }
     .visibility-banner.public { background: var(--brand-primary-light); color: var(--brand-primary-dark); }
     .visibility-banner.hash_only { background: var(--color-surface-alt); color: var(--color-text-secondary); }
     .visibility-banner.sealed { background: #FEF3C7; color: #92400E; }
-
-    /* Creator row */
-    .proof-creator-row {
-      display: flex; align-items: center; gap: var(--space-3);
-      margin-bottom: var(--space-5);
-      flex-wrap: wrap;
-    }
-    .creator-avatar {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: var(--brand-accent-light); color: var(--brand-accent);
-      display: flex; align-items: center; justify-content: center;
-      font-size: var(--text-sm); font-weight: 700; flex-shrink: 0;
-    }
+    .proof-creator-row { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-5); flex-wrap: wrap; }
+    .creator-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--brand-accent-light); color: var(--brand-accent); display: flex; align-items: center; justify-content: center; font-size: var(--text-sm); font-weight: 700; flex-shrink: 0; }
     .creator-info { flex: 1; min-width: 0; }
     .creator-name { font-size: var(--text-base); font-weight: 600; margin: 0 0 2px; }
     .creator-meta { font-size: var(--text-xs); color: var(--color-text-muted); margin: 0; }
-
-    /* Content block */
-    .proof-content-block {
-      background: var(--color-surface-alt);
-      border-left: 3px solid var(--brand-primary);
-      border-radius: 0 var(--radius-md) var(--radius-md) 0;
-      padding: var(--space-5);
-      margin: 0 0 var(--space-5);
-      overflow: hidden;
-      word-break: break-word;
-      overflow-wrap: anywhere;
-    }
-    .proof-content-text {
-      font-family: var(--font-serif);
-      font-size: var(--text-lg);
-      line-height: 1.65;
-      margin: 0;
-      color: var(--color-text);
-    }
-    .proof-content-hash-only {
-      text-align: center;
-      padding: var(--space-6);
-      color: var(--color-text-muted);
-      font-size: var(--text-sm);
-    }
-
-    /* Arweave view + download buttons */
-    .arweave-actions {
-      display: flex; align-items: center; gap: 8px;
-      flex-wrap: wrap; margin-top: var(--space-3);
-    }
-    .arweave-btn {
-      display: inline-flex; align-items: center; gap: 5px;
-      font-size: var(--text-xs); font-weight: 500;
-      padding: 5px 11px; border-radius: var(--radius-full);
-      text-decoration: none; cursor: pointer;
-      border: 1px solid var(--color-border);
-      background: var(--color-surface); color: var(--color-text-secondary);
-      transition: border-color .15s, color .15s, background .15s;
-      font-family: var(--font-sans);
-    }
+    .proof-content-block { background: var(--color-surface-alt); border-left: 3px solid var(--brand-primary); border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: var(--space-5); margin: 0 0 var(--space-5); overflow: hidden; word-break: break-word; overflow-wrap: anywhere; }
+    .proof-content-text { font-family: var(--font-serif); font-size: var(--text-lg); line-height: 1.65; margin: 0; color: var(--color-text); }
+    .proof-content-hash-only { text-align: center; padding: var(--space-6); color: var(--color-text-muted); font-size: var(--text-sm); }
+    .arweave-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: var(--space-3); }
+    .arweave-btn { display: inline-flex; align-items: center; gap: 5px; font-size: var(--text-xs); font-weight: 500; padding: 5px 11px; border-radius: var(--radius-full); text-decoration: none; cursor: pointer; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text-secondary); transition: border-color .15s, color .15s, background .15s; font-family: var(--font-sans); }
     .arweave-btn:hover { border-color: var(--brand-primary); color: var(--brand-primary); }
     .arweave-btn.primary { background: var(--brand-primary-light); color: var(--brand-primary-dark); border-color: transparent; }
     .arweave-btn.primary:hover { background: rgba(40,84,232,0.18); }
-    /* JSON viewer modal */
-    .json-modal-overlay {
-      display: none; position: fixed; inset: 0; z-index: 1000;
-      background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
-      align-items: center; justify-content: center; padding: 16px;
-    }
+    .json-modal-overlay { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px; }
     .json-modal-overlay.open { display: flex; }
-    .json-modal {
-      background: var(--color-surface); border-radius: var(--radius-xl);
-      width: 100%; max-width: 680px; max-height: 85vh;
-      display: flex; flex-direction: column;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    }
-    .json-modal-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 20px; border-bottom: 1px solid var(--color-border); flex-shrink: 0;
-    }
+    .json-modal { background: var(--color-surface); border-radius: var(--radius-xl); width: 100%; max-width: 680px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .json-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--color-border); flex-shrink: 0; }
     .json-modal-title { font-size: var(--text-base); font-weight: 600; margin: 0; }
-    .json-modal-close {
-      width: 28px; height: 28px; border-radius: 50%;
-      background: var(--color-surface-alt); border: none;
-      font-size: 14px; cursor: pointer; display: grid; place-items: center;
-      color: var(--color-text-secondary); flex-shrink: 0;
-    }
+    .json-modal-close { width: 28px; height: 28px; border-radius: 50%; background: var(--color-surface-alt); border: none; font-size: 14px; cursor: pointer; display: grid; place-items: center; color: var(--color-text-secondary); flex-shrink: 0; }
     .json-modal-body { overflow-y: auto; padding: 16px 20px; flex: 1; }
-    .json-modal-body pre {
-      font-family: var(--font-mono); font-size: 12px; line-height: 1.7;
-      color: var(--color-text); white-space: pre-wrap; word-break: break-all; margin: 0;
-    }
-    .json-modal-footer {
-      padding: 12px 20px; border-top: 1px solid var(--color-border);
-      display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap;
-    }
-
-    /* Tags */
+    .json-modal-body pre { font-family: var(--font-mono); font-size: 12px; line-height: 1.7; color: var(--color-text); white-space: pre-wrap; word-break: break-all; margin: 0; }
+    .json-modal-footer { padding: 12px 20px; border-top: 1px solid var(--color-border); display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
     .tags-row { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-5); }
-
-    /* Stat grid */
-    .stat-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: var(--space-3); margin-bottom: var(--space-5);
-    }
-    .stat-tile {
-      background: var(--color-surface-alt);
-      border-radius: var(--radius-md);
-      padding: var(--space-4);
-      text-align: center;
-    }
+    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin-bottom: var(--space-5); }
+    .stat-tile { background: var(--color-surface-alt); border-radius: var(--radius-md); padding: var(--space-4); text-align: center; }
     .stat-label { font-size: var(--text-xs); color: var(--color-text-muted); margin: 0 0 4px; text-transform: uppercase; letter-spacing: 0.04em; }
     .stat-value { font-size: var(--text-base); font-weight: 600; margin: 0; }
     .mono { font-family: var(--font-mono); font-size: var(--text-sm) !important; }
-
-    /* Tech rows */
-    .tech-row {
-      padding: var(--space-3) 0;
-      border-top: 1px solid var(--color-border);
-    }
+    .tech-row { padding: var(--space-3) 0; border-top: 1px solid var(--color-border); }
     .tech-label { font-size: var(--text-xs); color: var(--color-text-muted); margin: 0 0 4px; text-transform: uppercase; letter-spacing: 0.04em; }
-    .tech-value {
-      font-family: var(--font-mono); font-size: var(--text-xs);
-      color: var(--color-text-secondary); margin: 0;
-      word-break: break-all;
-    }
+    .tech-value { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-text-secondary); margin: 0; word-break: break-all; }
     .tech-value a { color: var(--brand-primary); text-decoration: none; }
     .tech-value a:hover { text-decoration: underline; }
-
-    /* Permanence note */
-    .permanence-note {
-      display: flex; align-items: flex-start; gap: var(--space-3);
-      padding: var(--space-4);
-      background: var(--brand-primary-light);
-      border-radius: var(--radius-md);
-      margin: var(--space-5) 0;
-    }
+    .permanence-note { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-4); background: var(--brand-primary-light); border-radius: var(--radius-md); margin: var(--space-5) 0; }
     .permanence-icon { width: 18px; height: 18px; flex-shrink: 0; color: var(--brand-primary); margin-top: 1px; }
     .permanence-text { font-size: var(--text-sm); color: var(--color-text); margin: 0; line-height: 1.5; }
     .permanence-text a { color: var(--brand-primary); text-decoration: underline; }
-
-    /* Action row */
     .action-row { display: flex; gap: var(--space-3); flex-wrap: wrap; }
-
-    /* Verification seal */
-    .verify-seal {
-      display: flex; align-items: center; gap: var(--space-2);
-      padding: var(--space-2) var(--space-3);
-      background: #D1FAE5; border-radius: var(--radius-full);
-      font-size: var(--text-xs); font-weight: 600; color: #065F46;
-      margin-left: auto;
-    }
-
-    /* Owner hash verifier */
-      .proof-card { padding: var(--space-5); }
-      .stat-grid { grid-template-columns: repeat(2, 1fr); }
-      .action-row { flex-direction: column; }
-    }
+    .verify-seal { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); background: #D1FAE5; border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: 600; color: #065F46; margin-left: auto; }
   </style>
 </head>
 <body>
   <nav class="nav">
     <div class="nav-inner">
-      <a href="index.html" class="nav-brand">
-        <span class="nav-logo">T</span><span>TruthStamp</span>
-      </a>
+      <a href="index.html" class="nav-brand"><span class="nav-logo">T</span><span>TruthStamp</span></a>
       <div class="nav-links">
         <a href="dashboard.html">My stamps</a>
         <a href="verify.html">Verify</a>
@@ -252,10 +90,7 @@
       </div>
     </div>
   </nav>
-
   <main class="proof-shell">
-
-    <!-- Loading state -->
     <div id="state-loading">
       <div class="state-card">
         <div class="spinner"></div>
@@ -263,8 +98,6 @@
         <p class="state-desc">Fetching stamp from the database.</p>
       </div>
     </div>
-
-    <!-- Error state -->
     <div id="state-error" style="display:none;">
       <div class="state-card">
         <div class="state-icon">🔍</div>
@@ -273,11 +106,8 @@
         <a href="stamp.html" class="btn btn-primary" style="margin-top: var(--space-5);">Create your own stamp</a>
       </div>
     </div>
-
-    <!-- Proof content (hidden until loaded) -->
     <div id="state-proof" style="display:none;">
-
-      <!-- URL bar -->
+      <!-- URL bar — CHANGE 2: copy URL button added -->
       <div class="url-bar">
         <a href="javascript:history.back()" style="display:inline-flex; align-items:center; gap:4px; font-size:var(--text-xs); color:var(--color-text-muted); text-decoration:none; flex-shrink:0;"
            onmouseover="this.style.color='var(--brand-primary)'" onmouseout="this.style.color='var(--color-text-muted)'">
@@ -285,6 +115,13 @@
           Back
         </a>
         <span class="url-text" id="proof-url">truthstamp.io/proof.html?id=...</span>
+        <!-- Copy URL button with cross-wallet tooltip -->
+        <button id="copy-url-btn" onclick="copyProofUrl()"
+          title="Copy proof URL — tip: to archive to Bitcoin using a different wallet (e.g. Xverse on mobile), copy this URL and open it in your Bitcoin wallet's browser"
+          style="display:inline-flex;align-items:center;gap:4px;font-size:var(--text-xs);color:var(--color-text-muted);background:none;border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:3px 8px;cursor:pointer;font-family:var(--font-sans);flex-shrink:0;transition:border-color .15s,color .15s;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          <span id="copy-url-label">Copy URL</span>
+        </button>
         <div style="display:flex; align-items:center; gap:var(--space-2); flex-shrink:0; flex-wrap:wrap; justify-content:flex-end;">
           <div class="verify-seal">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
@@ -298,17 +135,11 @@
           </a>
         </div>
       </div>
-
-      <!-- Main proof card -->
       <article class="proof-card">
-
-        <!-- Visibility banner -->
         <div class="visibility-banner" id="visibility-banner">
           <span id="visibility-icon">🌐</span>
           <span id="visibility-label">Public stamp</span>
         </div>
-
-        <!-- Creator -->
         <div class="proof-creator-row">
           <div class="creator-avatar" id="creator-avatar">?</div>
           <div class="creator-info">
@@ -316,16 +147,10 @@
             <p class="creator-meta" id="creator-meta"></p>
           </div>
         </div>
-
-        <!-- Tags -->
         <div class="tags-row" id="tags-row"></div>
-
-        <!-- Content -->
         <blockquote class="proof-content-block" id="content-block">
           <p class="proof-content-text" id="content-text"></p>
         </blockquote>
-
-        <!-- Arweave actions — OUTSIDE content-block so URL/file innerHTML rewrites don't destroy it -->
         <div class="arweave-actions" id="arweave-actions" style="display:none;">
           <button class="arweave-btn primary" id="arweave-view-btn" onclick="viewArweavePayload()">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -340,53 +165,19 @@
             Arweave TX ↗
           </a>
         </div>
-
-        <!-- Stats -->
         <div class="stat-grid">
-          <div class="stat-tile">
-            <p class="stat-label">Block</p>
-            <p class="stat-value mono" id="stat-block">—</p>
-          </div>
-          <div class="stat-tile">
-            <p class="stat-label">Network</p>
-            <p class="stat-value">MegaETH</p>
-          </div>
-          <div class="stat-tile">
-            <p class="stat-label">Type</p>
-            <p class="stat-value" id="stat-type">—</p>
-          </div>
+          <div class="stat-tile"><p class="stat-label">Block</p><p class="stat-value mono" id="stat-block">—</p></div>
+          <div class="stat-tile"><p class="stat-label">Network</p><p class="stat-value">MegaETH</p></div>
+          <div class="stat-tile"><p class="stat-label">Type</p><p class="stat-value" id="stat-type">—</p></div>
         </div>
-
-        <!-- Technical details -->
-        <div class="tech-row">
-          <p class="tech-label">Content fingerprint (SHA-256)</p>
-          <p class="tech-value" id="tech-hash">—</p>
-        </div>
-        <div class="tech-row">
-          <p class="tech-label">MegaETH transaction</p>
-          <p class="tech-value" id="tech-tx">—</p>
-        </div>
-        <div class="tech-row" id="tech-arweave-row" style="display:none;">
-          <p class="tech-label">Permanent storage (Arweave)</p>
-          <p class="tech-value" id="tech-arweave">—</p>
-        </div>
-        <div class="tech-row">
-          <p class="tech-label">Proof ID</p>
-          <p class="tech-value" id="tech-proof-id">—</p>
-        </div>
-
-        <!-- Permanence note -->
+        <div class="tech-row"><p class="tech-label">Content fingerprint (SHA-256)</p><p class="tech-value" id="tech-hash">—</p></div>
+        <div class="tech-row"><p class="tech-label">MegaETH transaction</p><p class="tech-value" id="tech-tx">—</p></div>
+        <div class="tech-row" id="tech-arweave-row" style="display:none;"><p class="tech-label">Permanent storage (Arweave)</p><p class="tech-value" id="tech-arweave">—</p></div>
+        <div class="tech-row"><p class="tech-label">Proof ID</p><p class="tech-value" id="tech-proof-id">—</p></div>
         <div class="permanence-note">
-          <svg class="permanence-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2L2 7v10l10 5 10-5V7l-10-5z"/><path d="M9 12l2 2 4-4"/>
-          </svg>
-          <p class="permanence-text">
-            This proof lives on MegaETH and is independently verifiable — no need to trust TruthStamp.
-            <a href="verify.html">Verify it yourself →</a>
-          </p>
+          <svg class="permanence-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7v10l10 5 10-5V7l-10-5z"/><path d="M9 12l2 2 4-4"/></svg>
+          <p class="permanence-text">This proof lives on MegaETH and is independently verifiable — no need to trust TruthStamp. <a href="verify.html">Verify it yourself →</a></p>
         </div>
-
-        <!-- Actions -->
         <div class="action-row" style="flex-wrap:wrap; gap:var(--space-2);">
           <button class="btn btn-secondary" onclick="shareToX()">Share on X</button>
           <button class="btn btn-secondary" onclick="copyLink()">Copy link</button>
@@ -394,95 +185,44 @@
           <button class="btn btn-secondary" onclick="showCertificate()">⬇ Certificate</button>
           <a id="explorer-link" href="#" target="_blank" class="btn btn-ghost">View on explorer →</a>
         </div>
-        <!-- Create your own CTA -->
         <div style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border); text-align: center;">
-          <a href="stamp.html" style="font-size: var(--text-sm); color: var(--brand-primary); text-decoration: none; font-weight: 500;">
-            Create your own permanent proof →
-          </a>
+          <a href="stamp.html" style="font-size: var(--text-sm); color: var(--brand-primary); text-decoration: none; font-weight: 500;">Create your own permanent proof →</a>
         </div>
       </article>
-
-      <!-- ── Bitcoin Archive Card ─────────────────────────────────────────── -->
-      <!-- Shown only for public/revealed stamps that aren't already archived  -->
+      <!-- Bitcoin Archive Card -->
       <div id="btc-archive-card" style="display:none;">
-        <article style="
-          background:var(--color-surface);
-          border:1px solid var(--color-border);
-          border-radius:var(--radius-xl);
-          padding:var(--space-6) var(--space-7);
-          margin-bottom:var(--space-5);
-        ">
-          <!-- Header -->
+        <article style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);padding:var(--space-6) var(--space-7);margin-bottom:var(--space-5);">
           <div id="btc-card-header" style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4);">
-            <div style="
-              width:36px;height:36px;border-radius:var(--radius-md);
-              background:#FEF3C7;display:grid;place-items:center;
-              font-size:18px;flex-shrink:0;
-            ">₿</div>
+            <div style="width:36px;height:36px;border-radius:var(--radius-md);background:#FEF3C7;display:grid;place-items:center;font-size:18px;flex-shrink:0;">₿</div>
             <div>
-              <p style="font-size:var(--text-base);font-weight:700;margin:0 0 2px;color:var(--color-text)">
-                Archive permanently to Bitcoin
-              </p>
-              <p style="font-size:var(--text-xs);color:var(--color-text-muted);margin:0">
-                Optional · The strongest permanence layer · You pay Bitcoin network fees
-              </p>
+              <p style="font-size:var(--text-base);font-weight:700;margin:0 0 2px;color:var(--color-text)">Archive permanently to Bitcoin</p>
+              <p style="font-size:var(--text-xs);color:var(--color-text-muted);margin:0">Optional · The strongest permanence layer · You pay Bitcoin network fees</p>
             </div>
           </div>
-
-          <!-- What this does -->
-          <div id="btc-card-desc" style="
-            background:var(--color-surface-alt);border-radius:var(--radius-md);
-            padding:var(--space-4);margin-bottom:var(--space-4);
-            font-size:var(--text-sm);color:var(--color-text-secondary);line-height:1.65;
-          ">
-            Embeds a TSA-1 canonical proof manifest into a Bitcoin transaction via OP_RETURN.
-            Permanently recorded in the Bitcoin blockchain — independently verifiable
-            by anyone, forever, without TruthStamp.
-            <a href="https://mempool.space" target="_blank" rel="noopener"
-               style="color:var(--brand-primary);text-decoration:none;"> Verify on mempool.space ↗</a>
+          <div id="btc-card-desc" style="background:var(--color-surface-alt);border-radius:var(--radius-md);padding:var(--space-4);margin-bottom:var(--space-4);font-size:var(--text-sm);color:var(--color-text-secondary);line-height:1.65;">
+            Embeds a TSA-1 canonical proof manifest into a Bitcoin transaction via OP_RETURN. Permanently recorded in the Bitcoin blockchain — independently verifiable by anyone, forever, without TruthStamp.
+            <a href="https://mempool.space" target="_blank" rel="noopener" style="color:var(--brand-primary);text-decoration:none;"> Verify on mempool.space ↗</a>
           </div>
-
-          <!-- Already archived state -->
           <div id="btc-already-archived" style="display:none;">
-            <div style="
-              background:#ECFDF5;border:1px solid rgba(16,185,129,.25);
-              border-radius:var(--radius-md);padding:var(--space-4);
-              display:flex;align-items:flex-start;gap:var(--space-3);
-            ">
+            <div style="background:#ECFDF5;border:1px solid rgba(16,185,129,.25);border-radius:var(--radius-md);padding:var(--space-4);display:flex;align-items:flex-start;gap:var(--space-3);">
               <span style="font-size:18px;flex-shrink:0">✅</span>
               <div>
-                <p style="font-size:var(--text-sm);font-weight:600;color:#065F46;margin:0 0 4px">
-                  Archived on Bitcoin
-                </p>
+                <p style="font-size:var(--text-sm);font-weight:600;color:#065F46;margin:0 0 4px">Archived on Bitcoin</p>
                 <p id="btc-txid-display" style="font-family:var(--font-mono);font-size:var(--text-xs);color:#065F46;margin:0 0 8px;word-break:break-all"></p>
-                <a id="btc-mempool-link" href="#" target="_blank" rel="noopener"
-                   style="font-size:var(--text-xs);color:var(--brand-primary);font-weight:500">
-                  View on mempool.space ↗
-                </a>
+                <a id="btc-mempool-link" href="#" target="_blank" rel="noopener" style="font-size:var(--text-xs);color:var(--brand-primary);font-weight:500">View on mempool.space ↗</a>
               </div>
             </div>
           </div>
-
-          <!-- Archive action UI -->
           <div id="btc-archive-action">
-            <!-- Step 1: not connected -->
             <div id="btc-step-connect">
-              <div style="
-                border:1px dashed var(--color-border);border-radius:var(--radius-md);
-                padding:var(--space-4);margin-bottom:var(--space-4);
-                font-size:var(--text-xs);color:var(--color-text-muted);line-height:1.6;
-              ">
-                ⚡ <strong>Requires:</strong> A Bitcoin wallet browser extension ·
-                5 TruthStamp credits · Bitcoin mainnet
+              <div style="border:1px dashed var(--color-border);border-radius:var(--radius-md);padding:var(--space-4);margin-bottom:var(--space-4);font-size:var(--text-xs);color:var(--color-text-muted);line-height:1.6;">
+                ⚡ <strong>Requires:</strong> A Bitcoin wallet browser extension · 5 TruthStamp credits · Bitcoin mainnet
               </div>
-              <!-- Wallet choice buttons -->
               <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:center;margin-bottom:var(--space-3)">
-                <button id="btc-connect-unisat" onclick="connectWallet('unisat')" class="btn btn-primary"
-                  style="display:inline-flex;align-items:center;gap:6px;">
+                <button id="btc-connect-unisat" onclick="connectWallet('unisat')" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:6px;">
                   <span style="font-size:15px">🟠</span> Connect Unisat
                 </button>
-                <button id="btc-connect-xverse" onclick="connectWallet('xverse')" class="btn btn-secondary"
-                  style="display:inline-flex;align-items:center;gap:6px;">
+                <button id="btc-connect-xverse" onclick="connectWallet('xverse')" class="btn btn-secondary" style="display:inline-flex;align-items:center;gap:6px;">
                   <span style="font-size:15px">🟣</span> Connect Xverse
                 </button>
               </div>
@@ -490,134 +230,67 @@
                 5 credits will be deducted after successful archive ·
                 <a href="https://unisat.io/download" target="_blank" rel="noopener" style="color:var(--brand-primary)">Get Unisat</a> ·
                 <a href="https://www.xverse.app/download" target="_blank" rel="noopener" style="color:var(--brand-primary)">Get Xverse</a>
-                <br>
-                <span style="color:#92400E">⚠️ Xverse requires confirmed Bitcoin funds (no recent pending TXs). Unisat works instantly on desktop.</span>
+                <br><span style="color:#92400E">⚠️ Xverse requires confirmed Bitcoin funds. Unisat works instantly on desktop.</span>
               </div>
             </div>
-
-            <!-- Step 2: connected, ready to archive -->
             <div id="btc-step-archive" style="display:none;">
-              <div style="
-                background:var(--brand-primary-light);border-radius:var(--radius-md);
-                padding:var(--space-4);margin-bottom:var(--space-4);
-              ">
+              <div style="background:var(--brand-primary-light);border-radius:var(--radius-md);padding:var(--space-4);margin-bottom:var(--space-4);">
                 <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
-                  <span style="font-size:var(--text-xs);color:var(--brand-primary-dark);font-weight:600">
-                    ✓ Unisat connected
-                  </span>
+                  <span style="font-size:var(--text-xs);color:var(--brand-primary-dark);font-weight:600">✓ Wallet connected</span>
                   <span id="btc-wallet-addr" style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--brand-primary-dark)"></span>
                 </div>
-                <div id="btc-wallet-note" style="display:none;margin-top:8px;font-size:var(--text-xs);color:#92400E;background:#FEF3C7;padding:6px 10px;border-radius:var(--radius-md)">
-                ⚠️ Xverse archives are verified via Bitcoin payment proof. For full OP_RETURN on-chain verification, use Unisat wallet.
+                <div id="btc-wallet-note" style="display:none;margin-top:8px;font-size:var(--text-xs);color:#92400E;background:#FEF3C7;padding:6px 10px;border-radius:var(--radius-md);">
+                  ⚠️ Xverse archives are verified via Bitcoin payment proof. For full OP_RETURN on-chain verification, use Unisat wallet.
+                </div>
               </div>
-              </div>
-
-              <!-- TSA-1 payload preview -->
-              <div style="
-                background:var(--color-surface-alt);border-radius:var(--radius-md);
-                padding:var(--space-3) var(--space-4);margin-bottom:var(--space-4);
-              ">
-                <p style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted);margin:0 0 4px">
-                  TSA-1 payload to be embedded in Bitcoin TX
-                </p>
+              <div style="background:var(--color-surface-alt);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);margin-bottom:var(--space-4);">
+                <p style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted);margin:0 0 4px">TSA-1 payload to be embedded in Bitcoin TX</p>
                 <p id="btc-payload-preview" style="font-family:var(--font-mono);font-size:11px;color:var(--color-text-secondary);margin:0;word-break:break-all"></p>
               </div>
-
               <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:center">
-                <button id="btc-archive-btn" onclick="archiveToBitcoin()" style="
-                  background:#F59E0B;color:#fff;border:none;font-family:var(--font-sans);
-                  font-size:var(--text-sm);font-weight:700;padding:10px 20px;
-                  border-radius:var(--radius-md);cursor:pointer;
-                  display:inline-flex;align-items:center;gap:6px;
-                  transition:background .15s;
-                ">
+                <button id="btc-archive-btn" onclick="archiveToBitcoin()" style="background:#F59E0B;color:#fff;border:none;font-family:var(--font-sans);font-size:var(--text-sm);font-weight:700;padding:10px 20px;border-radius:var(--radius-md);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;">
                   ₿ Archive to Bitcoin · 5 credits
                 </button>
-                <button onclick="resetBtcFlow()" style="
-                  background:none;border:none;color:var(--color-text-muted);
-                  font-size:var(--text-xs);cursor:pointer;font-family:var(--font-sans);
-                ">Disconnect</button>
+                <button onclick="resetBtcFlow()" style="background:none;border:none;color:var(--color-text-muted);font-size:var(--text-xs);cursor:pointer;font-family:var(--font-sans);">Disconnect</button>
               </div>
-
-              <!-- Manual txid entry — for already-broadcast TXs waiting confirmation -->
               <div style="margin-top:var(--space-4);padding-top:var(--space-4);border-top:1px solid var(--color-border)">
-                <p style="font-size:var(--text-xs);color:var(--color-text-muted);margin:0 0 8px">
-                  Already sent the transaction? Enter your Bitcoin txid to confirm:
-                </p>
+                <p style="font-size:var(--text-xs);color:var(--color-text-muted);margin:0 0 8px">Already sent the transaction? Enter your Bitcoin txid to confirm:</p>
                 <div style="display:flex;gap:8px;flex-wrap:wrap">
                   <input id="btc-manual-txid" type="text" placeholder="Paste txid from mempool.space…"
-                    style="flex:1;min-width:200px;font-family:var(--font-mono);font-size:11px;
-                    padding:7px 10px;border:1px solid var(--color-border);border-radius:var(--radius-md);
-                    background:var(--color-surface);color:var(--color-text);outline:none">
-                  <button onclick="confirmManualTxid()" style="
-                    background:var(--brand-primary);color:#fff;border:none;
-                    font-family:var(--font-sans);font-size:var(--text-xs);font-weight:600;
-                    padding:7px 14px;border-radius:var(--radius-md);cursor:pointer;white-space:nowrap;
-                  ">Confirm TX</button>
+                    style="flex:1;min-width:200px;font-family:var(--font-mono);font-size:11px;padding:7px 10px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface);color:var(--color-text);outline:none">
+                  <button onclick="confirmManualTxid()" style="background:var(--brand-primary);color:#fff;border:none;font-family:var(--font-sans);font-size:var(--text-xs);font-weight:600;padding:7px 14px;border-radius:var(--radius-md);cursor:pointer;white-space:nowrap;">Confirm TX</button>
                 </div>
               </div>
             </div>
-
-            <!-- Step 3: processing -->
             <div id="btc-step-processing" style="display:none;">
               <div style="display:flex;align-items:center;gap:var(--space-3);padding:var(--space-4);background:var(--color-surface-alt);border-radius:var(--radius-md)">
                 <div style="width:20px;height:20px;border:2px solid var(--color-border);border-top-color:var(--brand-primary);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0"></div>
-                <p id="btc-processing-msg" style="font-size:var(--text-sm);color:var(--color-text-secondary);margin:0">
-                  Preparing archive transaction…
-                </p>
+                <p id="btc-processing-msg" style="font-size:var(--text-sm);color:var(--color-text-secondary);margin:0">Preparing archive transaction…</p>
               </div>
             </div>
-
-            <!-- Result message -->
             <div id="btc-result-msg" style="display:none;margin-top:var(--space-3)"></div>
           </div>
         </article>
       </div>
-
-      <!-- Footer CTA for non-logged-in users -->
       <div class="text-center mt-8" id="footer-cta" style="display:none;">
         <p class="text-secondary" style="font-size: var(--text-sm); margin: 0 0 var(--space-3);">Want to drop your own receipts?</p>
         <a href="auth.html" class="btn btn-primary">Get started · free</a>
       </div>
-
-    </div><!-- /state-proof -->
+    </div>
   </main>
-
-  <!-- Certificate modal — works in all browsers including MetaMask WebView -->
-  <div id="certModal" style="
-    display:none; position:fixed; inset:0; z-index:1001;
-    background:rgba(0,0,0,0.6); backdrop-filter:blur(4px);
-    align-items:flex-start; justify-content:center;
-    padding:16px; overflow-y:auto;
-  " onclick="if(event.target===this)closeCertModal()">
-    <div style="
-      background:#fff; border-radius:12px; width:100%; max-width:700px;
-      margin:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);
-      font-family:Arial,sans-serif;
-    ">
-      <!-- Modal toolbar -->
-      <div style="
-        display:flex; align-items:center; justify-content:space-between;
-        padding:14px 20px; border-bottom:1px solid #e5e7eb;
-        position:sticky; top:0; background:#fff; border-radius:12px 12px 0 0; z-index:1;
-      ">
+  <!-- Certificate modal -->
+  <div id="certModal" style="display:none; position:fixed; inset:0; z-index:1001; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); align-items:flex-start; justify-content:center; padding:16px; overflow-y:auto;" onclick="if(event.target===this)closeCertModal()">
+    <div style="background:#fff; border-radius:12px; width:100%; max-width:700px; margin:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3); font-family:Arial,sans-serif;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid #e5e7eb; position:sticky; top:0; background:#fff; border-radius:12px 12px 0 0; z-index:1;">
         <span style="font-weight:700;font-size:14px;color:#111">Certificate of Proof</span>
         <div style="display:flex;gap:8px">
-          <button onclick="printCert()" style="
-            background:#2854E8;color:#fff;border:none;border-radius:6px;
-            padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;
-          ">🖨 Print / Save PDF</button>
-          <button onclick="closeCertModal()" style="
-            background:#f3f4f6;color:#374151;border:none;border-radius:6px;
-            padding:7px 12px;font-size:13px;cursor:pointer;
-          ">✕ Close</button>
+          <button onclick="printCert()" style="background:#2854E8;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;">🖨 Print / Save PDF</button>
+          <button onclick="closeCertModal()" style="background:#f3f4f6;color:#374151;border:none;border-radius:6px;padding:7px 12px;font-size:13px;cursor:pointer;">✕ Close</button>
         </div>
       </div>
-      <!-- Certificate content -->
       <div id="cert-content" style="padding:40px 48px;"></div>
     </div>
   </div>
-
   <!-- JSON payload modal -->
   <div class="json-modal-overlay" id="jsonModal" onclick="closeJsonModal(event)">
     <div class="json-modal" onclick="event.stopPropagation()">
@@ -645,126 +318,50 @@
       </div>
     </div>
   </div>
-
   <footer class="footer">
     <div class="footer-inner">
-      <div class="flex gap-2" style="align-items: center;">
-        <span class="nav-logo">T</span>
-        <span style="font-weight: 500; color: var(--color-text);">TruthStamp</span>
-      </div>
-      <div class="footer-links">
-        <a href="trust.html">Trust</a>
-        <a href="verify.html">Verify</a>
-        <a href="pricing.html">Pricing</a>
-      </div>
+      <div class="flex gap-2" style="align-items: center;"><span class="nav-logo">T</span><span style="font-weight: 500; color: var(--color-text);">TruthStamp</span></div>
+      <div class="footer-links"><a href="trust.html">Trust</a><a href="verify.html">Verify</a><a href="pricing.html">Pricing</a></div>
     </div>
   </footer>
-
   <script src="js/common.js"></script>
   <script>
   (async function() {
     try {
-    // ── Get proof ID from URL ──────────────────────────────────────────────
     const params = new URLSearchParams(window.location.search);
     const proofId = params.get('id');
-
-    if (!proofId || isNaN(Number(proofId))) {
-      showError('No proof ID specified. Use ?id=1 in the URL.');
-      return;
-    }
-
-    document.getElementById('proof-url').textContent =
-      `truthstamp.io/proof.html?id=${proofId}`;
-
-    // ── Fetch stamp AND current user in parallel ───────────────────────────
+    if (!proofId || isNaN(Number(proofId))) { showError('No proof ID specified. Use ?id=1 in the URL.'); return; }
+    document.getElementById('proof-url').textContent = `truthstamp.io/proof.html?id=${proofId}`;
     let stampResult, authResult;
     try {
       const contractAddress = window.TRUTHSTAMP_CONFIG?.CONTRACT_ADDRESS ?? '';
-      // Try with contract_address filter first (requires migration 012)
-      // Fall back to proof_id only if contract_address column missing from view
       let query = window.tsDB.from('stamps_with_creator').select('*, bitcoin_txid, bitcoin_archive_status').eq('proof_id', proofId);
       if (contractAddress) query = query.eq('contract_address', contractAddress);
-
-      [stampResult, authResult] = await Promise.all([
-        query.maybeSingle(),
-        window.tsDB.auth.getUser()
-      ]);
-    } catch (fetchErr) {
-      console.error('Fetch error:', fetchErr);
-      showError('Failed to connect to database. Please refresh the page.');
-      return;
-    }
-
+      [stampResult, authResult] = await Promise.all([query.maybeSingle(), window.tsDB.auth.getUser()]);
+    } catch (fetchErr) { console.error('Fetch error:', fetchErr); showError('Failed to connect to database. Please refresh the page.'); return; }
     const { data: stamp, error } = stampResult;
     const currentUser = authResult?.data?.user ?? null;
-
     if (error) {
       console.error('DB error:', error);
-      // If error mentions contract_address column, view needs migration 012
       if (error.message?.includes('contract_address')) {
-        // Fallback: query without contract_address (migration 012 not yet run)
-        const { data: stampFallback, error: fallbackErr } = await window.tsDB
-          .from('stamps_with_creator').select('*, bitcoin_txid, bitcoin_archive_status')
-          .eq('proof_id', proofId).maybeSingle();
-        if (!fallbackErr && stampFallback) {
-          await renderProof(stampFallback, currentUser, !!(currentUser?.id && (
-            currentUser.id === stampFallback.creator_profile_id ||
-            currentUser.id === stampFallback.creator_identity
-          )));
-          document.getElementById('state-loading').style.display = 'none';
-          document.getElementById('state-proof').style.display = 'block';
-          return;
-        }
+        const { data: stampFallback, error: fallbackErr } = await window.tsDB.from('stamps_with_creator').select('*, bitcoin_txid, bitcoin_archive_status').eq('proof_id', proofId).maybeSingle();
+        if (!fallbackErr && stampFallback) { await renderProof(stampFallback, currentUser, !!(currentUser?.id && (currentUser.id === stampFallback.creator_profile_id || currentUser.id === stampFallback.creator_identity))); document.getElementById('state-loading').style.display = 'none'; document.getElementById('state-proof').style.display = 'block'; return; }
       }
-      showError(`Failed to load stamp: ${error.message}. Please try again.`);
-      return;
+      showError(`Failed to load stamp: ${error.message}. Please try again.`); return;
     }
-
     if (!stamp) {
-      // Retry without contract_address in case migration 012 not run
-      const { data: stampFallback } = await window.tsDB
-        .from('stamps_with_creator').select('*, bitcoin_txid, bitcoin_archive_status')
-        .eq('proof_id', proofId).maybeSingle();
-      if (stampFallback) {
-        await renderProof(stampFallback, currentUser, !!(currentUser?.id && (
-          currentUser.id === stampFallback.creator_profile_id ||
-          currentUser.id === stampFallback.creator_identity
-        )));
-        document.getElementById('state-loading').style.display = 'none';
-        document.getElementById('state-proof').style.display = 'block';
-        return;
-      }
-      showError(`Stamp #${proofId} was not found. It may not exist yet — the blockchain indexer might still be catching up.`);
-      return;
+      const { data: stampFallback } = await window.tsDB.from('stamps_with_creator').select('*, bitcoin_txid, bitcoin_archive_status').eq('proof_id', proofId).maybeSingle();
+      if (stampFallback) { await renderProof(stampFallback, currentUser, !!(currentUser?.id && (currentUser.id === stampFallback.creator_profile_id || currentUser.id === stampFallback.creator_identity))); document.getElementById('state-loading').style.display = 'none'; document.getElementById('state-proof').style.display = 'block'; return; }
+      showError(`Stamp #${proofId} was not found.`); return;
     }
-
-    // isOwner: check profile_id (reliable) OR creator_identity (wallet users)
-    const isOwner = !!(currentUser?.id && (
-      currentUser.id === stamp.creator_profile_id ||
-      currentUser.id === stamp.creator_identity
-    ));
-
-    console.log('[TruthStamp] user:', currentUser?.id ?? 'anon');
-    console.log('[TruthStamp] creator_identity:', stamp.creator_identity);
-    console.log('[TruthStamp] isOwner:', isOwner);
-    console.log('[TruthStamp] encrypted_content:', !!stamp.encrypted_content);
-
-    // ── Render stamp data ──────────────────────────────────────────────────
-    try {
-      await renderProof(stamp, currentUser, isOwner);
-    } catch (renderErr) {
-      console.error('renderProof failed:', renderErr);
-      showError('Failed to render stamp data: ' + renderErr.message);
-    }
-
-    } catch (topErr) {
-      console.error('Proof page error:', topErr);
-      showError('Something went wrong loading this proof. Please refresh. Error: ' + topErr.message);
-    }
+    const isOwner = !!(currentUser?.id && (currentUser.id === stamp.creator_profile_id || currentUser.id === stamp.creator_identity));
+    console.log('[TruthStamp] user:', currentUser?.id ?? 'anon', '| isOwner:', isOwner, '| encrypted_content:', !!stamp.encrypted_content);
+    try { await renderProof(stamp, currentUser, isOwner); }
+    catch (renderErr) { console.error('renderProof failed:', renderErr); showError('Failed to render stamp data: ' + renderErr.message); }
+    } catch (topErr) { console.error('Proof page error:', topErr); showError('Something went wrong loading this proof. Please refresh. Error: ' + topErr.message); }
   })();
 
   async function renderProof(stamp, currentUser, isOwner) {
-    // Show nav user if logged in
     if (currentUser) {
       window.tsAuth?.getProfile?.().then(p => {
         if (p) {
@@ -779,1595 +376,560 @@
         }
       });
     }
-    // Visibility banner
     const bannerEl = document.getElementById('visibility-banner');
     const iconEl   = document.getElementById('visibility-icon');
     const labelEl  = document.getElementById('visibility-label');
-
     if (stamp.visibility === 'public') {
-      bannerEl.className = 'visibility-banner public';
-      iconEl.textContent = '🌐';
-      labelEl.textContent = 'Public stamp — content is publicly viewable';
+      bannerEl.className = 'visibility-banner public'; iconEl.textContent = '🌐'; labelEl.textContent = 'Public stamp — content is publicly viewable';
     } else if (stamp.visibility === 'sealed') {
-      bannerEl.className = 'visibility-banner sealed';
-      iconEl.textContent = '🔒';
+      bannerEl.className = 'visibility-banner sealed'; iconEl.textContent = '🔒';
       const sealedUntil = stamp.sealed_until ? new Date(stamp.sealed_until) : null;
       const isExpired = sealedUntil && sealedUntil <= new Date();
       if (stamp.revealed || isExpired) {
         iconEl.textContent = '🔓';
-        const revealDate = sealedUntil
-          ? sealedUntil.toLocaleString('en-US', {
-              month: 'long', day: 'numeric', year: 'numeric',
-              timeZone: 'UTC'
-            }) + ' UTC'
-          : 'unknown date';
-        labelEl.textContent = `Sealed stamp — revealed on ${revealDate}`;
-        bannerEl.className = 'visibility-banner public';
+        const revealDate = sealedUntil ? sealedUntil.toLocaleString('en-US', {month:'long',day:'numeric',year:'numeric',timeZone:'UTC'}) + ' UTC' : 'unknown date';
+        labelEl.textContent = `Sealed stamp — revealed on ${revealDate}`; bannerEl.className = 'visibility-banner public';
       } else {
-        const revealDate = sealedUntil
-          ? sealedUntil.toLocaleString('en-US', {
-              month: 'long', day: 'numeric', year: 'numeric',
-              hour: '2-digit', minute: '2-digit',
-              timeZone: 'UTC', hour12: true
-            }) + ' UTC'
-          : 'unknown date';
+        const revealDate = sealedUntil ? sealedUntil.toLocaleString('en-US', {month:'long',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'UTC',hour12:true}) + ' UTC' : 'unknown date';
         labelEl.textContent = `Sealed stamp — auto-reveals on ${revealDate}`;
       }
     } else {
-      bannerEl.className = 'visibility-banner hash_only';
-      iconEl.textContent = '🔐';
-      labelEl.textContent = 'Hash-only stamp — content stays private, hash is public';
+      bannerEl.className = 'visibility-banner hash_only'; iconEl.textContent = '🔐'; labelEl.textContent = 'Hash-only stamp — content stays private, hash is public';
     }
-
-    // Creator
     const name = stamp.creator_display_name || stamp.creator_identity?.split('-')[0] || 'Anonymous';
     const initials = name.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase() || '??';
     document.getElementById('creator-avatar').textContent = initials;
     document.getElementById('creator-name').textContent = name;
-
-    const stamped = stamp.block_timestamp
-      ? new Date(stamp.block_timestamp).toUTCString().replace('GMT', 'UTC')
-      : 'Unknown time';
+    const stamped = stamp.block_timestamp ? new Date(stamp.block_timestamp).toUTCString().replace('GMT', 'UTC') : 'Unknown time';
     document.getElementById('creator-meta').textContent = `Stamped ${stamped}`;
-
-    // Tags
     const tagsRow = document.getElementById('tags-row');
-    if (stamp.tags && stamp.tags.length > 0) {
-      tagsRow.innerHTML = stamp.tags
-        .map(t => `<span class="tag-display">#${t}</span>`)
-        .join('');
-    } else {
-      tagsRow.style.display = 'none';
-    }
-
-    // Content
+    if (stamp.tags && stamp.tags.length > 0) { tagsRow.innerHTML = stamp.tags.map(t => `<span class="tag-display">#${t}</span>`).join(''); }
+    else { tagsRow.style.display = 'none'; }
     const contentBlock = document.getElementById('content-block');
     const contentText  = document.getElementById('content-text');
-
     if (stamp.visibility === 'hash_only') {
-      // Set placeholder first, then immediately overwrite if owner
-      contentBlock.innerHTML = `
-        <div class="proof-content-hash-only" id="hash-only-content">
-          <div style="font-size: 2rem; margin-bottom: 8px;">🔐</div>
-          <p style="margin: 0; color: var(--color-text-secondary);">
-            Content is private. Only the fingerprint is stored on-chain.<br>
-            The owner can prove authorship by providing the original content.
-          </p>
-        </div>`;
-      // await here — this is inside an async function so it works correctly
+      contentBlock.innerHTML = `<div class="proof-content-hash-only" id="hash-only-content"><div style="font-size: 2rem; margin-bottom: 8px;">🔐</div><p style="margin: 0; color: var(--color-text-secondary);">Content is private. Only the fingerprint is stored on-chain.<br>The owner can prove authorship by providing the original content.</p></div>`;
       await renderHashOnlyContent(stamp, isOwner, currentUser);
     } else if (stamp.visibility === 'sealed') {
       const sealedUntil = stamp.sealed_until ? new Date(stamp.sealed_until) : null;
       const isExpired   = sealedUntil && sealedUntil <= new Date();
-      const isRevealed  = stamp.revealed; // only true after revealSealed() on-chain
+      const isRevealed  = stamp.revealed;
       const canReveal   = isExpired && isOwner && !isRevealed;
-
-      // Credit cost for reveal (mirrors stamp creation cost)
-      const revealCreditCost = stamp.content_type === 'file' ? 3
-                              : stamp.content_type === 'url'  ? 2 : 1;
-
+      const revealCreditCost = stamp.content_type === 'file' ? 3 : stamp.content_type === 'url' ? 2 : 1;
       if (!isExpired) {
-        // Still sealed — show locked state only
-        const revealDate = sealedUntil
-          ? sealedUntil.toLocaleString('en-US', {
-              month: 'long', day: 'numeric', year: 'numeric',
-              hour: '2-digit', minute: '2-digit',
-              timeZone: 'UTC', hour12: true
-            }) + ' UTC'
-          : 'a future date';
-        contentBlock.innerHTML = `
-          <div class="proof-content-hash-only">
-            <div style="font-size: 2rem; margin-bottom: 8px;">🔒</div>
-            <p style="margin: 0 0 var(--space-3); color: var(--color-text-secondary);">
-              Content is sealed until <strong>${revealDate}</strong>.<br>
-              The timestamp is locked in — content will reveal automatically.
-            </p>
-            ${isOwner ? `
-              <div style="margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid rgba(83,74,183,0.15);">
-                <button class="btn btn-secondary" onclick="downloadRecoveryPackage()"
-                  style="font-size: var(--text-xs); display:inline-flex; align-items:center; gap:6px;"
-                  title="Downloads your encrypted sealed content as a local backup.">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5 5-5-5M12 3v12"/></svg>
-                  Download recovery package
-                </button>
-                <p style="margin: var(--space-1) 0 0; font-size: 10px; color: var(--color-text-muted);">
-                  Encrypted local backup — only you can decrypt it
-                </p>
-              </div>
-            ` : ''}
-          </div>`;
+        const revealDate = sealedUntil ? sealedUntil.toLocaleString('en-US', {month:'long',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'UTC',hour12:true}) + ' UTC' : 'a future date';
+        contentBlock.innerHTML = `<div class="proof-content-hash-only"><div style="font-size: 2rem; margin-bottom: 8px;">🔒</div><p style="margin: 0 0 var(--space-3); color: var(--color-text-secondary);">Content is sealed until <strong>${revealDate}</strong>.<br>The timestamp is locked in — content will reveal automatically.</p>${isOwner ? `<div style="margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid rgba(83,74,183,0.15);"><button class="btn btn-secondary" onclick="downloadRecoveryPackage()" style="font-size: var(--text-xs); display:inline-flex; align-items:center; gap:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5 5-5-5M12 3v12"/></svg>Download recovery package</button><p style="margin: var(--space-1) 0 0; font-size: 10px; color: var(--color-text-muted);">Encrypted local backup — only you can decrypt it</p></div>` : ''}</div>`;
       } else {
-        // ── Reveal date has passed — show content ─────────────────────────
-        // New stamps: text_content is stored directly (since fix)
-        // Old stamps: encrypted_content only — need decrypt
         let text = stamp.text_content || '';
-
-        // If text_content is already set — use it directly, no decrypt needed
         if (!text) {
-          // Old stamp: try owner client-side decrypt first
           if (stamp.encrypted_content && currentUser?.id) {
             try {
               const decrypted = await decryptForUser(stamp.encrypted_content, currentUser.id);
-              try { const p = JSON.parse(decrypted); text = p.content ?? decrypted; }
-              catch { text = decrypted; }
-              // Cache to DB so non-owners can see it on next load
-              if (text) {
-                try {
-                  await window.tsDB.from('stamps').update({
-                    text_content: text,
-                    display_title: text.slice(0, 60),
-                  })
-                  .eq('proof_id', stamp.proof_id)
-                  .eq('contract_address', window.TRUTHSTAMP_CONFIG?.CONTRACT_ADDRESS ?? '');
-                } catch(e) { console.warn('[TruthStamp] cache failed:', e); }
-              }
+              try { const p = JSON.parse(decrypted); text = p.content ?? decrypted; } catch { text = decrypted; }
+              if (text) { try { await window.tsDB.from('stamps').update({text_content: text, display_title: text.slice(0, 60)}).eq('proof_id', stamp.proof_id).eq('contract_address', window.TRUTHSTAMP_CONFIG?.CONTRACT_ADDRESS ?? ''); } catch(e) { console.warn('[TruthStamp] cache failed:', e); } }
             } catch(e) { console.warn('[TruthStamp] client decrypt failed:', e); }
           }
-          // Still no text — try server-side decrypt (handles old encrypted stamps for non-owners)
           if (!text) {
             try {
-              const { data: fnData, error: fnErr } = await window.tsDB.functions.invoke(
-                'decrypt-sealed', { body: { proof_id: stamp.proof_id } }
-              );
+              const { data: fnData, error: fnErr } = await window.tsDB.functions.invoke('decrypt-sealed', { body: { proof_id: stamp.proof_id } });
               if (!fnErr && fnData?.success && fnData?.content) text = fnData.content;
             } catch(e) { console.warn('[TruthStamp] decrypt-sealed error:', e.message); }
           }
         }
-
-        // Render content based on type
         if (stamp.content_type === 'url' && text) {
           let displayUrl = text;
-          if (text.startsWith('{')) {
-            try { displayUrl = JSON.parse(text).url ?? text; } catch { /* plain url */ }
-          }
-          contentBlock.innerHTML =
-            '<div style="padding: var(--space-4);">'
-            + '<p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0 0 4px; text-transform:uppercase; letter-spacing:0.04em;">Stamped URL</p>'
-            + '<a href="' + escapeHtml(displayUrl) + '" target="_blank" rel="noopener" '
-            + 'style="font-size:var(--text-sm); font-weight:600; color:var(--brand-primary); word-break:break-all; overflow-wrap:anywhere; display:block;">'
-            + escapeHtml(displayUrl) + '</a></div>';
+          if (text.startsWith('{')) { try { displayUrl = JSON.parse(text).url ?? text; } catch {} }
+          contentBlock.innerHTML = '<div style="padding: var(--space-4);"><p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0 0 4px; text-transform:uppercase; letter-spacing:0.04em;">Stamped URL</p><a href="' + escapeHtml(displayUrl) + '" target="_blank" rel="noopener" style="font-size:var(--text-sm); font-weight:600; color:var(--brand-primary); word-break:break-all; overflow-wrap:anywhere; display:block;">' + escapeHtml(displayUrl) + '</a></div>';
         } else if (stamp.content_type === 'file') {
           contentText.textContent = stamp.file_name ? `📄 ${stamp.file_name}` : '(File stamp)';
         } else if (text) {
           contentText.textContent = text;
         } else if (!isOwner) {
-          // Non-owner, seal date passed, content not yet available
-          const msg = stamp.revealed
-            ? `Content was revealed on-chain. <a href="" style="color:var(--brand-primary)">Refresh</a> to see it.`
-            : `Seal date has passed.<br><span style="font-size:var(--text-xs); color:var(--color-text-muted);">Content will be permanently visible after the owner clicks <strong>Reveal on-chain</strong>.</span>`;
-          contentBlock.innerHTML = `
-            <div class="proof-content-hash-only">
-              <div style="font-size: 2rem; margin-bottom: 8px;">${stamp.revealed ? '🔓' : '⏳'}</div>
-              <p style="margin: 0; color: var(--color-text-secondary); line-height: 1.6;">${msg}</p>
-            </div>`;
+          const msg = stamp.revealed ? `Content was revealed on-chain. <a href="" style="color:var(--brand-primary)">Refresh</a> to see it.` : `Seal date has passed.<br><span style="font-size:var(--text-xs); color:var(--color-text-muted);">Content will be permanently visible after the owner clicks <strong>Reveal on-chain</strong>.</span>`;
+          contentBlock.innerHTML = `<div class="proof-content-hash-only"><div style="font-size: 2rem; margin-bottom: 8px;">${stamp.revealed ? '🔓' : '⏳'}</div><p style="margin: 0; color: var(--color-text-secondary); line-height: 1.6;">${msg}</p></div>`;
         } else {
-          // Owner but decrypt failed
-          contentBlock.innerHTML = `
-            <div class="proof-content-hash-only">
-              <div style="font-size: 2rem; margin-bottom: 8px;">⚠️</div>
-              <p style="margin: 0; color: var(--color-text-secondary);">
-                Could not decrypt content. Try the
-                <a href="decrypt.html" style="color:var(--brand-primary);">decrypt tool</a>
-                with your recovery package.
-              </p>
-            </div>`;
+          contentBlock.innerHTML = `<div class="proof-content-hash-only"><div style="font-size: 2rem; margin-bottom: 8px;">⚠️</div><p style="margin: 0; color: var(--color-text-secondary);">Could not decrypt content. Try the <a href="decrypt.html" style="color:var(--brand-primary);">decrypt tool</a> with your recovery package.</p></div>`;
         }
-
-        // Show Arweave link if revealed on-chain
-        if (stamp.storage_uri) {
-          showArweaveActions(stamp.storage_uri, stamp.content_type);
-        }
-
-        // Amber banner — owner only, not yet revealed on-chain
+        if (stamp.storage_uri) showArweaveActions(stamp.storage_uri, stamp.content_type);
         if (canReveal) {
           const revealBanner = document.createElement('div');
           revealBanner.id = 'reveal-banner';
           revealBanner.style.cssText = 'margin-top:var(--space-4); padding:var(--space-4); background:#FEF3C7; border:1px solid #F59E0B; border-radius:var(--radius-md);';
-          revealBanner.innerHTML = `
-            <div style="display:flex; align-items:flex-start; gap:var(--space-3);">
-              <span style="font-size:1.2rem; flex-shrink:0;">⚡</span>
-              <div style="flex:1;">
-                <p style="font-size:var(--text-sm); font-weight:600; color:#92400E; margin:0 0 4px;">
-                  Make this stamp permanent on-chain
-                </p>
-                <p style="font-size:var(--text-xs); color:#92400E; margin:0 0 var(--space-3); line-height:1.6;">
-                  Content is visible above from the database. To make it <strong>independently
-                  verifiable forever</strong> — even if TruthStamp's database goes offline —
-                  reveal on-chain. This uploads to Arweave and updates the smart contract permanently.
-                </p>
-                <div style="display:flex; align-items:center; gap:var(--space-3); flex-wrap:wrap;">
-                  <button id="reveal-btn" class="btn btn-primary" onclick="handleReveal()"
-                    title="Uploads content to Arweave permanently and calls revealSealed() on MegaETH. Costs ${revealCreditCost} credit${revealCreditCost > 1 ? 's' : ''}. Cannot be undone."
-                    style="display:inline-flex; align-items:center; gap:8px; background:#D97706; border-color:#D97706;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7v10l10 5 10-5V7l-10-5z"/><path d="M9 12l2 2 4-4"/></svg>
-                    Reveal on-chain · ${revealCreditCost} credit${revealCreditCost > 1 ? 's' : ''}
-                  </button>
-                  <button class="btn btn-secondary" onclick="downloadRecoveryPackage()"
-                    style="font-size:var(--text-xs); display:inline-flex; align-items:center; gap:6px;">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5 5-5-5M12 3v12"/></svg>
-                    Download recovery package
-                  </button>
-                </div>
-                <div id="reveal-result" style="margin-top:var(--space-3); display:none;"></div>
-              </div>
-            </div>`;
+          revealBanner.innerHTML = `<div style="display:flex; align-items:flex-start; gap:var(--space-3);"><span style="font-size:1.2rem; flex-shrink:0;">⚡</span><div style="flex:1;"><p style="font-size:var(--text-sm); font-weight:600; color:#92400E; margin:0 0 4px;">Make this stamp permanent on-chain</p><p style="font-size:var(--text-xs); color:#92400E; margin:0 0 var(--space-3); line-height:1.6;">Content is visible above from the database. To make it <strong>independently verifiable forever</strong> — even if TruthStamp's database goes offline — reveal on-chain.</p><div style="display:flex; align-items:center; gap:var(--space-3); flex-wrap:wrap;"><button id="reveal-btn" class="btn btn-primary" onclick="handleReveal()" style="display:inline-flex; align-items:center; gap:8px; background:#D97706; border-color:#D97706;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7v10l10 5 10-5V7l-10-5z"/><path d="M9 12l2 2 4-4"/></svg>Reveal on-chain · ${revealCreditCost} credit${revealCreditCost > 1 ? 's' : ''}</button><button class="btn btn-secondary" onclick="downloadRecoveryPackage()" style="font-size:var(--text-xs); display:inline-flex; align-items:center; gap:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5 5-5-5M12 3v12"/></svg>Download recovery package</button></div><div id="reveal-result" style="margin-top:var(--space-3); display:none;"></div></div></div>`;
           contentBlock.appendChild(revealBanner);
-
-        // Non-owner info note — shown until owner reveals on-chain
         } else if (!isOwner && !isRevealed) {
           const infoNote = document.createElement('div');
           infoNote.style.cssText = 'margin-top:var(--space-3); padding:var(--space-3); background:var(--color-surface-alt); border:1px solid var(--color-border); border-radius:var(--radius-md);';
-          infoNote.innerHTML = `
-            <p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0; line-height:1.6; display:flex; gap:8px; align-items:flex-start;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0; margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              Content shown from TruthStamp's database. The owner can make it permanently
-              verifiable on-chain and Arweave — independent of any database.
-            </p>`;
+          infoNote.innerHTML = `<p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0; line-height:1.6; display:flex; gap:8px; align-items:flex-start;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0; margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Content shown from TruthStamp's database. The owner can make it permanently verifiable on-chain and Arweave.</p>`;
           contentBlock.appendChild(infoNote);
-
-        // Owner download button after fully revealed
         } else if (isOwner && isRevealed) {
           const dl = document.createElement('div');
           dl.style.cssText = 'margin-top:var(--space-3);';
-          dl.innerHTML = `
-            <button class="btn btn-secondary" onclick="downloadRecoveryPackage()"
-              style="font-size:var(--text-xs); display:inline-flex; align-items:center; gap:6px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5 5-5-5M12 3v12"/></svg>
-              Download recovery package
-            </button>`;
+          dl.innerHTML = `<button class="btn btn-secondary" onclick="downloadRecoveryPackage()" style="font-size:var(--text-xs); display:inline-flex; align-items:center; gap:6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5 5-5-5M12 3v12"/></svg>Download recovery package</button>`;
           contentBlock.appendChild(dl);
         }
       }
     } else {
-      // Public or revealed sealed — show content
       const text = stamp.text_content || stamp.display_title || '';
-
-      // URL stamp — show URL prominently with snapshot info
       if (stamp.content_type === 'url' && text) {
-        let displayUrl = text;
-        let pageHash = '';
-        let capturedAt = '';
-
-        // Try to parse as JSON snapshot object
-        if (text.startsWith('{')) {
-          try {
-            const parsed = JSON.parse(text);
-            if (parsed.url) displayUrl = parsed.url;
-            pageHash = parsed.content_hash ?? '';
-            capturedAt = parsed.fetched_at ?? '';
-          } catch { /* plain URL string */ }
-        }
-
+        let displayUrl = text; let pageHash = ''; let capturedAt = '';
+        if (text.startsWith('{')) { try { const parsed = JSON.parse(text); if (parsed.url) displayUrl = parsed.url; pageHash = parsed.content_hash ?? ''; capturedAt = parsed.fetched_at ?? ''; } catch {} }
         const pageHashHtml = pageHash
-          ? '<div style="margin-top:var(--space-3); padding:var(--space-3); background:var(--color-surface-alt); border-radius:var(--radius-md);">'
-            + '<p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0 0 4px; text-transform:uppercase; letter-spacing:0.04em;">Page content fingerprint (SHA-256)</p>'
-            + '<p style="font-family:var(--font-mono); font-size:var(--text-xs); color:var(--color-text-secondary); margin:0; word-break:break-all;">' + escapeHtml(pageHash) + '</p>'
-            + '<p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:4px 0 0;">Captured and hashed at stamp time' + (capturedAt ? ' · ' + new Date(capturedAt).toUTCString() : '') + '. Proves exact page content at this moment.</p>'
-            + '</div>'
-          : '<p style="font-size:var(--text-xs); color:var(--color-text-muted); margin-top:var(--space-2);">⚠️ Page snapshot unavailable — URL was inaccessible at stamp time. The URL itself is still proven.</p>';
-
+          ? '<div style="margin-top:var(--space-3); padding:var(--space-3); background:var(--color-surface-alt); border-radius:var(--radius-md);"><p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0 0 4px; text-transform:uppercase; letter-spacing:0.04em;">Page content fingerprint (SHA-256)</p><p style="font-family:var(--font-mono); font-size:var(--text-xs); color:var(--color-text-secondary); margin:0; word-break:break-all;">' + escapeHtml(pageHash) + '</p><p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:4px 0 0;">Captured and hashed at stamp time' + (capturedAt ? ' · ' + new Date(capturedAt).toUTCString() : '') + '.</p></div>'
+          : '<p style="font-size:var(--text-xs); color:var(--color-text-muted); margin-top:var(--space-2);">⚠️ Page snapshot unavailable — URL was inaccessible at stamp time.</p>';
         const arweaveHtml = stamp.storage_uri
-          ? '<a href="https://arweave.net/' + stamp.storage_uri.replace('ar://', '') + '" target="_blank" rel="noopener" style="margin-top:var(--space-3); display:inline-flex; align-items:center; gap:6px; font-size:var(--text-xs); color:var(--brand-primary); text-decoration:none;">'
-            + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
-            + 'View archived page snapshot on Arweave →</a>'
+          ? '<a href="https://arweave.net/' + stamp.storage_uri.replace('ar://','') + '" target="_blank" rel="noopener" style="margin-top:var(--space-3); display:inline-flex; align-items:center; gap:6px; font-size:var(--text-xs); color:var(--brand-primary); text-decoration:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>View archived page snapshot on Arweave →</a>'
           : '';
-
-        contentBlock.innerHTML = '<div style="padding: var(--space-4);">'
-          + '<p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0 0 4px; text-transform:uppercase; letter-spacing:0.04em;">Stamped URL</p>'
-          + '<a href="' + escapeHtml(displayUrl) + '" target="_blank" rel="noopener" style="font-size:var(--text-sm); font-weight:600; color:var(--brand-primary); word-break:break-all; overflow-wrap:anywhere; display:block; max-width:100%;">'
-          + escapeHtml(displayUrl) + '</a>'
-          + pageHashHtml
-          + arweaveHtml
-          + '</div>';
-
-        // Show Arweave TX button for URL stamps (snapshot link is in card above,
-        // but TX proof is shown via the arweave-actions container below)
-        if (stamp.storage_uri) {
-          showArweaveActions(stamp.storage_uri, stamp.content_type);
-        }
-
+        contentBlock.innerHTML = '<div style="padding: var(--space-4);"><p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0 0 4px; text-transform:uppercase; letter-spacing:0.04em;">Stamped URL</p><a href="' + escapeHtml(displayUrl) + '" target="_blank" rel="noopener" style="font-size:var(--text-sm); font-weight:600; color:var(--brand-primary); word-break:break-all; overflow-wrap:anywhere; display:block; max-width:100%;">' + escapeHtml(displayUrl) + '</a>' + pageHashHtml + arweaveHtml + '</div>';
+        if (stamp.storage_uri) showArweaveActions(stamp.storage_uri, stamp.content_type);
       } else {
-        // Text or other content
-        if (text) {
-          contentText.textContent = text;
-        } else if (stamp.file_name) {
-          contentText.textContent = `📄 ${stamp.file_name}`;
-        } else {
-          contentText.textContent = '(Content not available in cache — view on Arweave)';
-        }
-
-        if (stamp.storage_uri) {
-          showArweaveActions(stamp.storage_uri, stamp.content_type);
-        }
+        if (text) { contentText.textContent = text; }
+        else if (stamp.file_name) { contentText.textContent = `📄 ${stamp.file_name}`; }
+        else { contentText.textContent = '(Content not available in cache — view on Arweave)'; }
+        if (stamp.storage_uri) showArweaveActions(stamp.storage_uri, stamp.content_type);
       }
-    } // end public/sealed content block
-
-    // Stats
-    document.getElementById('stat-block').textContent =
-      stamp.block_number ? stamp.block_number.toLocaleString() : '—';
-    document.getElementById('stat-type').textContent =
-      stamp.content_type ? stamp.content_type.charAt(0).toUpperCase() + stamp.content_type.slice(1) : '—';
-
-    // Technical details
-    // content_hash from DB is bytea — Supabase returns it as hex string like \xabc123
+    }
+    document.getElementById('stat-block').textContent = stamp.block_number ? stamp.block_number.toLocaleString() : '—';
+    document.getElementById('stat-type').textContent = stamp.content_type ? stamp.content_type.charAt(0).toUpperCase() + stamp.content_type.slice(1) : '—';
     const rawHash = stamp.content_hash;
-    if (rawHash) {
-      // Convert \xabc123 → 0xabc123
-      const hexHash = typeof rawHash === 'string'
-        ? '0x' + rawHash.replace(/^\\x/, '')
-        : rawHash;
-      document.getElementById('tech-hash').textContent = hexHash;
-    }
-
+    if (rawHash) { const hexHash = typeof rawHash === 'string' ? '0x' + rawHash.replace(/^\\x/, '') : rawHash; document.getElementById('tech-hash').textContent = hexHash; }
     if (stamp.tx_hash) {
-      const cfg = window.TRUTHSTAMP_CONFIG;
-      const explorerBase = cfg?.CONTRACT_EXPLORER ?? 'https://megaeth-testnet-v2.blockscout.com';
-      document.getElementById('tech-tx').innerHTML =
-        `<a href="${explorerBase}/tx/${stamp.tx_hash}" target="_blank" rel="noopener">${stamp.tx_hash}</a>`;
-      const explorerLink = document.getElementById('explorer-link');
-      explorerLink.href = `${explorerBase}/tx/${stamp.tx_hash}`;
-      // Populate top "View tx" link beside verified badge
+      const cfg = window.TRUTHSTAMP_CONFIG; const explorerBase = cfg?.CONTRACT_EXPLORER ?? 'https://megaeth-testnet-v2.blockscout.com';
+      document.getElementById('tech-tx').innerHTML = `<a href="${explorerBase}/tx/${stamp.tx_hash}" target="_blank" rel="noopener">${stamp.tx_hash}</a>`;
+      document.getElementById('explorer-link').href = `${explorerBase}/tx/${stamp.tx_hash}`;
       const topLink = document.getElementById('explorer-link-top');
-      if (topLink) {
-        topLink.href = `${explorerBase}/tx/${stamp.tx_hash}`;
-        topLink.style.display = 'inline-flex';
-      }
+      if (topLink) { topLink.href = `${explorerBase}/tx/${stamp.tx_hash}`; topLink.style.display = 'inline-flex'; }
     }
-
     if (stamp.storage_uri) {
-      const txId = stamp.storage_uri.replace('ar://', '');
-      document.getElementById('tech-arweave').innerHTML =
-        `<a href="https://arweave.net/${txId}" target="_blank" rel="noopener">${stamp.storage_uri}</a>`;
+      const txId = stamp.storage_uri.replace('ar://','');
+      document.getElementById('tech-arweave').innerHTML = `<a href="https://arweave.net/${txId}" target="_blank" rel="noopener">${stamp.storage_uri}</a>`;
       document.getElementById('tech-arweave-row').style.display = 'block';
     }
-
     document.getElementById('tech-proof-id').textContent = `#${stamp.proof_id}`;
-
-    // Check if user is logged in — hide footer CTA if they are
-    if (window.tsAuth) {
-      window.tsAuth.getUser().then(user => {
-        if (!user) {
-          document.getElementById('footer-cta').style.display = 'block';
-        }
-      });
-    }
-
-    // Update page title and OG tags
+    if (window.tsAuth) { window.tsAuth.getUser().then(user => { if (!user) document.getElementById('footer-cta').style.display = 'block'; }); }
     document.title = `Proof #${stamp.proof_id} — TruthStamp`;
-
-    // Show proof, hide loading
     document.getElementById('state-loading').style.display = 'none';
     document.getElementById('state-proof').style.display = 'block';
-
-    if (window.trackEvent) {
-      window.trackEvent('proof_viewed', { proof_id: stamp.proof_id, visibility: stamp.visibility });
-    }
-
-    // Bitcoin archive card — shown for eligible stamps
+    if (window.trackEvent) window.trackEvent('proof_viewed', { proof_id: stamp.proof_id, visibility: stamp.visibility });
     initBitcoinArchiveCard(stamp, currentUser);
   }
 
-  // ── Client-side decryption (mirrors stamp.html logic) ───────────────────
   const ENCRYPT_PEPPER = 'truthstamp-v1-hash-only';
-
   async function deriveKey(userId) {
-    const keyMaterial = await crypto.subtle.importKey(
-      'raw',
-      new TextEncoder().encode(userId + ENCRYPT_PEPPER),
-      'PBKDF2', false, ['deriveKey']
-    );
-    return crypto.subtle.deriveKey(
-      { name: 'PBKDF2', salt: new TextEncoder().encode(userId), iterations: 100000, hash: 'SHA-256' },
-      keyMaterial,
-      { name: 'AES-GCM', length: 256 }, false, ['decrypt']
-    );
+    const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(userId + ENCRYPT_PEPPER), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey({ name:'PBKDF2', salt:new TextEncoder().encode(userId), iterations:100000, hash:'SHA-256' }, keyMaterial, { name:'AES-GCM', length:256 }, false, ['decrypt']);
   }
-
   async function decryptForUser(encryptedData, userId) {
     const key = await deriveKey(userId);
-
-    // Try new self-describing JSON envelope format first
-    // { version, enc, kdf, iv, ciphertext, iterations, ... }
     try {
       const envelope = JSON.parse(encryptedData);
       if (envelope.version && envelope.ciphertext && envelope.iv) {
-        const iv         = Uint8Array.from(atob(envelope.iv),         c => c.charCodeAt(0));
+        const iv = Uint8Array.from(atob(envelope.iv), c => c.charCodeAt(0));
         const ciphertext = Uint8Array.from(atob(envelope.ciphertext), c => c.charCodeAt(0));
-        const decrypted  = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+        const decrypted = await crypto.subtle.decrypt({ name:'AES-GCM', iv }, key, ciphertext);
         return new TextDecoder().decode(decrypted);
       }
-    } catch { /* not JSON envelope — try legacy */ }
-
-    // Legacy format: raw base64 with IV prepended to ciphertext
-    const combined   = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0));
-    const iv         = combined.slice(0, 12);
-    const ciphertext = combined.slice(12);
-    const decrypted  = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+    } catch {}
+    const combined = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0));
+    const iv = combined.slice(0, 12); const ciphertext = combined.slice(12);
+    const decrypted = await crypto.subtle.decrypt({ name:'AES-GCM', iv }, key, ciphertext);
     return new TextDecoder().decode(decrypted);
   }
 
   async function renderHashOnlyContent(stamp, isOwner, user) {
-    const el = document.getElementById('hash-only-content');
-    if (!el) return;
-
-    console.log('[TruthStamp] renderHashOnlyContent - isOwner:', isOwner,
-      'encrypted:', !!stamp.encrypted_content, 'text:', !!stamp.text_content,
-      'file:', !!stamp.file_name, 'content_type:', stamp.content_type);
-
+    const el = document.getElementById('hash-only-content'); if (!el) return;
     if (!isOwner) return;
-
-    let content = null;
-    const contentBlock = document.getElementById('content-block');
-    if (!contentBlock) return;
-
-    // ── File stamp ────────────────────────────────────────────────────────
+    const contentBlock = document.getElementById('content-block'); if (!contentBlock) return;
     if (stamp.content_type === 'file') {
-      // For file stamps: show file info to owner
-      // The file content is on Arweave — show the link if available
-      const size = stamp.file_size_bytes
-        ? stamp.file_size_bytes > 1024 * 1024
-          ? `${(stamp.file_size_bytes / 1024 / 1024).toFixed(1)} MB`
-          : `${(stamp.file_size_bytes / 1024).toFixed(1)} KB`
-        : '';
-
-      const arweaveBtn = stamp.storage_uri
-        ? '<a href="https://arweave.net/' + stamp.storage_uri.replace('ar://', '') + '" target="_blank" rel="noopener" class="btn btn-secondary" style="font-size:var(--text-sm);">View file on Arweave →</a>'
-        : '<p style="font-size:var(--text-sm); color:var(--color-text-muted); margin:0;">🔐 File fingerprint sealed on MegaETH. Content stays private — not uploaded to Arweave.</p>';
-
-      contentBlock.innerHTML = '<div style="padding: var(--space-4);">'
-        + '<div style="display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-3);">'
-        + '<div style="font-size:2rem;">📄</div>'
-        + '<div>'
-        + '<p style="font-weight:600; margin:0 0 2px;">' + escapeHtml(stamp.file_name || 'File stamp') + '</p>'
-        + '<p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0;">' + escapeHtml(stamp.file_mime_type || '') + (size ? ' · ' + size : '') + '</p>'
-        + '</div></div>'
-        + arweaveBtn
-        + '<div style="margin-top:var(--space-3);">'
-        + '<span style="font-size:11px; background:var(--color-surface-alt); border:1px solid var(--color-border); border-radius:var(--radius-full); padding:3px 8px; color:var(--color-text-muted);">🔐 Visible only to you · private file stamp</span>'
-        + '</div></div>';
+      const size = stamp.file_size_bytes ? (stamp.file_size_bytes > 1048576 ? `${(stamp.file_size_bytes/1048576).toFixed(1)} MB` : `${(stamp.file_size_bytes/1024).toFixed(1)} KB`) : '';
+      const arweaveBtn = stamp.storage_uri ? '<a href="https://arweave.net/' + stamp.storage_uri.replace('ar://','') + '" target="_blank" rel="noopener" class="btn btn-secondary" style="font-size:var(--text-sm);">View file on Arweave →</a>' : '<p style="font-size:var(--text-sm); color:var(--color-text-muted); margin:0;">🔐 File fingerprint sealed on MegaETH.</p>';
+      contentBlock.innerHTML = '<div style="padding:var(--space-4);"><div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-3);"><div style="font-size:2rem;">📄</div><div><p style="font-weight:600;margin:0 0 2px;">' + escapeHtml(stamp.file_name||'File stamp') + '</p><p style="font-size:var(--text-xs);color:var(--color-text-muted);margin:0;">' + escapeHtml(stamp.file_mime_type||'') + (size?' · '+size:'') + '</p></div></div>' + arweaveBtn + '<div style="margin-top:var(--space-3);"><span style="font-size:11px;background:var(--color-surface-alt);border:1px solid var(--color-border);border-radius:var(--radius-full);padding:3px 8px;color:var(--color-text-muted);">🔐 Visible only to you · private file stamp</span></div></div>';
       return;
     }
-
-    // ── Text stamp ────────────────────────────────────────────────────────
-    // Try decryption first
-    if (stamp.encrypted_content && user?.id) {
-      try {
-        content = await decryptForUser(stamp.encrypted_content, user.id);
-        console.log('[TruthStamp] Decryption succeeded, content length:', content?.length);
-      } catch (err) {
-        console.error('[TruthStamp] Decryption failed:', err);
-      }
-    }
-
-    // Fallback to plaintext (older stamps before encryption)
-    if (!content && stamp.text_content) {
-      content = stamp.text_content;
-      console.log('[TruthStamp] Using text_content fallback');
-    }
-
+    let content = null;
+    if (stamp.encrypted_content && user?.id) { try { content = await decryptForUser(stamp.encrypted_content, user.id); } catch (err) { console.error('[TruthStamp] Decryption failed:', err); } }
+    if (!content && stamp.text_content) content = stamp.text_content;
     if (content) {
-      contentBlock.innerHTML = `
-        <p class="proof-content-text">${escapeHtml(content)}</p>
-        <div style="margin-top: var(--space-3);">
-          <span style="font-size: 11px; background: var(--color-surface-alt); border: 1px solid var(--color-border); border-radius: var(--radius-full); padding: 3px 8px; color: var(--color-text-muted);">
-            🔐 Visible only to you · encrypted storage
-          </span>
-        </div>`;
+      contentBlock.innerHTML = `<p class="proof-content-text">${escapeHtml(content)}</p><div style="margin-top:var(--space-3);"><span style="font-size:11px;background:var(--color-surface-alt);border:1px solid var(--color-border);border-radius:var(--radius-full);padding:3px 8px;color:var(--color-text-muted);">🔐 Visible only to you · encrypted storage</span></div>`;
     } else {
-      el.innerHTML = `
-        <div style="font-size: 2rem; margin-bottom: 8px;">🔐</div>
-        <p style="margin: 0; color: var(--color-text-secondary);">
-          This is your private stamp. Content encrypted and only visible to you.<br>
-          <span style="font-size: var(--text-xs); margin-top: 4px; display: block; color: var(--color-text-muted);">
-            (Stamps from before encryption show content here once re-stamped)
-          </span>
-        </p>`;
+      el.innerHTML = `<div style="font-size:2rem;margin-bottom:8px;">🔐</div><p style="margin:0;color:var(--color-text-secondary);">This is your private stamp. Content encrypted and only visible to you.</p>`;
     }
   }
 
-  // ── Download recovery package ─────────────────────────────────────────────
-  // Downloads a recovery package for any stamp type:
-  //   File stamps   → Arweave URI + file metadata (no encryption)
-  //   Text/URL stamps → encrypted payload for offline decryption
   async function downloadRecoveryPackage() {
     const proofId = new URLSearchParams(window.location.search).get('id');
     try {
-      const { data: stamp } = await window.tsDB
-        .from('stamps')
-        .select('content_type, encrypted_content, encrypted_arweave_uri, storage_uri, proof_id, content_hash, sealed_until, creator_identity, file_name, file_mime_type, file_size_bytes, tx_hash, block_timestamp, display_title')
-        .eq('proof_id', proofId)
-        .maybeSingle();
-
-      if (!stamp) {
-        alert('Could not load stamp data. Please try again.');
-        return;
-      }
-
+      const { data: stamp } = await window.tsDB.from('stamps').select('content_type, encrypted_content, encrypted_arweave_uri, storage_uri, proof_id, content_hash, sealed_until, creator_identity, file_name, file_mime_type, file_size_bytes, tx_hash, block_timestamp, display_title').eq('proof_id', proofId).maybeSingle();
+      if (!stamp) { alert('Could not load stamp data. Please try again.'); return; }
       let pkg;
-      const cfg         = window.TRUTHSTAMP_CONFIG ?? {};
+      const cfg = window.TRUTHSTAMP_CONFIG ?? {};
       const explorerBase = cfg.CONTRACT_EXPLORER ?? 'https://megaeth-testnet-v2.blockscout.com';
-
       if (stamp.content_type === 'file') {
-        // ── File stamp recovery package ──────────────────────────────────
-        // Contains Arweave URI + metadata so the owner can always retrieve
-        // the file independently — no encryption needed, file lives on Arweave.
         const arweaveUri = stamp.storage_uri ?? null;
-        const arweaveUrl = arweaveUri ? 'https://arweave.net/' + arweaveUri.replace('ar://', '') : null;
-
-        pkg = {
-          _note:          'TruthStamp file stamp recovery package',
-          _version:       '1.0',
-          _type:          'file',
-          _instructions:  arweaveUrl
-            ? 'Your file is permanently stored on Arweave. Use the arweave_url below to retrieve it at any time — no TruthStamp account needed.'
-            : 'Your file hash is sealed on MegaETH. Retrieve the file from Arweave once the owner has revealed on-chain.',
-          proof_id:       stamp.proof_id,
-          file_name:      stamp.file_name ?? null,
-          file_mime_type: stamp.file_mime_type ?? null,
-          file_size_bytes: stamp.file_size_bytes ?? null,
-          content_hash:   stamp.content_hash,
-          display_title:  stamp.display_title ?? null,
-          sealed_until:   stamp.sealed_until ?? null,
-          creator_identity: stamp.creator_identity,
-          arweave_uri:    arweaveUri,
-          arweave_url:    arweaveUrl,
-          megaeth_tx:     stamp.tx_hash ?? null,
-          megaeth_tx_url: stamp.tx_hash ? `${explorerBase}/tx/${stamp.tx_hash}` : null,
-          block_timestamp: stamp.block_timestamp ?? null,
-          exported_at:    new Date().toISOString(),
-        };
-
+        const arweaveUrl = arweaveUri ? 'https://arweave.net/' + arweaveUri.replace('ar://','') : null;
+        pkg = { _note:'TruthStamp file stamp recovery package', _version:'1.0', _type:'file', _instructions: arweaveUrl ? 'Your file is permanently stored on Arweave. Use the arweave_url below to retrieve it at any time.' : 'File hash sealed on MegaETH.', proof_id:stamp.proof_id, file_name:stamp.file_name??null, file_mime_type:stamp.file_mime_type??null, file_size_bytes:stamp.file_size_bytes??null, content_hash:stamp.content_hash, display_title:stamp.display_title??null, sealed_until:stamp.sealed_until??null, creator_identity:stamp.creator_identity, arweave_uri:arweaveUri, arweave_url:arweaveUrl, megaeth_tx:stamp.tx_hash??null, megaeth_tx_url:stamp.tx_hash?`${explorerBase}/tx/${stamp.tx_hash}`:null, block_timestamp:stamp.block_timestamp??null, exported_at:new Date().toISOString() };
       } else {
-        // ── Text / URL stamp recovery package ────────────────────────────
-        // Contains encrypted payload for offline decryption.
         if (!stamp.encrypted_content) {
-          // Stamp exists but no encrypted backup — provide basic proof metadata
-          pkg = {
-            _note:        'TruthStamp proof recovery package (no encrypted backup)',
-            _version:     '1.0',
-            _type:        stamp.content_type,
-            _instructions: 'No encrypted backup was stored for this stamp. The proof is permanently on MegaETH and Arweave.',
-            proof_id:     stamp.proof_id,
-            content_hash: stamp.content_hash,
-            sealed_until: stamp.sealed_until ?? null,
-            creator_identity: stamp.creator_identity,
-            arweave_uri:  stamp.storage_uri ?? null,
-            megaeth_tx:   stamp.tx_hash ?? null,
-            megaeth_tx_url: stamp.tx_hash ? `${explorerBase}/tx/${stamp.tx_hash}` : null,
-            exported_at:  new Date().toISOString(),
-          };
+          pkg = { _note:'TruthStamp proof recovery package (no encrypted backup)', _version:'1.0', _type:stamp.content_type, _instructions:'No encrypted backup stored. Proof is permanently on MegaETH and Arweave.', proof_id:stamp.proof_id, content_hash:stamp.content_hash, sealed_until:stamp.sealed_until??null, creator_identity:stamp.creator_identity, arweave_uri:stamp.storage_uri??null, megaeth_tx:stamp.tx_hash??null, megaeth_tx_url:stamp.tx_hash?`${explorerBase}/tx/${stamp.tx_hash}`:null, exported_at:new Date().toISOString() };
         } else {
-          let encPayload;
-          try { encPayload = JSON.parse(stamp.encrypted_content); }
-          catch { encPayload = stamp.encrypted_content; }
-
-          pkg = {
-            _note:                 'TruthStamp encrypted recovery package',
-            _version:              '1.0',
-            _type:                 stamp.content_type,
-            _instructions:         'Decrypt ciphertext using AES-256-GCM. Key derived via PBKDF2-SHA256 from (userId + "truthstamp-v1-hash-only"). See enc/kdf/iv/iterations fields.',
-            proof_id:              stamp.proof_id,
-            content_hash:          stamp.content_hash,
-            sealed_until:          stamp.sealed_until ?? null,
-            creator_identity:      stamp.creator_identity,
-            arweave_uri:           stamp.storage_uri ?? null,
-            encrypted_arweave_uri: stamp.encrypted_arweave_uri ?? null,
-            megaeth_tx:            stamp.tx_hash ?? null,
-            encrypted_payload:     encPayload,
-            exported_at:           new Date().toISOString(),
-          };
+          let encPayload; try { encPayload = JSON.parse(stamp.encrypted_content); } catch { encPayload = stamp.encrypted_content; }
+          pkg = { _note:'TruthStamp encrypted recovery package', _version:'1.0', _type:stamp.content_type, _instructions:'Decrypt ciphertext using AES-256-GCM. Key derived via PBKDF2-SHA256 from (userId + "truthstamp-v1-hash-only").', proof_id:stamp.proof_id, content_hash:stamp.content_hash, sealed_until:stamp.sealed_until??null, creator_identity:stamp.creator_identity, arweave_uri:stamp.storage_uri??null, encrypted_arweave_uri:stamp.encrypted_arweave_uri??null, megaeth_tx:stamp.tx_hash??null, encrypted_payload:encPayload, exported_at:new Date().toISOString() };
         }
       }
-
-      const blob = new Blob([JSON.stringify(pkg, null, 2)], { type: 'application/json' });
-      const a    = document.createElement('a');
-      a.href     = URL.createObjectURL(blob);
-      a.download = `truthstamp-recovery-proof-${proofId}.json`;
-      a.click();
-      URL.revokeObjectURL(a.href);
-
-    } catch(e) {
-      alert('Failed to download recovery package: ' + e.message);
-    }
+      const blob = new Blob([JSON.stringify(pkg,null,2)],{type:'application/json'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `truthstamp-recovery-proof-${proofId}.json`; a.click(); URL.revokeObjectURL(a.href);
+    } catch(e) { alert('Failed to download recovery package: ' + e.message); }
   }
 
-  // ── Reveal sealed stamp ───────────────────────────────────────────────────
   async function handleReveal() {
-    const btn = document.getElementById('reveal-btn');
-    const resultEl = document.getElementById('reveal-result');
+    const btn = document.getElementById('reveal-btn'); const resultEl = document.getElementById('reveal-result');
     if (!btn || !resultEl) return;
-
-    const proofId = new URLSearchParams(window.location.search).get('id');
-    if (!proofId) return;
-
-    // Get stamp type for credit cost display
+    const proofId = new URLSearchParams(window.location.search).get('id'); if (!proofId) return;
     const contentType = document.getElementById('stat-type')?.textContent?.toLowerCase() ?? 'text';
-    const creditCost  = contentType === 'file' ? 3 : contentType === 'url' ? 2 : 1;
-
-    const confirmed = confirm(
-      `Reveal this sealed stamp on-chain?\n\n` +
-      `• ${creditCost} credit${creditCost > 1 ? 's' : ''} will be deducted\n` +
-      `• Your content will be permanently uploaded to Arweave\n` +
-      `• The smart contract will be updated on MegaETH\n` +
-      `• This cannot be undone\n\n` +
-      `Continue?`
-    );
+    const creditCost = contentType === 'file' ? 3 : contentType === 'url' ? 2 : 1;
+    const confirmed = confirm(`Reveal this sealed stamp on-chain?\n\n• ${creditCost} credit${creditCost>1?'s':''} will be deducted\n• Content permanently uploaded to Arweave\n• Smart contract updated on MegaETH\n• Cannot be undone\n\nContinue?`);
     if (!confirmed) return;
-
-    btn.disabled = true;
-    btn.style.position = 'relative';
-    btn.style.color = 'transparent';
-    btn.innerHTML = `
-      <span style="
-        position:absolute; top:50%; left:50%;
-        width:16px; height:16px; margin:-8px 0 0 -8px;
-        border:2px solid rgba(255,255,255,0.4);
-        border-top-color:white;
-        border-radius:50%;
-        animation:ts-spin 0.7s linear infinite;
-      "></span>
-      Revealing on-chain...`;
+    btn.disabled = true; btn.style.position = 'relative'; btn.style.color = 'transparent';
+    btn.innerHTML = `<span style="position:absolute;top:50%;left:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:ts-spin 0.7s linear infinite;"></span>Revealing…`;
     resultEl.style.display = 'none';
-
     try {
-      const session = await window.tsDB.auth.getSession();
-      const token   = session?.data?.session?.access_token;
-      if (!token) {
-        alert('Please sign in to reveal your stamp.');
-        btn.disabled = false;
-        btn.innerHTML = '🔓 Reveal Now';
-        return;
-      }
-
+      const session = await window.tsDB.auth.getSession(); const token = session?.data?.session?.access_token;
+      if (!token) { alert('Please sign in to reveal your stamp.'); btn.disabled = false; btn.innerHTML = '🔓 Reveal Now'; return; }
       const supabaseUrl = window.TRUTHSTAMP_CONFIG.SUPABASE_URL;
-      const response = await fetch(`${supabaseUrl}/functions/v1/seal-reveal`, {
-        method:  'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ proof_id: Number(proofId) }),
-      });
-
+      const response = await fetch(`${supabaseUrl}/functions/v1/seal-reveal`, { method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify({proof_id:Number(proofId)}) });
       const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.error ?? `Server error (${response.status})`);
-      }
-
-      // Success — hide amber banner, show Arweave link
-      resultEl.innerHTML =
-        '<div style="background:#D1FAE5; border:1px solid #6EE7B7; border-radius:8px; padding:12px 16px; font-size:var(--text-sm); color:#065F46; margin-bottom:8px;">' +
-        `✅ Revealed on-chain! ${result.credits_used ?? creditCost} credit${creditCost > 1 ? 's' : ''} used · ${result.credits_remaining ?? '—'} remaining` +
-        '</div>';
-      resultEl.style.display = 'block';
-      btn.textContent = '✅ Revealed';
-
-      // Show Arweave link in content block
-      if (result.arweave_uri) {
-        const ct = document.getElementById('stat-type')?.textContent?.toLowerCase() ?? 'text';
-        showArweaveActions(result.arweave_uri, ct);
-      }
-
-      // Hide amber banner after short delay
-      setTimeout(() => {
-        const banner = document.getElementById('reveal-banner');
-        if (banner) banner.style.display = 'none';
-      }, 3000);
-
+      if (!response.ok || !result.success) throw new Error(result.error ?? `Server error (${response.status})`);
+      resultEl.innerHTML = '<div style="background:#D1FAE5;border:1px solid #6EE7B7;border-radius:8px;padding:12px 16px;font-size:var(--text-sm);color:#065F46;margin-bottom:8px;">' + `✅ Revealed on-chain! ${result.credits_used??creditCost} credit${creditCost>1?'s':''} used · ${result.credits_remaining??'—'} remaining` + '</div>';
+      resultEl.style.display = 'block'; btn.textContent = '✅ Revealed';
+      if (result.arweave_uri) { const ct = document.getElementById('stat-type')?.textContent?.toLowerCase()?? 'text'; showArweaveActions(result.arweave_uri, ct); }
+      setTimeout(() => { const banner = document.getElementById('reveal-banner'); if (banner) banner.style.display = 'none'; }, 3000);
     } catch(err) {
-      resultEl.innerHTML =
-        '<div style="background:#FEE2E2; border:1px solid #FCA5A5; border-radius:8px; padding:12px 16px; font-size:var(--text-sm); color:#991B1B;">' +
-        '❌ Reveal failed: ' + escapeHtml(err.message) + '</div>';
-      resultEl.style.display = 'block';
-      btn.disabled = false;
-      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7v10l10 5 10-5V7l-10-5z"/><path d="M9 12l2 2 4-4"/></svg> Reveal on-chain · ${creditCost} credit${creditCost > 1 ? 's' : ''}`;
+      resultEl.innerHTML = '<div style="background:#FEE2E2;border:1px solid #FCA5A5;border-radius:8px;padding:12px 16px;font-size:var(--text-sm);color:#991B1B;">❌ Reveal failed: ' + escapeHtml(err.message) + '</div>';
+      resultEl.style.display = 'block'; btn.disabled = false;
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7v10l10 5 10-5V7l-10-5z"/><path d="M9 12l2 2 4-4"/></svg> Reveal on-chain · ${creditCost} credit${creditCost>1?'s':''}`;
     }
   }
 
-  // ── Arweave action buttons ───────────────────────────────────────────────
-  // Button logic per content type:
-  //   text  → View TSP-1 modal | Download JSON | Arweave TX ↗
-  //   file  → View file on Arweave ↗ | Arweave TX ↗
-  //   url   → Arweave TX ↗ only (snapshot link already shown in card)
   function showArweaveActions(storageUri, contentType) {
     if (!storageUri) return;
-    const txId         = storageUri.replace('ar://', '');
-    const arweaveUrl   = `https://arweave.net/${txId}`;
-    const viewblockUrl = `https://viewblock.io/arweave/tx/${txId}`;
-    const actions = document.getElementById('arweave-actions');
-    const viewBtn = document.getElementById('arweave-view-btn');
-    const rawBtn  = document.getElementById('arweave-raw-btn');
-    const dlBtn   = document.getElementById('arweave-download-btn');
+    const txId = storageUri.replace('ar://',''); const arweaveUrl = `https://arweave.net/${txId}`; const viewblockUrl = `https://viewblock.io/arweave/tx/${txId}`;
+    const actions = document.getElementById('arweave-actions'); const viewBtn = document.getElementById('arweave-view-btn'); const rawBtn = document.getElementById('arweave-raw-btn'); const dlBtn = document.getElementById('arweave-download-btn');
     if (!actions) return;
-    actions.style.display       = 'flex';
-    actions.dataset.txId        = txId;
-    actions.dataset.contentType = contentType || 'text';
-
+    actions.style.display = 'flex'; actions.dataset.txId = txId; actions.dataset.contentType = contentType || 'text';
     const svgExt = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
-    const txBtnHtml = `${svgExt} Arweave TX ↗`;
-
     if (contentType === 'file') {
-      // File: View file (primary) + Arweave TX
-      if (viewBtn) viewBtn.style.display = 'none';
-      if (dlBtn)   dlBtn.style.display   = 'none';
-      if (rawBtn) {
-        rawBtn.href          = arweaveUrl;
-        rawBtn.className     = 'arweave-btn primary';
-        rawBtn.innerHTML     = `${svgExt} View file on Arweave ↗`;
-        rawBtn.style.display = 'inline-flex';
-        rawBtn.removeAttribute('download');
-      }
-      // Arweave TX button — appended once
-      if (!document.getElementById('arweave-tx-btn')) {
-        const a = document.createElement('a');
-        a.id        = 'arweave-tx-btn';
-        a.className = 'arweave-btn';
-        a.href      = viewblockUrl;
-        a.target    = '_blank';
-        a.rel       = 'noopener';
-        a.innerHTML = txBtnHtml;
-        actions.appendChild(a);
-      } else {
-        document.getElementById('arweave-tx-btn').href = viewblockUrl;
-      }
-
+      if (viewBtn) viewBtn.style.display = 'none'; if (dlBtn) dlBtn.style.display = 'none';
+      if (rawBtn) { rawBtn.href = arweaveUrl; rawBtn.className = 'arweave-btn primary'; rawBtn.innerHTML = `${svgExt} View file on Arweave ↗`; rawBtn.style.display = 'inline-flex'; rawBtn.removeAttribute('download'); }
+      if (!document.getElementById('arweave-tx-btn')) { const a = document.createElement('a'); a.id='arweave-tx-btn'; a.className='arweave-btn'; a.href=viewblockUrl; a.target='_blank'; a.rel='noopener'; a.innerHTML=`${svgExt} Arweave TX ↗`; actions.appendChild(a); } else { document.getElementById('arweave-tx-btn').href=viewblockUrl; }
     } else if (contentType === 'url') {
-      // URL: snapshot link already in card — just Arweave TX
-      if (viewBtn) viewBtn.style.display = 'none';
-      if (dlBtn)   dlBtn.style.display   = 'none';
-      if (rawBtn)  rawBtn.style.display  = 'none';
-      if (!document.getElementById('arweave-tx-btn')) {
-        const a = document.createElement('a');
-        a.id        = 'arweave-tx-btn';
-        a.className = 'arweave-btn primary';
-        a.href      = viewblockUrl;
-        a.target    = '_blank';
-        a.rel       = 'noopener';
-        a.innerHTML = txBtnHtml;
-        actions.appendChild(a);
-      } else {
-        document.getElementById('arweave-tx-btn').href = viewblockUrl;
-      }
-
+      if (viewBtn) viewBtn.style.display = 'none'; if (dlBtn) dlBtn.style.display = 'none'; if (rawBtn) rawBtn.style.display = 'none';
+      if (!document.getElementById('arweave-tx-btn')) { const a = document.createElement('a'); a.id='arweave-tx-btn'; a.className='arweave-btn primary'; a.href=viewblockUrl; a.target='_blank'; a.rel='noopener'; a.innerHTML=`${svgExt} Arweave TX ↗`; actions.appendChild(a); } else { document.getElementById('arweave-tx-btn').href=viewblockUrl; }
     } else {
-      // Text: View modal + Download JSON + Arweave TX
       if (viewBtn) viewBtn.style.display = 'inline-flex';
-      if (dlBtn) {
-        dlBtn.href = arweaveUrl;
-        dlBtn.setAttribute('download', `truthstamp-proof-${txId.slice(0,8)}.json`);
-        dlBtn.style.display = 'inline-flex';
-      }
-      if (rawBtn) {
-        rawBtn.href          = viewblockUrl;
-        rawBtn.innerHTML     = `${svgExt} Arweave TX ↗`;
-        rawBtn.style.display = 'inline-flex';
-        rawBtn.removeAttribute('download');
-      }
+      if (dlBtn) { dlBtn.href=arweaveUrl; dlBtn.setAttribute('download',`truthstamp-proof-${txId.slice(0,8)}.json`); dlBtn.style.display='inline-flex'; }
+      if (rawBtn) { rawBtn.href=viewblockUrl; rawBtn.innerHTML=`${svgExt} Arweave TX ↗`; rawBtn.style.display='inline-flex'; rawBtn.removeAttribute('download'); }
     }
-
-    // Update modal footer links
-    const modalLink = document.getElementById('json-modal-arweave-link');
-    const modalDl   = document.getElementById('json-modal-download-link');
-    if (modalLink) {
-      modalLink.href      = viewblockUrl;
-      modalLink.innerHTML = `${svgExt} Arweave TX ↗`;
-    }
-    if (modalDl) modalDl.href = arweaveUrl;
+    const modalLink = document.getElementById('json-modal-arweave-link'); const modalDl = document.getElementById('json-modal-download-link');
+    if (modalLink) { modalLink.href=viewblockUrl; modalLink.innerHTML=`${svgExt} Arweave TX ↗`; } if (modalDl) modalDl.href=arweaveUrl;
   }
 
   async function viewArweavePayload() {
-    const actions   = document.getElementById('arweave-actions');
-    const txId      = actions?.dataset.txId;
-    if (!txId) return;
-    const arweaveUrl = `https://arweave.net/${txId}`;
-    // Open modal
-    const modal     = document.getElementById('jsonModal');
-    const loading   = document.getElementById('json-modal-loading');
-    const content   = document.getElementById('json-modal-content');
-    if (!modal) return;
-    modal.classList.add('open');
-    document.body.style.overflow = 'hidden';
-    if (loading) loading.style.display = 'block';
-    if (content) content.style.display = 'none';
+    const actions = document.getElementById('arweave-actions'); const txId = actions?.dataset.txId; if (!txId) return;
+    const arweaveUrl = `https://arweave.net/${txId}`; const modal = document.getElementById('jsonModal'); const loading = document.getElementById('json-modal-loading'); const content = document.getElementById('json-modal-content');
+    if (!modal) return; modal.classList.add('open'); document.body.style.overflow = 'hidden';
+    if (loading) loading.style.display = 'block'; if (content) content.style.display = 'none';
     try {
-      const res  = await fetch(arweaveUrl);
-      const text = await res.text();
-      // Try to pretty-print if JSON, otherwise show as-is
-      let display = text;
-      try {
-        const parsed = JSON.parse(text);
-        display = JSON.stringify(parsed, null, 2);
-      } catch { /* not JSON — show raw text */ }
-      if (content) {
-        content.textContent = display;
-        content.style.display = 'block';
-      }
-      if (loading) loading.style.display = 'none';
+      const res = await fetch(arweaveUrl); const text = await res.text();
+      let display = text; try { const parsed = JSON.parse(text); display = JSON.stringify(parsed, null, 2); } catch {}
+      if (content) { content.textContent = display; content.style.display = 'block'; } if (loading) loading.style.display = 'none';
     } catch(e) {
-      if (content) {
-        content.textContent = 'Failed to load from Arweave: ' + e.message + '\n\nTry opening directly: ' + arweaveUrl;
-        content.style.display = 'block';
-      }
-      if (loading) loading.style.display = 'none';
+      if (content) { content.textContent = 'Failed to load from Arweave: ' + e.message + '\n\nTry: ' + arweaveUrl; content.style.display = 'block'; } if (loading) loading.style.display = 'none';
     }
   }
 
-  function closeJsonModal(e) {
-    // If called from overlay click, only close if clicking the overlay itself
-    if (e && e.target !== document.getElementById('jsonModal')) return;
-    const modal = document.getElementById('jsonModal');
-    if (modal) modal.classList.remove('open');
-    document.body.style.overflow = '';
-  }
+  function closeJsonModal(e) { if (e && e.target !== document.getElementById('jsonModal')) return; const modal = document.getElementById('jsonModal'); if (modal) modal.classList.remove('open'); document.body.style.overflow = ''; }
 
-  function escapeHtml(str) {
-    if (!str) return '';
-    return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
-
-  function showError(message) {
-    document.getElementById('state-loading').style.display = 'none';
-    document.getElementById('error-message').textContent = message;
-    document.getElementById('state-error').style.display = 'block';
-  }
+  function escapeHtml(str) { if (!str) return ''; return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+  function showError(message) { document.getElementById('state-loading').style.display='none'; document.getElementById('error-message').textContent=message; document.getElementById('state-error').style.display='block'; }
 
   function shareToX() {
     const proofId = new URLSearchParams(window.location.search).get('id');
-    const url = encodeURIComponent(window.location.href);
-    const text = encodeURIComponent(
-      `I just dropped a permanent receipt on @MegaETH_ — tamper-proof timestamp, sealed forever. Proof #${proofId} on @TruthStamp_io`
-    );
-    window.open(`https://x.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+    window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(`I just dropped a permanent receipt on @MegaETH_ — tamper-proof timestamp, sealed forever. Proof #${proofId} on @TruthStamp_io`)}&url=${encodeURIComponent(window.location.href)}`, '_blank');
     if (window.trackEvent) window.trackEvent('proof_shared', { channel: 'x' });
   }
-
-  function shareWhatsApp() {
-    const text = encodeURIComponent(`TruthStamp proof: ${document.title.replace(' — TruthStamp','')}\n${window.location.href}`);
-    window.open(`https://wa.me/?text=${text}`, '_blank');
-    if (window.trackEvent) window.trackEvent('proof_shared', { channel: 'whatsapp' });
-  }
-
+  function shareWhatsApp() { window.open(`https://wa.me/?text=${encodeURIComponent(`TruthStamp proof: ${document.title.replace(' — TruthStamp','')}\n${window.location.href}`)}`, '_blank'); }
   function copyLink() {
-    navigator.clipboard.writeText(window.location.href).then(() => {
-      const btn = event.target;
-      const orig = btn.textContent;
-      btn.textContent = 'Copied!';
-      setTimeout(() => { btn.textContent = orig; }, 2000);
-    });
+    navigator.clipboard.writeText(window.location.href).then(() => { const btn = event.target; const orig = btn.textContent; btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = orig; }, 2000); });
     if (window.trackEvent) window.trackEvent('proof_link_copied');
+  }
+  // CHANGE 3: copyProofUrl function
+  function copyProofUrl() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      const label = document.getElementById('copy-url-label');
+      const btn   = document.getElementById('copy-url-btn');
+      if (label) label.textContent = 'Copied!';
+      if (btn)   btn.style.color = 'var(--brand-primary)';
+      setTimeout(() => {
+        if (label) label.textContent = 'Copy URL';
+        if (btn)   btn.style.color = '';
+      }, 2000);
+    });
+    if (window.trackEvent) window.trackEvent('proof_url_copied');
   }
 
   function showCertificate() {
-    const proofId   = document.getElementById('tech-proof-id')?.textContent ?? '';
-    const hash      = document.getElementById('tech-hash')?.textContent ?? '';
-    const txEl      = document.getElementById('tech-tx');
-    const tx        = txEl?.textContent ?? txEl?.querySelector('a')?.textContent ?? '';
-    const title     = document.title.replace(' — TruthStamp','');
-    const stampedAt = document.getElementById('creator-meta')?.textContent ?? '';
-    const proofUrl  = window.location.href;
-    const cfg       = window.TRUTHSTAMP_CONFIG;
-
+    const proofId = document.getElementById('tech-proof-id')?.textContent ?? '';
+    const hash = document.getElementById('tech-hash')?.textContent ?? '';
+    const txEl = document.getElementById('tech-tx'); const tx = txEl?.textContent ?? txEl?.querySelector('a')?.textContent ?? '';
+    const title = document.title.replace(' — TruthStamp',''); const stampedAt = document.getElementById('creator-meta')?.textContent ?? '';
+    const proofUrl = window.location.href; const cfg = window.TRUTHSTAMP_CONFIG;
     const safe = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-    // Creator row — show wallet address or custom handle only
-    const rawName     = document.getElementById('creator-name')?.textContent?.trim() ?? '';
-    const showCreator = rawName && rawName !== 'Anonymous'
-                        && !rawName.startsWith('Creator_') && rawName !== 'Creator';
-    const creatorRow  = showCreator
-      ? `<div class="crow"><span class="ck">Creator</span><span class="cv" style="font-family:Arial">${safe(rawName)}</span></div>`
-      : '';
-
-    // Render certificate inside modal
-    document.getElementById('cert-content').innerHTML = `
-      <div style="border:3px double #1a1a2e;padding:40px;border-radius:8px;color:#111">
-        <div style="text-align:center;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid #e5e7eb">
-          <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#2854E8;margin-bottom:8px">✦ TruthStamp</div>
-          <h1 style="font-size:26px;font-weight:700;margin-bottom:6px">Certificate of Proof</h1>
-          <p style="color:#6b7280;font-size:13px">Immutable blockchain proof of existence</p>
-          <div style="display:inline-block;background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;margin-top:14px">✅ Verified on MegaETH Blockchain</div>
-        </div>
-        <div style="background:#f8f9fb;border:1px solid #e5e7eb;border-radius:6px;padding:14px 20px;margin-bottom:20px;text-align:center;font-size:15px;font-weight:600">${safe(title)}</div>
-        <style>
-          .crow{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid #f3f4f6;font-size:12px;gap:16px}
-          .ck{color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10px;flex-shrink:0;padding-top:1px}
-          .cv{font-family:monospace;font-size:10px;word-break:break-all;text-align:right}
-        </style>
-        <div class="crow"><span class="ck">Proof ID</span><span class="cv">${safe(proofId)}</span></div>
-        <div class="crow"><span class="ck">Stamped</span><span class="cv" style="font-family:Arial">${safe(stampedAt)}</span></div>
-        ${creatorRow}
-        <div class="crow"><span class="ck">Content Hash (SHA-256)</span><span class="cv">${safe(hash)}</span></div>
-        <div class="crow"><span class="ck">Blockchain Transaction</span><span class="cv">${safe(tx)}</span></div>
-        <div class="crow"><span class="ck">Proof URL</span><span class="cv" style="font-family:Arial">${safe(proofUrl)}</span></div>
-        <div style="text-align:center;margin-top:24px;padding-top:20px;border-top:1px solid #e5e7eb">
-          <p style="font-size:11px;color:#9ca3af;margin-bottom:4px">This proof is permanently recorded on the MegaETH blockchain and cannot be altered or deleted.</p>
-          <p style="font-size:11px;color:#9ca3af;margin-bottom:4px">Verify independently at any time — even without TruthStamp — using the hash and contract address.</p>
-          <p style="font-size:10px;color:#2854E8">Contract: ${safe(cfg?.CONTRACT_ADDRESS??'')} · Network: MegaETH Testnet</p>
-        </div>
-      </div>`;
-
-    // Show modal
-    const modal = document.getElementById('certModal');
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-
+    const rawName = document.getElementById('creator-name')?.textContent?.trim() ?? '';
+    const showCreator = rawName && rawName !== 'Anonymous' && !rawName.startsWith('Creator_') && rawName !== 'Creator';
+    const creatorRow = showCreator ? `<div class="crow"><span class="ck">Creator</span><span class="cv" style="font-family:Arial">${safe(rawName)}</span></div>` : '';
+    document.getElementById('cert-content').innerHTML = `<div style="border:3px double #1a1a2e;padding:40px;border-radius:8px;color:#111"><div style="text-align:center;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid #e5e7eb"><div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#2854E8;margin-bottom:8px">✦ TruthStamp</div><h1 style="font-size:26px;font-weight:700;margin-bottom:6px">Certificate of Proof</h1><p style="color:#6b7280;font-size:13px">Immutable blockchain proof of existence</p><div style="display:inline-block;background:#ecfdf5;color:#065f46;border:1px solid #6ee7b7;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;margin-top:14px">✅ Verified on MegaETH Blockchain</div></div><div style="background:#f8f9fb;border:1px solid #e5e7eb;border-radius:6px;padding:14px 20px;margin-bottom:20px;text-align:center;font-size:15px;font-weight:600">${safe(title)}</div><style>.crow{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid #f3f4f6;font-size:12px;gap:16px}.ck{color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10px;flex-shrink:0;padding-top:1px}.cv{font-family:monospace;font-size:10px;word-break:break-all;text-align:right}</style><div class="crow"><span class="ck">Proof ID</span><span class="cv">${safe(proofId)}</span></div><div class="crow"><span class="ck">Stamped</span><span class="cv" style="font-family:Arial">${safe(stampedAt)}</span></div>${creatorRow}<div class="crow"><span class="ck">Content Hash (SHA-256)</span><span class="cv">${safe(hash)}</span></div><div class="crow"><span class="ck">Blockchain Transaction</span><span class="cv">${safe(tx)}</span></div><div class="crow"><span class="ck">Proof URL</span><span class="cv" style="font-family:Arial">${safe(proofUrl)}</span></div><div style="text-align:center;margin-top:24px;padding-top:20px;border-top:1px solid #e5e7eb"><p style="font-size:11px;color:#9ca3af;margin-bottom:4px">This proof is permanently recorded on the MegaETH blockchain and cannot be altered or deleted.</p><p style="font-size:10px;color:#2854E8">Contract: ${safe(cfg?.CONTRACT_ADDRESS??'')} · Network: MegaETH Testnet</p></div></div>`;
+    document.getElementById('certModal').style.display = 'flex'; document.body.style.overflow = 'hidden';
     if (window.trackEvent) window.trackEvent('certificate_viewed', {});
   }
-
-  function closeCertModal() {
-    document.getElementById('certModal').style.display = 'none';
-    document.body.style.overflow = '';
-  }
-
+  function closeCertModal() { document.getElementById('certModal').style.display='none'; document.body.style.overflow=''; }
   function printCert() {
-    // Use the modal content for printing — works in all browsers
     const content = document.getElementById('cert-content').innerHTML;
-    const win     = window.open('', '_blank');
-    if (win) {
-      win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
-        <title>TruthStamp Certificate</title>
-        <style>body{font-family:Arial,sans-serif;padding:40px;max-width:760px;margin:0 auto}
-        @media print{body{padding:20px}}
-        .crow{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid #f3f4f6;font-size:12px;gap:16px}
-        .ck{color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10px;flex-shrink:0;padding-top:1px}
-        .cv{font-family:monospace;font-size:10px;word-break:break-all;text-align:right}
-        </style></head>
-        <body onload="window.print()">${content}</body></html>`);
-      win.document.close();
-    } else {
-      // Fallback for MetaMask — just show browser print dialog on current page
-      window.print();
-    }
+    const win = window.open('','_blank');
+    if (win) { win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>TruthStamp Certificate</title><style>body{font-family:Arial,sans-serif;padding:40px;max-width:760px;margin:0 auto}@media print{body{padding:20px}}.crow{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid #f3f4f6;font-size:12px;gap:16px}.ck{color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10px;flex-shrink:0;padding-top:1px}.cv{font-family:monospace;font-size:10px;word-break:break-all;text-align:right}</style></head><body onload="window.print()">${content}</body></html>`); win.document.close(); }
+    else { window.print(); }
   }
-  // ── Bitcoin Archive (Unisat) ──────────────────────────────────────────────
+
+  // ── Bitcoin Archive ────────────────────────────────────────────────────────
   const PLATFORM_BTC_ADDRESS = 'bc1pdpqg3ekdz64p36kf484sj68htrar57yf552kcc3jvl50cmg7gdjslvyesr';
-  const DUST_SATS            = 546;
-  const MEMPOOL_API          = 'https://mempool.space/api';
-  let   btcPrepareData       = null; // holds response from bitcoin-archive-prepare
+  const DUST_SATS = 546;
+  const MEMPOOL_API = 'https://mempool.space/api';
+  let btcPrepareData = null;
 
-  // Show/hide Bitcoin archive card based on stamp eligibility
   function initBitcoinArchiveCard(stamp, currentUser) {
-    const card = document.getElementById('btc-archive-card');
-    if (!card) return;
-
+    const card = document.getElementById('btc-archive-card'); if (!card) return;
     const isPublic   = stamp.visibility === 'public';
     const isRevealed = stamp.visibility === 'sealed' && stamp.revealed;
     if (!isPublic && !isRevealed) return;
-
-    // Already archived (confirmed or pending in mempool) — show green badge to EVERYONE
-    const isBitcoinArchived = stamp.bitcoin_txid &&
-      (stamp.bitcoin_archive_status === 'confirmed' || stamp.bitcoin_archive_status === 'pending' || stamp.bitcoin_archive_status === 'broadcast');
+    const isBitcoinArchived = stamp.bitcoin_txid && (stamp.bitcoin_archive_status === 'confirmed' || stamp.bitcoin_archive_status === 'pending' || stamp.bitcoin_archive_status === 'broadcast');
     if (isBitcoinArchived) {
       card.style.display = 'block';
-      const header = document.getElementById('btc-card-header');
-      const desc   = document.getElementById('btc-card-desc');
-      const action = document.getElementById('btc-archive-action');
-      if (header) header.style.display = 'none';
-      if (desc)   desc.style.display   = 'none';
-      if (action) action.style.display = 'none';
-      showBtcArchived(stamp.bitcoin_txid, stamp.bitcoin_archive_status);
-      return;
+      const header = document.getElementById('btc-card-header'); const desc = document.getElementById('btc-card-desc'); const action = document.getElementById('btc-archive-action');
+      if (header) header.style.display = 'none'; if (desc) desc.style.display = 'none'; if (action) action.style.display = 'none';
+      showBtcArchived(stamp.bitcoin_txid, stamp.bitcoin_archive_status); return;
     }
-
-    // Not archived yet — only the OWNER can archive
-    const isOwner = !!(currentUser?.id && (
-      currentUser.id === stamp.creator_profile_id ||
-      currentUser.id === stamp.creator_identity
-    ));
-
-    // Hide card for: non-logged-in users AND logged-in non-owners
-    if (!currentUser || !isOwner) {
-      card.style.display = 'none';
-      return;
-    }
-
-    // Owner + not archived → show archive action
+    // CHANGE 1: Any logged-in user can archive (not just owner)
+    // Solves cross-wallet problem: MetaMask stamp → Xverse archive on mobile
+    if (!currentUser) { card.style.display = 'none'; return; }
     card.style.display = 'block';
     checkPendingBitcoinArchive();
   }
 
   function showBtcArchived(txid, status) {
-    document.getElementById('btc-archive-action').style.display   = 'none';
+    document.getElementById('btc-archive-action').style.display = 'none';
     document.getElementById('btc-already-archived').style.display = 'block';
-    const txidEl   = document.getElementById('btc-txid-display');
-    const linkEl   = document.getElementById('btc-mempool-link');
-    const titleEl  = document.querySelector('#btc-already-archived p');
+    const txidEl = document.getElementById('btc-txid-display'); const linkEl = document.getElementById('btc-mempool-link');
     const isPending = status === 'pending' || status === 'broadcast';
     if (txidEl) txidEl.textContent = txid;
     if (linkEl) linkEl.href = `https://mempool.space/tx/${txid}`;
-    // Update badge title based on confirmation status
     const badgeTitle = document.querySelector('#btc-already-archived p[style*="font-weight"]');
-    if (badgeTitle) {
-      badgeTitle.textContent = isPending
-        ? '⏳ Bitcoin archive pending confirmation'
-        : '✅ Archived on Bitcoin';
-      badgeTitle.style.color = isPending ? '#92400E' : '#065F46';
-    }
-    // Update badge background for pending
+    if (badgeTitle) { badgeTitle.textContent = isPending ? '⏳ Bitcoin archive pending confirmation' : '✅ Archived on Bitcoin'; badgeTitle.style.color = isPending ? '#92400E' : '#065F46'; }
     const badge = document.getElementById('btc-already-archived');
-    if (badge && isPending) {
-      badge.style.background = '#FEF3C7';
-      badge.style.borderColor = 'rgba(245,158,11,.25)';
-    }
+    if (badge && isPending) { badge.style.background = '#FEF3C7'; badge.style.borderColor = 'rgba(245,158,11,.25)'; }
   }
 
-  let activeBtcWallet = null; // 'unisat' | 'xverse'
-
-  // Dispatcher — routes to correct wallet
-  async function connectWallet(wallet) {
-    activeBtcWallet = wallet;
-    if (wallet === 'unisat') await connectUnisat();
-    else if (wallet === 'xverse') await connectXverse();
-  }
+  let activeBtcWallet = null;
+  async function connectWallet(wallet) { activeBtcWallet = wallet; if (wallet === 'unisat') await connectUnisat(); else if (wallet === 'xverse') await connectXverse(); }
 
   async function connectXverse() {
     const btn = document.getElementById('btc-connect-xverse');
     try {
       if (btn) { btn.disabled = true; btn.textContent = 'Connecting…'; }
-
-      // Xverse injects window.XverseProviders — use wallet_connect which handles
-      // permissions + returns addresses in one call. No library needed.
       let provider = window.XverseProviders?.BitcoinProvider ?? null;
-      if (!provider) {
-        await new Promise(r => setTimeout(r, 500));
-        provider = window.XverseProviders?.BitcoinProvider ?? null;
-      }
-      if (!provider) {
-        showBtcResult(
-          '⚠️ Xverse wallet not detected. <a href="https://www.xverse.app/download" target="_blank" rel="noopener" style="color:var(--brand-primary)">Install Xverse →</a>',
-          '#FEF3C7'
-        );
-        if (btn) { btn.disabled = false; btn.innerHTML = '<span style="font-size:15px">🟣</span> Connect Xverse'; }
-        return;
-      }
-
-      // wallet_connect: Xverse returns JSON-RPC 2.0 format { jsonrpc, result } not { status }
-      const res = await provider.request('wallet_connect', {
-        addresses: ['payment'],
-        message:   'Connect to TruthStamp to archive proofs to Bitcoin.',
-        network:   'Mainnet',
-      });
-
-      // Xverse returns { jsonrpc: "2.0", result: { addresses, id, walletType, network } }
-      // NOT { status: "success", result: ... }
+      if (!provider) { await new Promise(r => setTimeout(r, 500)); provider = window.XverseProviders?.BitcoinProvider ?? null; }
+      if (!provider) { showBtcResult('⚠️ Xverse wallet not detected. <a href="https://www.xverse.app/download" target="_blank" rel="noopener" style="color:var(--brand-primary)">Install Xverse →</a>', '#FEF3C7'); if (btn) { btn.disabled=false; btn.innerHTML='<span style="font-size:15px">🟣</span> Connect Xverse'; } return; }
+      const res = await provider.request('wallet_connect', { addresses:['payment'], message:'Connect to TruthStamp to archive proofs to Bitcoin.', network:'Mainnet' });
       const result = res.result ?? res;
-      if (!result || res.error) {
-        throw new Error(res.error?.message ?? 'Xverse connection failed or was cancelled.');
-      }
-
+      if (!result || res.error) throw new Error(res.error?.message ?? 'Xverse connection failed or was cancelled.');
       const addresses = result.addresses ?? [];
-      const paymentAddr = addresses.find(a =>
-        a.purpose === 'payment' || a.purpose === 'Payment'
-      );
-      if (!paymentAddr)
-        throw new Error('No Bitcoin payment address returned. Make sure Xverse is on Mainnet.');
-
+      const paymentAddr = addresses.find(a => a.purpose === 'payment' || a.purpose === 'Payment');
+      if (!paymentAddr) throw new Error('No Bitcoin payment address returned. Make sure Xverse is on Mainnet.');
       const addr = paymentAddr.address;
-      window._xversePaymentAddress = addr;
-      window._xversePublicKey      = paymentAddr.publicKey;
-      window._xverseProvider       = provider;
-
-      // Validate mainnet
-      if (!addr.startsWith('bc1') && !addr.startsWith('1') && !addr.startsWith('3'))
-        throw new Error('Please switch Xverse to Bitcoin Mainnet and try again.');
-
-      // Show connected state
-      document.getElementById('btc-step-connect').style.display = 'none';
-      document.getElementById('btc-step-archive').style.display = 'block';
-      const addrEl = document.getElementById('btc-wallet-addr');
-      if (addrEl) addrEl.textContent = addr.slice(0,8) + '…' + addr.slice(-6);
-      // Show Xverse limitation note
-      const noteEl = document.getElementById('btc-wallet-note');
-      if (noteEl) noteEl.style.display = 'block';
-
+      window._xversePaymentAddress = addr; window._xversePublicKey = paymentAddr.publicKey; window._xverseProvider = provider;
+      if (!addr.startsWith('bc1') && !addr.startsWith('1') && !addr.startsWith('3')) throw new Error('Please switch Xverse to Bitcoin Mainnet and try again.');
+      document.getElementById('btc-step-connect').style.display = 'none'; document.getElementById('btc-step-archive').style.display = 'block';
+      const addrEl = document.getElementById('btc-wallet-addr'); if (addrEl) addrEl.textContent = addr.slice(0,8)+'…'+addr.slice(-6);
+      const noteEl = document.getElementById('btc-wallet-note'); if (noteEl) noteEl.style.display = 'block';
       await prepareBitcoinArchive();
-
-    } catch(e) {
-      showBtcResult('❌ ' + e.message, '#FEE2E2');
-      if (btn) { btn.disabled = false; btn.innerHTML = '<span style="font-size:15px">🟣</span> Connect Xverse'; }
-    }
+    } catch(e) { showBtcResult('❌ ' + e.message, '#FEE2E2'); if (btn) { btn.disabled=false; btn.innerHTML='<span style="font-size:15px">🟣</span> Connect Xverse'; } }
   }
 
   async function connectUnisat() {
     const btn = document.getElementById('btc-connect-unisat');
-    if (!window.unisat) {
-      showBtcResult(
-        '⚠️ Unisat wallet not detected. <a href="https://unisat.io/download" target="_blank" rel="noopener" style="color:var(--brand-primary)">Install Unisat →</a>',
-        '#FEF3C7'
-      );
-      return;
-    }
-
+    if (!window.unisat) { showBtcResult('⚠️ Unisat wallet not detected. <a href="https://unisat.io/download" target="_blank" rel="noopener" style="color:var(--brand-primary)">Install Unisat →</a>', '#FEF3C7'); return; }
     try {
-      if (btn) { btn.disabled = true; btn.textContent = 'Connecting…'; }
-
-      const accounts = await window.unisat.requestAccounts();
-      if (!accounts?.length) throw new Error('No accounts returned');
-
-      const btcAddress = accounts[0];
-      const network    = await window.unisat.getNetwork();
-      if (network !== 'livenet' && network !== 'mainnet')
-        throw new Error('Please switch Unisat to Bitcoin Mainnet and try again.');
-
-      document.getElementById('btc-step-connect').style.display  = 'none';
-      document.getElementById('btc-step-archive').style.display  = 'block';
-
-      const addrEl = document.getElementById('btc-wallet-addr');
-      if (addrEl) addrEl.textContent = btcAddress.slice(0,8) + '…' + btcAddress.slice(-6);
-
+      if (btn) { btn.disabled=true; btn.textContent='Connecting…'; }
+      const accounts = await window.unisat.requestAccounts(); if (!accounts?.length) throw new Error('No accounts returned');
+      const btcAddress = accounts[0]; const network = await window.unisat.getNetwork();
+      if (network !== 'livenet' && network !== 'mainnet') throw new Error('Please switch Unisat to Bitcoin Mainnet and try again.');
+      document.getElementById('btc-step-connect').style.display = 'none'; document.getElementById('btc-step-archive').style.display = 'block';
+      const addrEl = document.getElementById('btc-wallet-addr'); if (addrEl) addrEl.textContent = btcAddress.slice(0,8)+'…'+btcAddress.slice(-6);
       await prepareBitcoinArchive();
-
-    } catch(e) {
-      showBtcResult('❌ ' + e.message, '#FEE2E2');
-      if (btn) { btn.disabled = false; btn.innerHTML = '<span style="font-size:15px">🟠</span> Connect Unisat'; }
-    }
+    } catch(e) { showBtcResult('❌ ' + e.message, '#FEE2E2'); if (btn) { btn.disabled=false; btn.innerHTML='<span style="font-size:15px">🟠</span> Connect Unisat'; } }
   }
 
   async function prepareBitcoinArchive() {
-    showBtcProcessing('Preparing TSA-1 archive payload…');
-    document.getElementById('btc-archive-btn').style.display = 'none';
-
+    showBtcProcessing('Preparing TSA-1 archive payload…'); document.getElementById('btc-archive-btn').style.display = 'none';
     try {
       const proofId = new URLSearchParams(window.location.search).get('id');
-      const session = await window.tsDB.auth.getSession();
-      const token   = session?.data?.session?.access_token;
+      const session = await window.tsDB.auth.getSession(); const token = session?.data?.session?.access_token;
       if (!token) throw new Error('Please sign in to TruthStamp to archive.');
-
       const supabaseUrl = window.TRUTHSTAMP_CONFIG?.SUPABASE_URL;
-      const res  = await fetch(`${supabaseUrl}/functions/v1/bitcoin-archive-prepare`, {
-        method:  'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ proof_id: Number(proofId) }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Preparation failed');
-
-      btcPrepareData = data;
-      hideBtcProcessing();
-
-      // Show payload preview
-      const payloadEl = document.getElementById('btc-payload-preview');
-      if (payloadEl) payloadEl.textContent = data.tsa1_payload;
-
-      // Show fee estimate
-      const feeEl = document.getElementById('btc-fee-display');
-      if (feeEl) {
-        feeEl.textContent = data.fee_usd_estimate > 0
-          ? `~$${data.fee_usd_estimate} USD`
-          : `~${data.fee_sats_per_vbyte} sat/vB`;
-      }
-
+      const res = await fetch(`${supabaseUrl}/functions/v1/bitcoin-archive-prepare`, { method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify({proof_id:Number(proofId)}) });
+      const data = await res.json(); if (!res.ok) throw new Error(data.error ?? 'Preparation failed');
+      btcPrepareData = data; hideBtcProcessing();
+      const payloadEl = document.getElementById('btc-payload-preview'); if (payloadEl) payloadEl.textContent = data.tsa1_payload;
       document.getElementById('btc-archive-btn').style.display = 'inline-flex';
-
-    } catch(e) {
-      hideBtcProcessing();
-      showBtcResult('❌ ' + e.message, '#FEE2E2');
-    }
+    } catch(e) { hideBtcProcessing(); showBtcResult('❌ ' + e.message, '#FEE2E2'); }
   }
 
   async function archiveToBitcoin() {
     if (!btcPrepareData) { await prepareBitcoinArchive(); return; }
-
-    const btn = document.getElementById('btc-archive-btn');
-    btn.disabled = true;
-    showBtcProcessing('Sending to Bitcoin — please confirm in Unisat wallet…');
-
+    const btn = document.getElementById('btc-archive-btn'); btn.disabled = true;
+    showBtcProcessing('Sending to Bitcoin — please confirm in wallet…');
     try {
-      // Unisat sendBitcoin with memo (OP_RETURN) support
-      // This sends dust to platform address + embeds OP_RETURN data
       let txid;
       if (activeBtcWallet === 'xverse') {
-        const xverseProvider = window._xverseProvider;
-        if (!xverseProvider) throw new Error('Xverse session expired. Please reconnect.');
-
-        const senderAddress = window._xversePaymentAddress;
-        if (!senderAddress) throw new Error('Xverse address not found. Please reconnect.');
-
-        // UTXO fetching moved to edge function (avoids CORS + mempool.space browser blocks)
+        const xverseProvider = window._xverseProvider; if (!xverseProvider) throw new Error('Xverse session expired. Please reconnect.');
+        const senderAddress = window._xversePaymentAddress; if (!senderAddress) throw new Error('Xverse address not found. Please reconnect.');
         showBtcProcessing('Building Bitcoin archive transaction…');
-
-        const psbtHex = await buildOpReturnPsbt(
-          senderAddress,
-          null,
-          PLATFORM_BTC_ADDRESS,
-          DUST_SATS,
-          btcPrepareData.op_return_hex,
-          btcPrepareData.fee_sats_per_vbyte,
-          window._xversePublicKey
-        );
-
+        const psbtHex = await buildOpReturnPsbt(senderAddress, null, PLATFORM_BTC_ADDRESS, DUST_SATS, btcPrepareData.op_return_hex, btcPrepareData.fee_sats_per_vbyte, window._xversePublicKey);
         showBtcProcessing('Please confirm the transaction in Xverse…');
-
-        // Xverse signPsbt — correct parameter format
-        // Xverse requires 'inputsToSign' as array, NOT 'signInputs' as object
-        const signPromise = xverseProvider.request('signPsbt', {
-          psbt:         psbtHex,
-          inputsToSign: [{
-            address:    senderAddress,
-            signingIndexes: [0],
-          }],
-          broadcast: true,
-        });
-
-        // 3-minute timeout — if Xverse doesn't respond, show manual fallback
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('TIMEOUT')), 180000)
-        );
-
+        const signPromise = xverseProvider.request('signPsbt', { psbt:psbtHex, inputsToSign:[{address:senderAddress,signingIndexes:[0]}], broadcast:true });
+        const timeoutPromise = new Promise((_,reject) => setTimeout(() => reject(new Error('TIMEOUT')), 180000));
         let signRes;
-        try {
-          signRes = await Promise.race([signPromise, timeoutPromise]);
-        } catch(raceErr) {
-          if (raceErr.message === 'TIMEOUT') {
-            hideBtcProcessing();
-            showBtcResult(
-              `⚠️ Xverse did not open a confirmation popup. This can happen if Xverse is already open or busy.<br>` +
-              `<strong>Try:</strong> Open Xverse manually, check for a pending approval, or disconnect and reconnect.<br>` +
-              `If you already approved a TX in Xverse, paste the txid in the manual field below.`,
-              '#FEF3C7'
-            );
-            btn.disabled = false;
-            return;
-          }
+        try { signRes = await Promise.race([signPromise, timeoutPromise]); }
+        catch(raceErr) {
+          if (raceErr.message === 'TIMEOUT') { hideBtcProcessing(); showBtcResult('⚠️ Xverse did not open a confirmation popup. Try reconnecting.', '#FEF3C7'); btn.disabled=false; return; }
           throw raceErr;
         }
-
-        // Xverse returns JSON-RPC 2.0: { jsonrpc, result } not { status, result }
-        if (signRes.error)
-          throw new Error(signRes.error?.message ?? 'Xverse signing failed or was cancelled');
-
+        if (signRes.error) throw new Error(signRes.error?.message ?? 'Xverse signing failed or was cancelled');
         const signResult = signRes.result ?? signRes;
-        txid = signResult?.txid
-            ?? signResult?.txId
-            ?? signResult?.broadcastTxId
-            ?? signResult?.transaction?.txid;
-
-        if (!txid) {
-          alert('TX broadcast but txid field unclear.\nFull response: ' + JSON.stringify(signRes).slice(0, 500) + '\n\nCopy your txid from Xverse and paste in the manual field below.');
-          throw new Error('Transaction broadcast by Xverse — use the manual txid field below to confirm.');
-        }
-
+        txid = signResult?.txid ?? signResult?.txId ?? signResult?.broadcastTxId ?? signResult?.transaction?.txid;
+        if (!txid) { alert('TX broadcast but txid unclear.\nFull response: ' + JSON.stringify(signRes).slice(0,500) + '\n\nCopy txid from Xverse and paste in the manual field below.'); throw new Error('Transaction broadcast by Xverse — use the manual txid field below to confirm.'); }
       } else {
-        // Unisat (default)
-        if (typeof window.unisat?.sendBitcoin !== 'function')
-          throw new Error('Unisat sendBitcoin not available. Please update your Unisat extension.');
-
-        txid = await window.unisat.sendBitcoin(
-          PLATFORM_BTC_ADDRESS,
-          DUST_SATS,
-          {
-            feeRate: btcPrepareData.fee_sats_per_vbyte,
-            memo:    btcPrepareData.tsa1_payload,
-          }
-        );
+        if (typeof window.unisat?.sendBitcoin !== 'function') throw new Error('Unisat sendBitcoin not available. Please update your Unisat extension.');
+        txid = await window.unisat.sendBitcoin(PLATFORM_BTC_ADDRESS, DUST_SATS, { feeRate:btcPrepareData.fee_sats_per_vbyte, memo:btcPrepareData.tsa1_payload });
       }
-
-      if (!txid) throw new Error('No transaction ID returned from Unisat');
-
-      showBtcProcessing(`Transaction broadcast! TXID: ${txid.slice(0,16)}… Verifying on Bitcoin network…`);
-
-      // Store txid in localStorage immediately — so if user leaves and comes back
-      // we can auto-confirm without them having to re-enter it
+      if (!txid) throw new Error('No transaction ID returned');
+      showBtcProcessing(`Transaction broadcast! TXID: ${txid.slice(0,16)}… Verifying…`);
       const proofId2 = new URLSearchParams(window.location.search).get('id');
-      localStorage.setItem(`btc_pending_${proofId2}`, JSON.stringify({
-        txid,
-        tsa1_payload: btcPrepareData.tsa1_payload,
-        stored_at:    Date.now(),
-      }));
-
-      // Try to confirm immediately, then poll if not visible yet
+      localStorage.setItem(`btc_pending_${proofId2}`, JSON.stringify({txid, tsa1_payload:btcPrepareData.tsa1_payload, stored_at:Date.now()}));
       await confirmTxWithRetry(txid, btcPrepareData.tsa1_payload, proofId2);
-
     } catch(e) {
       hideBtcProcessing();
-      // Pending UTXO — show amber info box, not red error
       if (e.message.includes('confirmed funds') || e.message.includes('confirmed UTXOs') || e.message.includes('pending')) {
         const el = document.getElementById('btc-result-msg');
-        el.innerHTML = `<div style="padding:var(--space-4);background:#FEF3C7;border:1px solid #F59E0B;border-radius:var(--radius-md);font-size:var(--text-sm);line-height:1.7">
-          <p style="font-weight:600;color:#92400E;margin:0 0 6px">⏳ Pending transactions — please wait</p>
-          <p style="color:#92400E;margin:0 0 8px">Bitcoin requires confirmed funds before signing. Your last transaction needs 1 confirmation (~10–60 minutes).</p>
-          <p style="color:#78350F;margin:0;font-size:var(--text-xs)">Your proof is already permanently sealed on MegaETH + Arweave. Bitcoin archive is optional — try again after your wallet confirms.</p>
-        </div>`;
+        el.innerHTML = `<div style="padding:var(--space-4);background:#FEF3C7;border:1px solid #F59E0B;border-radius:var(--radius-md);font-size:var(--text-sm);line-height:1.7"><p style="font-weight:600;color:#92400E;margin:0 0 6px">⏳ Pending transactions — please wait</p><p style="color:#92400E;margin:0 0 8px">Bitcoin requires confirmed funds. Your last transaction needs 1 confirmation (~10–60 minutes).</p><p style="color:#78350F;margin:0;font-size:var(--text-xs)">Your proof is sealed on MegaETH + Arweave. Bitcoin archive is optional — try again after your wallet confirms.</p></div>`;
         el.style.display = 'block';
-      } else {
-        showBtcResult('❌ ' + escapeHtml(e.message), '#FEE2E2');
-      }
+      } else { showBtcResult('❌ ' + escapeHtml(e.message), '#FEE2E2'); }
       btn.disabled = false;
     }
   }
 
-  // ── Bitcoin TX confirmation with auto-retry polling ───────────────────────
-  // Polls mempool.space every 30s for up to 20 minutes after broadcast.
-  // Persists txid in localStorage so page refresh auto-resumes polling.
-
   async function confirmTxWithRetry(txid, tsa1Payload, proofId, attempt) {
-    attempt = attempt || 1;
-    const MAX_ATTEMPTS = 40; // 40 × 30s = 20 minutes
-    const POLL_MS      = 30000;
-
-    showBtcProcessing(
-      attempt === 1
-        ? `Confirming TX on Bitcoin network…`
-        : `TX pending in mempool · checking again (attempt ${attempt}/${MAX_ATTEMPTS})…`
-    );
-
+    attempt = attempt || 1; const MAX_ATTEMPTS = 40; const POLL_MS = 30000;
+    showBtcProcessing(attempt === 1 ? `Confirming TX on Bitcoin network…` : `TX pending · checking again (attempt ${attempt}/${MAX_ATTEMPTS})…`);
     try {
-      const session     = await window.tsDB.auth.getSession();
-      const token       = session?.data?.session?.access_token;
+      const session = await window.tsDB.auth.getSession(); const token = session?.data?.session?.access_token;
       if (!token) throw new Error('Session expired — please sign in again.');
       const supabaseUrl = window.TRUTHSTAMP_CONFIG?.SUPABASE_URL;
-
-      // Use AbortController timeout — prevents "Load failed" on slow networks
-      const controller = new AbortController();
-      const timer      = setTimeout(() => controller.abort(), 20000); // 20s timeout
-
+      const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 20000);
       let confirmRes, data;
       try {
-        confirmRes = await fetch(`${supabaseUrl}/functions/v1/bitcoin-archive-confirm`, {
-          method:  'POST',
-          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ proof_id: Number(proofId), txid, tsa1_payload: tsa1Payload }),
-          signal:  controller.signal,
-        });
-        clearTimeout(timer);
-        data = await confirmRes.json();
+        confirmRes = await fetch(`${supabaseUrl}/functions/v1/bitcoin-archive-confirm`, { method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify({proof_id:Number(proofId),txid,tsa1_payload:tsa1Payload}), signal:controller.signal });
+        clearTimeout(timer); data = await confirmRes.json();
       } catch(fetchErr) {
         clearTimeout(timer);
-        // Network error or timeout — treat as retry, not fatal
-        if (attempt >= MAX_ATTEMPTS) {
-          hideBtcProcessing();
-          showBtcResult(
-            `⚠️ Network error after ${MAX_ATTEMPTS} attempts. ` +
-            `Paste txid in the manual field below: <code style="font-family:monospace;font-size:11px">${txid}</code>`,
-            '#FEF3C7'
-          );
-          return;
-        }
-        scheduleRetry(txid, tsa1Payload, proofId, attempt);
-        return;
+        if (attempt >= MAX_ATTEMPTS) { hideBtcProcessing(); showBtcResult(`⚠️ Network error. Paste txid in the manual field: <code style="font-family:monospace;font-size:11px">${txid}</code>`, '#FEF3C7'); return; }
+        scheduleRetry(txid, tsa1Payload, proofId, attempt); return;
       }
-
       if (confirmRes.ok) {
-        // ✅ Success
-        localStorage.removeItem(`btc_pending_${proofId}`);
-        hideBtcProcessing();
+        localStorage.removeItem(`btc_pending_${proofId}`); hideBtcProcessing();
         showBtcArchived(txid, data.confirmed ? 'confirmed' : 'pending');
-        showBtcResult(
-          `✅ ${data.message} · <a href="https://mempool.space/tx/${txid}" target="_blank" rel="noopener" style="color:var(--brand-primary)">View on mempool.space ↗</a>` +
-          `<br><span style="font-size:11px;color:var(--color-text-muted)">${data.credits_deducted} credits deducted · ${data.credits_remaining} remaining</span>`,
-          '#ECFDF5'
-        );
-        return;
+        showBtcResult(`✅ ${data.message} · <a href="https://mempool.space/tx/${txid}" target="_blank" rel="noopener" style="color:var(--brand-primary)">View on mempool.space ↗</a><br><span style="font-size:11px;color:var(--color-text-muted)">${data.credits_deducted} credits deducted · ${data.credits_remaining} remaining</span>`, '#ECFDF5'); return;
       }
-
-      // 404 retry — TX not visible in mempool yet, keep polling
       if ((confirmRes.status === 404 && data.retry) || confirmRes.status === 503) {
-        if (attempt >= MAX_ATTEMPTS) {
-          hideBtcProcessing();
-          localStorage.removeItem(`btc_pending_${proofId}`);
-          showBtcResult(
-            `⚠️ TX broadcast but not confirmed after 20 minutes. ` +
-            `Use the manual field below: <code style="font-family:monospace;font-size:11px">${txid}</code>`,
-            '#FEF3C7'
-          );
-          return;
-        }
-        scheduleRetry(txid, tsa1Payload, proofId, attempt);
-        return;
+        if (attempt >= MAX_ATTEMPTS) { hideBtcProcessing(); localStorage.removeItem(`btc_pending_${proofId}`); showBtcResult(`⚠️ TX broadcast but not confirmed after 20 minutes. Use the manual field: <code style="font-family:monospace;font-size:11px">${txid}</code>`, '#FEF3C7'); return; }
+        scheduleRetry(txid, tsa1Payload, proofId, attempt); return;
       }
-
-      // Other server error — show message but keep txid available
-      hideBtcProcessing();
-      showBtcResult(
-        `⚠️ ${escapeHtml(data.error ?? 'Confirmation error')}. ` +
-        `TX was broadcast — paste txid in the manual field: <code style="font-family:monospace;font-size:11px">${txid}</code>`,
-        '#FEF3C7'
-      );
-
-    } catch(e) {
-      hideBtcProcessing();
-      showBtcResult('❌ ' + escapeHtml(e.message), '#FEE2E2');
-      const btn2 = document.getElementById('btc-archive-btn');
-      if (btn2) btn2.disabled = false;
-    }
+      hideBtcProcessing(); showBtcResult(`⚠️ ${escapeHtml(data.error ?? 'Confirmation error')}. TX was broadcast — paste txid in manual field: <code style="font-family:monospace;font-size:11px">${txid}</code>`, '#FEF3C7');
+    } catch(e) { hideBtcProcessing(); showBtcResult('❌ ' + escapeHtml(e.message), '#FEE2E2'); const btn2 = document.getElementById('btc-archive-btn'); if (btn2) btn2.disabled=false; }
   }
 
   function scheduleRetry(txid, tsa1Payload, proofId, attempt) {
-    const POLL_MS = 30000;
-    let secs = POLL_MS / 1000;
-    const countdown = setInterval(() => {
-      secs--;
-      showBtcProcessing(
-        `TX in mempool · next check in ${secs}s (${attempt + 1}/40)… ` +
-        `<a href="https://mempool.space/tx/${txid}" target="_blank" rel="noopener" ` +
-        `style="color:var(--brand-primary);font-size:11px">track ↗</a>`
-      );
-      if (secs <= 0) clearInterval(countdown);
-    }, 1000);
-    setTimeout(() => {
-      clearInterval(countdown);
-      confirmTxWithRetry(txid, tsa1Payload, proofId, attempt + 1);
-    }, POLL_MS);
+    const POLL_MS = 30000; let secs = POLL_MS/1000;
+    const countdown = setInterval(() => { secs--; showBtcProcessing(`TX in mempool · next check in ${secs}s (${attempt+1}/40)… <a href="https://mempool.space/tx/${txid}" target="_blank" rel="noopener" style="color:var(--brand-primary);font-size:11px">track ↗</a>`); if (secs <= 0) clearInterval(countdown); }, 1000);
+    setTimeout(() => { clearInterval(countdown); confirmTxWithRetry(txid, tsa1Payload, proofId, attempt+1); }, POLL_MS);
   }
 
-  // ── On page load: check localStorage for any pending Bitcoin TX ───────────
-  // If user broadcast a TX then left/refreshed, auto-resume polling
   function checkPendingBitcoinArchive() {
-    const proofId = new URLSearchParams(window.location.search).get('id');
-    if (!proofId) return;
-    const key     = `btc_pending_${proofId}`;
-    const stored  = localStorage.getItem(key);
+    const proofId = new URLSearchParams(window.location.search).get('id'); if (!proofId) return;
+    const key = `btc_pending_${proofId}`; const stored = localStorage.getItem(key);
     if (!stored) return;
-
     try {
       const { txid, tsa1_payload, stored_at } = JSON.parse(stored);
-      // Give up if stored more than 24 hours ago
-      if (Date.now() - stored_at > 86400000) {
-        localStorage.removeItem(key);
-        return;
-      }
-      // Show the archive card and auto-resume confirm
-      const card = document.getElementById('btc-archive-card');
-      if (card) card.style.display = 'block';
-      // Show archive action section
-      document.getElementById('btc-step-connect').style.display  = 'none';
-      document.getElementById('btc-step-archive').style.display  = 'none';
-      // Auto-fill manual txid field as fallback
-      const manualInput = document.getElementById('btc-manual-txid');
-      if (manualInput) manualInput.value = txid;
-      // Resume polling
-      showBtcProcessing(
-        `Resuming confirmation for TX ${txid.slice(0,12)}… ` +
-        `<a href="https://mempool.space/tx/${txid}" target="_blank" rel="noopener" ` +
-        `style="color:var(--brand-primary);font-size:11px">track ↗</a>`
-      );
+      if (Date.now() - stored_at > 86400000) { localStorage.removeItem(key); return; }
+      const card = document.getElementById('btc-archive-card'); if (card) card.style.display = 'block';
+      document.getElementById('btc-step-connect').style.display = 'none'; document.getElementById('btc-step-archive').style.display = 'none';
+      const manualInput = document.getElementById('btc-manual-txid'); if (manualInput) manualInput.value = txid;
+      showBtcProcessing(`Resuming confirmation for TX ${txid.slice(0,12)}… <a href="https://mempool.space/tx/${txid}" target="_blank" rel="noopener" style="color:var(--brand-primary);font-size:11px">track ↗</a>`);
       confirmTxWithRetry(txid, tsa1_payload, proofId, 1);
-    } catch(e) {
-      localStorage.removeItem(key);
-    }
+    } catch(e) { localStorage.removeItem(key); }
   }
 
-  // ── Build a minimal PSBT for OP_RETURN + dust output (Xverse) ─────────────
-  // Constructs a PSBT hex that Xverse can sign.
-  // Input: one UTXO from sender
-  // Outputs: OP_RETURN (TSA-1 data) + dust to platform + change back to sender
   async function buildOpReturnPsbt(senderAddr, _unused, platformAddr, dustSats, opReturnHex, feeRate, publicKey) {
     try {
-      const session     = await window.tsDB.auth.getSession();
-      const token       = session?.data?.session?.access_token;
+      const session = await window.tsDB.auth.getSession(); const token = session?.data?.session?.access_token;
       const supabaseUrl = window.TRUTHSTAMP_CONFIG?.SUPABASE_URL;
-      const proofId     = new URLSearchParams(window.location.search).get('id');
-
-      const res = await fetch(`${supabaseUrl}/functions/v1/bitcoin-archive-prepare`, {
-        method:  'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          proof_id:       Number(proofId),
-          wallet_type:    'xverse',
-          sender_address: senderAddr,
-          sender_pubkey:  publicKey ?? '',
-          // No utxo fields — edge function fetches UTXOs server-side
-        }),
-      });
+      const proofId = new URLSearchParams(window.location.search).get('id');
+      const res = await fetch(`${supabaseUrl}/functions/v1/bitcoin-archive-prepare`, { method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify({proof_id:Number(proofId),wallet_type:'xverse',sender_address:senderAddr,sender_pubkey:publicKey??''}) });
       const data = await res.json();
-      if (!res.ok) {
-        // Check for pending UTXO error from edge function
-        if (data.error?.includes('pending') || data.error?.includes('confirmed')) {
-          throw new Error(
-            '⏳ pending: ' + data.error
-          );
-        }
-        throw new Error(data.error ?? 'PSBT build failed');
-      }
-      if (!data.psbt_hex) {
-        throw new Error('No PSBT returned from server');
-      }
+      if (!res.ok) { if (data.error?.includes('pending') || data.error?.includes('confirmed')) throw new Error('⏳ pending: ' + data.error); throw new Error(data.error ?? 'PSBT build failed'); }
+      if (!data.psbt_hex) throw new Error('No PSBT returned from server');
       return data.psbt_hex;
-    } catch(e) {
-      throw new Error('Failed to build PSBT: ' + e.message);
-    }
+    } catch(e) { throw new Error('Failed to build PSBT: ' + e.message); }
   }
 
   async function confirmManualTxid() {
-    const input = document.getElementById('btc-manual-txid');
-    const txid  = (input?.value ?? '').trim().toLowerCase();
-    if (!txid || txid.length !== 64) {
-      showBtcResult('❌ Please paste a valid 64-character Bitcoin txid.', '#FEE2E2');
-      return;
-    }
+    const input = document.getElementById('btc-manual-txid'); const txid = (input?.value ?? '').trim().toLowerCase();
+    if (!txid || txid.length !== 64) { showBtcResult('❌ Please paste a valid 64-character Bitcoin txid.', '#FEE2E2'); return; }
     showBtcProcessing('Verifying transaction on Bitcoin network…');
-
     try {
-      const proofId     = new URLSearchParams(window.location.search).get('id');
-      const session     = await window.tsDB.auth.getSession();
-      const token       = session?.data?.session?.access_token;
+      const proofId = new URLSearchParams(window.location.search).get('id');
+      const session = await window.tsDB.auth.getSession(); const token = session?.data?.session?.access_token;
       if (!token) throw new Error('Please sign in first.');
       const supabaseUrl = window.TRUTHSTAMP_CONFIG?.SUPABASE_URL;
-
-      const confirmRes  = await fetch(`${supabaseUrl}/functions/v1/bitcoin-archive-confirm`, {
-        method:  'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          proof_id:     Number(proofId),
-          txid,
-          tsa1_payload: btcPrepareData?.tsa1_payload ?? '', // may be null if page was refreshed
-        }),
-      });
-      const data = await confirmRes.json();
-      hideBtcProcessing();
-
-      if (!confirmRes.ok) {
-        showBtcResult('❌ ' + escapeHtml(data.error ?? 'Confirmation failed'), '#FEE2E2');
-        return;
-      }
-
+      const confirmRes = await fetch(`${supabaseUrl}/functions/v1/bitcoin-archive-confirm`, { method:'POST', headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'}, body:JSON.stringify({proof_id:Number(proofId),txid,tsa1_payload:btcPrepareData?.tsa1_payload??''}) });
+      const data = await confirmRes.json(); hideBtcProcessing();
+      if (!confirmRes.ok) { showBtcResult('❌ ' + escapeHtml(data.error ?? 'Confirmation failed'), '#FEE2E2'); return; }
       showBtcArchived(txid, data.confirmed ? 'confirmed' : 'pending');
-      showBtcResult(
-        `✅ ${data.message} · <a href="https://mempool.space/tx/${txid}" target="_blank" rel="noopener" style="color:var(--brand-primary)">View on mempool.space ↗</a>` +
-        `<br><span style="font-size:11px;color:var(--color-text-muted)">${data.credits_deducted} credits deducted · ${data.credits_remaining} remaining</span>`,
-        '#ECFDF5'
-      );
-    } catch(e) {
-      hideBtcProcessing();
-      showBtcResult('❌ ' + escapeHtml(e.message), '#FEE2E2');
-    }
+      showBtcResult(`✅ ${data.message} · <a href="https://mempool.space/tx/${txid}" target="_blank" rel="noopener" style="color:var(--brand-primary)">View on mempool.space ↗</a><br><span style="font-size:11px;color:var(--color-text-muted)">${data.credits_deducted} credits deducted · ${data.credits_remaining} remaining</span>`, '#ECFDF5');
+    } catch(e) { hideBtcProcessing(); showBtcResult('❌ ' + escapeHtml(e.message), '#FEE2E2'); }
   }
 
   function resetBtcFlow() {
-    const connectStep  = document.getElementById('btc-step-connect');
-    const archiveStep  = document.getElementById('btc-step-archive');
-    const processStep  = document.getElementById('btc-step-processing');
-    const resultMsg    = document.getElementById('btc-result-msg');
-    const unisatBtn    = document.getElementById('btc-connect-unisat');
-    const xverseBtn    = document.getElementById('btc-connect-xverse');
-
-    if (connectStep) connectStep.style.display = 'block';
-    if (archiveStep) archiveStep.style.display  = 'none';
-    if (processStep) processStep.style.display  = 'none';
-    if (resultMsg)   resultMsg.style.display     = 'none';
-    if (unisatBtn)   { unisatBtn.disabled = false; unisatBtn.innerHTML = '<span style="font-size:15px">🟠</span> Connect Unisat'; }
-    if (xverseBtn)   { xverseBtn.disabled = false; xverseBtn.innerHTML = '<span style="font-size:15px">🟣</span> Connect Xverse'; }
-    activeBtcWallet = null;
-    btcPrepareData  = null;
+    const els = {connect:'block',archive:'none',processing:'none',result:'none'};
+    document.getElementById('btc-step-connect').style.display = 'block';
+    document.getElementById('btc-step-archive').style.display = 'none';
+    document.getElementById('btc-step-processing').style.display = 'none';
+    const resultMsg = document.getElementById('btc-result-msg'); if (resultMsg) resultMsg.style.display = 'none';
+    const unisatBtn = document.getElementById('btc-connect-unisat'); if (unisatBtn) { unisatBtn.disabled=false; unisatBtn.innerHTML='<span style="font-size:15px">🟠</span> Connect Unisat'; }
+    const xverseBtn = document.getElementById('btc-connect-xverse'); if (xverseBtn) { xverseBtn.disabled=false; xverseBtn.innerHTML='<span style="font-size:15px">🟣</span> Connect Xverse'; }
+    activeBtcWallet = null; btcPrepareData = null;
   }
-
-  function showBtcProcessing(msg) {
-    const el  = document.getElementById('btc-step-processing');
-    const txt = document.getElementById('btc-processing-msg');
-    if (el)  el.style.display  = 'block';
-    if (txt) txt.innerHTML = msg; // innerHTML so links render
-  }
-  function hideBtcProcessing() {
-    const el = document.getElementById('btc-step-processing');
-    if (el) el.style.display = 'none';
-  }
-  function showBtcResult(html, bg) {
-    const el = document.getElementById('btc-result-msg');
-    el.innerHTML   = `<div style="padding:var(--space-3) var(--space-4);background:${bg};border-radius:var(--radius-md);font-size:var(--text-sm);line-height:1.6">${html}</div>`;
-    el.style.display = 'block';
-  }
+  function showBtcProcessing(msg) { const el = document.getElementById('btc-step-processing'); const txt = document.getElementById('btc-processing-msg'); if (el) el.style.display='block'; if (txt) txt.innerHTML=msg; }
+  function hideBtcProcessing() { const el = document.getElementById('btc-step-processing'); if (el) el.style.display='none'; }
+  function showBtcResult(html, bg) { const el = document.getElementById('btc-result-msg'); el.innerHTML=`<div style="padding:var(--space-3) var(--space-4);background:${bg};border-radius:var(--radius-md);font-size:var(--text-sm);line-height:1.6">${html}</div>`; el.style.display='block'; }
   </script>
 </body>
 </html>
