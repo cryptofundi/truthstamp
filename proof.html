@@ -1286,39 +1286,100 @@
   }
 
   // ── Download recovery package ─────────────────────────────────────────────
-  // Downloads the encrypted_content from DB as a standalone recovery file.
-  // User keeps this locally — can decrypt independently if TruthStamp goes down.
+  // Downloads a recovery package for any stamp type:
+  //   File stamps   → Arweave URI + file metadata (no encryption)
+  //   Text/URL stamps → encrypted payload for offline decryption
   async function downloadRecoveryPackage() {
     const proofId = new URLSearchParams(window.location.search).get('id');
     try {
       const { data: stamp } = await window.tsDB
         .from('stamps')
-        .select('encrypted_content, encrypted_arweave_uri, proof_id, content_hash, sealed_until, creator_identity')
+        .select('content_type, encrypted_content, encrypted_arweave_uri, storage_uri, proof_id, content_hash, sealed_until, creator_identity, file_name, file_mime_type, file_size_bytes, tx_hash, block_timestamp, display_title')
         .eq('proof_id', proofId)
         .maybeSingle();
 
-      if (!stamp?.encrypted_content) {
-        alert('No encrypted backup found for this stamp.\nThis may be an older stamp created before encryption was added.');
+      if (!stamp) {
+        alert('Could not load stamp data. Please try again.');
         return;
       }
 
-      const pkg = {
-        _note:                 'TruthStamp encrypted recovery package',
-        _version:              '1.0',
-        _instructions:         'Decrypt ciphertext using AES-256-GCM. Key derived via PBKDF2-SHA256 from (userId + "truthstamp-v1-hash-only"). See enc/kdf/iv/iterations fields.',
-        proof_id:              stamp.proof_id,
-        content_hash:          stamp.content_hash,
-        sealed_until:          stamp.sealed_until,
-        creator_identity:      stamp.creator_identity,
-        encrypted_arweave_uri: stamp.encrypted_arweave_uri ?? null,
-        encrypted_payload:     JSON.parse(stamp.encrypted_content),
-        exported_at:           new Date().toISOString(),
-      };
+      let pkg;
+      const cfg         = window.TRUTHSTAMP_CONFIG ?? {};
+      const explorerBase = cfg.CONTRACT_EXPLORER ?? 'https://megaeth-testnet-v2.blockscout.com';
 
-      const blob = new Blob(
-        [JSON.stringify(pkg, null, 2)],
-        { type: 'application/json' }
-      );
+      if (stamp.content_type === 'file') {
+        // ── File stamp recovery package ──────────────────────────────────
+        // Contains Arweave URI + metadata so the owner can always retrieve
+        // the file independently — no encryption needed, file lives on Arweave.
+        const arweaveUri = stamp.storage_uri ?? null;
+        const arweaveUrl = arweaveUri ? 'https://arweave.net/' + arweaveUri.replace('ar://', '') : null;
+
+        pkg = {
+          _note:          'TruthStamp file stamp recovery package',
+          _version:       '1.0',
+          _type:          'file',
+          _instructions:  arweaveUrl
+            ? 'Your file is permanently stored on Arweave. Use the arweave_url below to retrieve it at any time — no TruthStamp account needed.'
+            : 'Your file hash is sealed on MegaETH. Retrieve the file from Arweave once the owner has revealed on-chain.',
+          proof_id:       stamp.proof_id,
+          file_name:      stamp.file_name ?? null,
+          file_mime_type: stamp.file_mime_type ?? null,
+          file_size_bytes: stamp.file_size_bytes ?? null,
+          content_hash:   stamp.content_hash,
+          display_title:  stamp.display_title ?? null,
+          sealed_until:   stamp.sealed_until ?? null,
+          creator_identity: stamp.creator_identity,
+          arweave_uri:    arweaveUri,
+          arweave_url:    arweaveUrl,
+          megaeth_tx:     stamp.tx_hash ?? null,
+          megaeth_tx_url: stamp.tx_hash ? `${explorerBase}/tx/${stamp.tx_hash}` : null,
+          block_timestamp: stamp.block_timestamp ?? null,
+          exported_at:    new Date().toISOString(),
+        };
+
+      } else {
+        // ── Text / URL stamp recovery package ────────────────────────────
+        // Contains encrypted payload for offline decryption.
+        if (!stamp.encrypted_content) {
+          // Stamp exists but no encrypted backup — provide basic proof metadata
+          pkg = {
+            _note:        'TruthStamp proof recovery package (no encrypted backup)',
+            _version:     '1.0',
+            _type:        stamp.content_type,
+            _instructions: 'No encrypted backup was stored for this stamp. The proof is permanently on MegaETH and Arweave.',
+            proof_id:     stamp.proof_id,
+            content_hash: stamp.content_hash,
+            sealed_until: stamp.sealed_until ?? null,
+            creator_identity: stamp.creator_identity,
+            arweave_uri:  stamp.storage_uri ?? null,
+            megaeth_tx:   stamp.tx_hash ?? null,
+            megaeth_tx_url: stamp.tx_hash ? `${explorerBase}/tx/${stamp.tx_hash}` : null,
+            exported_at:  new Date().toISOString(),
+          };
+        } else {
+          let encPayload;
+          try { encPayload = JSON.parse(stamp.encrypted_content); }
+          catch { encPayload = stamp.encrypted_content; }
+
+          pkg = {
+            _note:                 'TruthStamp encrypted recovery package',
+            _version:              '1.0',
+            _type:                 stamp.content_type,
+            _instructions:         'Decrypt ciphertext using AES-256-GCM. Key derived via PBKDF2-SHA256 from (userId + "truthstamp-v1-hash-only"). See enc/kdf/iv/iterations fields.',
+            proof_id:              stamp.proof_id,
+            content_hash:          stamp.content_hash,
+            sealed_until:          stamp.sealed_until ?? null,
+            creator_identity:      stamp.creator_identity,
+            arweave_uri:           stamp.storage_uri ?? null,
+            encrypted_arweave_uri: stamp.encrypted_arweave_uri ?? null,
+            megaeth_tx:            stamp.tx_hash ?? null,
+            encrypted_payload:     encPayload,
+            exported_at:           new Date().toISOString(),
+          };
+        }
+      }
+
+      const blob = new Blob([JSON.stringify(pkg, null, 2)], { type: 'application/json' });
       const a    = document.createElement('a');
       a.href     = URL.createObjectURL(blob);
       a.download = `truthstamp-recovery-proof-${proofId}.json`;
