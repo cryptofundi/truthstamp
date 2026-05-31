@@ -953,24 +953,20 @@
             + 'style="font-size:var(--text-sm); font-weight:600; color:var(--brand-primary); word-break:break-all; overflow-wrap:anywhere; display:block;">'
             + escapeHtml(displayUrl) + '</a></div>';
         } else if (stamp.content_type === 'file') {
-          // For image files: render inline so browser shows image regardless of
-          // Arweave Content-Type header (seal-reveal may not set MIME tags).
-          const isImage = stamp.file_mime_type?.startsWith('image/');
-          if (isImage && stamp.storage_uri) {
-            const imgUrl = `https://arweave.net/${stamp.storage_uri.replace('ar://', '')}`;
+          var isSealedImg = stamp.file_mime_type && stamp.file_mime_type.indexOf('image/') === 0;
+          if (isSealedImg && stamp.storage_uri) {
+            var sealedImgUrl = 'https://arweave.net/' + stamp.storage_uri.replace('ar://', '');
+            var sealedFileName = escapeHtml(stamp.file_name || 'Image');
             contentBlock.innerHTML =
               '<div style="padding:var(--space-4);text-align:center;">'
-              + `<img src="${imgUrl}" alt="${escapeHtml(stamp.file_name || 'Image')}" `
-              + 'style="max-width:100%;border-radius:var(--radius-md);margin-bottom:var(--space-3);display:block;margin-left:auto;margin-right:auto;" '
-              + 'onerror="this.style.display='none';this.nextElementSibling.style.display='block'">'
-              + '<div style="display:none;">'
-              + `<p style="color:var(--color-text-muted);font-size:var(--text-sm);">⚠️ Could not load image preview. `
-              + `<a href="${imgUrl}" target="_blank" rel="noopener" style="color:var(--brand-primary)">Open on Arweave ↗</a></p>`
-              + '</div>'
-              + `<p style="font-size:var(--text-xs);color:var(--color-text-muted);margin:0;">📄 ${escapeHtml(stamp.file_name || 'Image file')}</p>`
+              + '<img src="' + sealedImgUrl + '" alt="' + sealedFileName + '" '
+              + 'style="max-width:100%;border-radius:var(--radius-md);margin-bottom:var(--space-3);display:block;margin-left:auto;margin-right:auto;">'
+              + '<p style="font-size:var(--text-xs);color:var(--color-text-muted);margin:4px 0 0;">' + sealedFileName + '</p>'
+              + '<a href="' + sealedImgUrl + '" target="_blank" rel="noopener" '
+              + 'style="font-size:var(--text-xs);color:var(--brand-primary);margin-top:6px;display:inline-block;">Open on Arweave</a>'
               + '</div>';
           } else {
-            contentText.textContent = stamp.file_name ? `📄 ${stamp.file_name}` : '(File stamp)';
+            contentText.textContent = stamp.file_name ? stamp.file_name : '(File stamp)';
           }
         } else if (text) {
           contentText.textContent = text;
