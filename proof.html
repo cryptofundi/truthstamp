@@ -1680,6 +1680,37 @@
     });
     if (window.trackEvent) window.trackEvent('proof_link_copied');
   }
+  function copyProofUrl() {
+    var url = window.location.href;
+    function onCopied() {
+      var label = document.getElementById('copy-url-label');
+      var btn   = document.getElementById('copy-url-btn');
+      if (label) label.textContent = 'Copied!';
+      if (btn)   btn.style.color = 'var(--brand-primary)';
+      setTimeout(function() {
+        if (label) label.textContent = 'Copy URL';
+        if (btn)   btn.style.color = '';
+      }, 2000);
+    }
+    function fallback() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = url;
+        ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
+        document.body.appendChild(ta);
+        ta.focus(); ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        onCopied();
+      } catch(e) { alert('Copy this URL:\n' + url); }
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(url).then(onCopied).catch(fallback);
+    } else {
+      fallback();
+    }
+    if (window.trackEvent) window.trackEvent('proof_url_copied');
+  }
 
   function showCertificate() {
     const proofId   = document.getElementById('tech-proof-id')?.textContent ?? '';
