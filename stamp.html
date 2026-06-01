@@ -914,7 +914,16 @@
           return;
         }
 
-        if (!response.ok || !result.success) throw new Error(result.error ?? `Server error (${response.status})`);
+        if (!response.ok || !result.success) {
+          const errMsg = result.error ?? `Server error (${response.status})`;
+          // Already-stamped on-chain (0xdd241ce8) — show friendly message
+          if (response.status === 409 || errMsg.includes('already been stamped')) {
+            showError(errMsg);
+            if (btn) { btn.disabled = false; btn.classList.remove('btn-spinning'); }
+            return;
+          }
+          throw new Error(errMsg);
+        }
         window.location.href = `proof.html?id=${result.proof_id}`;
       } catch (err) {
         showError(err instanceof Error ? err.message : 'File stamping failed. Please try again.');
@@ -992,7 +1001,16 @@
           return;
         }
 
-        if (!response.ok || !result.success) throw new Error(result.error ?? `Server error (${response.status})`);
+        if (!response.ok || !result.success) {
+          const errMsg = result.error ?? `Server error (${response.status})`;
+          // Already-stamped on-chain (0xdd241ce8) — show friendly message
+          if (response.status === 409 || errMsg.includes('already been stamped')) {
+            showError(errMsg);
+            if (btn) { btn.disabled = false; btn.classList.remove('btn-spinning'); }
+            return;
+          }
+          throw new Error(errMsg);
+        }
         window.location.href = `proof.html?id=${result.proof_id}`;
       } catch (err) {
         showError(err instanceof Error ? err.message : 'URL stamping failed. Please try again.');
