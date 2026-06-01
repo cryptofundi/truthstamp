@@ -947,7 +947,22 @@
             + 'style="font-size:var(--text-sm); font-weight:600; color:var(--brand-primary); word-break:break-all; overflow-wrap:anywhere; display:block;">'
             + escapeHtml(displayUrl) + '</a></div>';
         } else if (stamp.content_type === 'file') {
-          contentText.textContent = stamp.file_name ? `📄 ${stamp.file_name}` : '(File stamp)';
+          // FIX 2: image files render inline; avoids Arweave octet-stream download
+          var isSealedImg = stamp.file_mime_type && stamp.file_mime_type.indexOf('image/') === 0;
+          if (isSealedImg && stamp.storage_uri) {
+            var sealedImgUrl = 'https://arweave.net/' + stamp.storage_uri.replace('ar://', '');
+            var sealedAlt = escapeHtml(stamp.file_name || 'Image');
+            contentBlock.innerHTML =
+              '<div style="padding:var(--space-4);text-align:center;">'
+              + '<img src="' + sealedImgUrl + '" alt="' + sealedAlt + '" '
+              + 'style="max-width:100%;border-radius:var(--radius-md);margin-bottom:var(--space-3);display:block;margin-left:auto;margin-right:auto;">'
+              + '<p style="font-size:var(--text-xs);color:var(--color-text-muted);margin:4px 0 0;">' + sealedAlt + '</p>'
+              + '<a href="' + sealedImgUrl + '" target="_blank" rel="noopener" '
+              + 'style="font-size:var(--text-xs);color:var(--brand-primary);margin-top:6px;display:inline-block;">Open on Arweave ↗</a>'
+              + '</div>';
+          } else {
+            contentText.textContent = stamp.file_name ? stamp.file_name : '(File stamp)';
+          }
         } else if (text) {
           contentText.textContent = text;
         } else if (!isOwner) {
@@ -1771,19 +1786,12 @@
       return;
     }
 
-    // Not archived yet — only the OWNER can archive
-    const isOwner = !!(currentUser?.id && (
-      currentUser.id === stamp.creator_profile_id ||
-      currentUser.id === stamp.creator_identity
-    ));
-
-    // Hide card for: non-logged-in users AND logged-in non-owners
-    if (!currentUser || !isOwner) {
+    // Any logged-in user can archive any public stamp to Bitcoin.
+    // Solves cross-wallet problem (MetaMask stamp -> Xverse on mobile).
+    if (!currentUser) {
       card.style.display = 'none';
       return;
     }
-
-    // Owner + not archived → show archive action
     card.style.display = 'block';
     checkPendingBitcoinArchive();
   }
