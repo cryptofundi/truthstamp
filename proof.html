@@ -1126,6 +1126,9 @@
     // Stats
     document.getElementById('stat-block').textContent =
       stamp.block_number ? stamp.block_number.toLocaleString() : '—';
+    // Store mime type and filename for post-reveal inline image display
+    window._currentStampMimeType = stamp.file_mime_type ?? '';
+    window._currentStampFileName = stamp.file_name ?? '';
     document.getElementById('stat-type').textContent =
       stamp.content_type ? stamp.content_type.charAt(0).toUpperCase() + stamp.content_type.slice(1) : '—';
 
@@ -1481,10 +1484,26 @@
       resultEl.style.display = 'block';
       btn.textContent = '✅ Revealed';
 
-      // Show Arweave link in content block
+      // Show Arweave link + inline preview after reveal
       if (result.arweave_uri) {
         const ct = document.getElementById('stat-type')?.textContent?.toLowerCase() ?? 'text';
         showArweaveActions(result.arweave_uri, ct);
+        // For image files: show inline preview immediately without requiring page refresh
+        const fileMime = window._currentStampMimeType ?? '';
+        const isRevealedImg = ct === 'file' && fileMime && fileMime.indexOf('image/') === 0;
+        if (isRevealedImg) {
+          const imgUrl = 'https://arweave.net/' + result.arweave_uri.replace('ar://', '');
+          const contentBlock = document.getElementById('content-block');
+          if (contentBlock) {
+            contentBlock.innerHTML =
+              '<div style="padding:var(--space-4);text-align:center;">'
+              + '<img src="' + imgUrl + '" alt="Revealed file" '
+              + 'style="max-width:100%;border-radius:var(--radius-md);margin-bottom:var(--space-3);display:block;margin-left:auto;margin-right:auto;">'
+              + '<p style="font-size:var(--text-xs);color:var(--color-text-muted);margin:4px 0 0;">'
+              + (window._currentStampFileName ?? 'Image file') + '</p>'
+              + '</div>';
+          }
+        }
       }
 
       // Hide amber banner after short delay
