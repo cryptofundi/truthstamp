@@ -336,7 +336,16 @@
         <button class="filter-tab" data-filter="sealed">Sealed</button>
         <button class="filter-tab" data-filter="hash_only">Hash only</button>
       </div>
-      <input type="text" class="input search-input" id="stamp-search" placeholder="Search your stamps..." oninput="handleSearch(this.value)">
+      <div style="display:flex;align-items:center;gap:var(--space-2);">
+        <input type="text" class="input search-input" id="stamp-search" placeholder="Search stamps or Proof ID..." oninput="handleSearch(this.value)">
+        <button onclick="exportToExcel()" title="Export all your stamps to Excel"
+          style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;font-size:var(--text-sm);font-family:var(--font-sans);font-weight:500;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface);color:var(--color-text-secondary);cursor:pointer;white-space:nowrap;transition:border-color .15s,color .15s;"
+          onmouseover="this.style.borderColor='var(--brand-primary)';this.style.color='var(--brand-primary)'"
+          onmouseout="this.style.borderColor='';this.style.color=''">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Export
+        </button>
+      </div>
     </div>
 
     <!-- Stamps list -->
@@ -368,6 +377,7 @@
     </div>
   </footer>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="js/common.js"></script>
   <script>
     // Require auth — redirect to login if not signed in
@@ -530,11 +540,18 @@
       if (filter === 'sealed')    query = query.eq('visibility', 'sealed');
       if (filter === 'hash_only') query = query.eq('visibility', 'hash_only');
 
-      // Search across display_title, file_name, tags
+      // Search across display_title, file_name, and proof_id (numeric)
       if (searchQuery) {
-        query = query.or(
-          `display_title.ilike.%${searchQuery}%,file_name.ilike.%${searchQuery}%`
-        );
+        const isNumeric = /^\d+$/.test(searchQuery);
+        if (isNumeric) {
+          query = query.or(
+            `display_title.ilike.%${searchQuery}%,file_name.ilike.%${searchQuery}%,proof_id.eq.${searchQuery}`
+          );
+        } else {
+          query = query.or(
+            `display_title.ilike.%${searchQuery}%,file_name.ilike.%${searchQuery}%`
+          );
+        }
       }
 
       const { data: stamps, error } = await query;
@@ -848,6 +865,55 @@
         alert('Sign out failed: ' + error.message);
       } else {
         window.location.href = 'index.html';
+      }
+    }
+
+    // ── Export to Excel ───────────────────────────────────────────────────
+    async function exportToExcel() {
+      if (!window._dashUserId) return;
+      const btn = document.querySelector('button[onclick="exportToExcel()"]');
+      if (btn) { btn.textContent = 'Exporting…'; btn.disabled = true; }
+      try {
+        // Fetch ALL confirmed stamps (no pagination)
+        const { data: stamps, error } = await window.tsDB
+          .from('stamps')
+          .select('proof_id, content_type, visibility, display_title, file_name, file_size_bytes, tags, block_timestamp, status, storage_uri, sealed_until, revealed, tx_hash')
+          .eq('creator_profile_id', window._dashUserId)
+          .eq('status', 'confirmed')
+          .order('block_timestamp', { ascending: false });
+        if (error) throw error;
+        // Build rows
+        const rows = (stamps || []).map(s => ({
+          'Proof ID':       s.proof_id,
+          'Type':           s.content_type ?? '',
+          'Visibility':     s.visibility ?? '',
+          'Title / File':   s.display_title || s.file_name || '',
+          'File Size (KB)': s.file_size_bytes ? (s.file_size_bytes / 1024).toFixed(1) : '',
+          'Tags':           (s.tags || []).join(', '),
+          'Stamped At':     s.block_timestamp ? new Date(s.block_timestamp).toISOString() : '',
+          'Sealed Until':   s.sealed_until ?? '',
+          'Revealed':       s.revealed ? 'Yes' : '',
+          'Arweave':        s.storage_uri ? 'https://arweave.net/' + s.storage_uri.replace('ar://', '') : '',
+          'MegaETH TX':     s.tx_hash ?? '',
+          'Proof URL':      s.proof_id ? (window.location.origin + '/proof.html?id=' + s.proof_id) : '',
+        }));
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(rows);
+        // Column widths
+        ws['!cols'] = [
+          {wch:10},{wch:8},{wch:10},{wch:40},{wch:12},{wch:20},
+          {wch:22},{wch:22},{wch:9},{wch:52},{wch:68},{wch:52}
+        ];
+        XLSX.utils.book_append_sheet(wb, ws, 'My Stamps');
+        const date = new Date().toISOString().slice(0,10);
+        XLSX.writeFile(wb, `TruthStamp-export-${date}.xlsx`);
+      } catch(e) {
+        alert('Export failed: ' + e.message);
+      } finally {
+        if (btn) {
+          btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Export';
+          btn.disabled = false;
+        }
       }
     }
   </script>
