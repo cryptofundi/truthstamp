@@ -357,9 +357,10 @@
     </div>
     </div>
 
-    <p class="text-center text-muted mt-6" id="stamps-pagination" style="font-size: var(--text-sm); display:none;">
-      <a href="#" id="load-more-btn" style="color: var(--brand-primary);">Load more</a>
-    </p>
+    <!-- Infinite scroll sentinel — becomes visible when more stamps exist -->
+    <div id="scroll-sentinel" style="height:40px;display:flex;align-items:center;justify-content:center;">
+      <div id="scroll-spinner" style="display:none;width:20px;height:20px;border:2px solid var(--color-border);border-top-color:var(--brand-primary);border-radius:50%;animation:spin .7s linear infinite;"></div>
+    </div>
   </main>
 
   <footer class="footer">
@@ -584,21 +585,9 @@
         document.querySelector('.stamp-list').insertAdjacentHTML('beforeend', listHTML);
       }
 
-      // Show/hide load more
-      const pagination = document.getElementById('stamps-pagination');
-      if (stamps.length === PAGE_SIZE) {
-        pagination.style.display = 'block';
-        document.getElementById('load-more-btn').onclick = (e) => {
-          e.preventDefault();
-          loadStamps(
-            window._dashUserId,
-            currentFilter,
-            currentOffset + PAGE_SIZE
-          );
-        };
-      } else {
-        pagination.style.display = 'none';
-      }
+      // Show/hide scroll sentinel based on whether more pages exist
+      window._hasMoreStamps = stamps.length === PAGE_SIZE;
+      document.getElementById('scroll-spinner').style.display = 'none';
     }
 
     function renderStampRow(stamp) {
@@ -916,6 +905,32 @@
         }
       }
     }
+
+    // ── Infinite scroll via IntersectionObserver ─────────────────────────
+    (function() {
+      let _loading = false;
+      const sentinel = document.getElementById('scroll-sentinel');
+      const spinner  = document.getElementById('scroll-spinner');
+      if (!sentinel) return;
+      const observer = new IntersectionObserver(async (entries) => {
+        if (!entries[0].isIntersecting) return;
+        if (_loading) return;
+        if (!window._hasMoreStamps) return;
+        if (!window._dashUserId) return;
+        _loading = true;
+        if (spinner) spinner.style.display = 'block';
+        const searchVal = document.getElementById('stamp-search')?.value?.trim() ?? '';
+        await loadStamps(
+          window._dashUserId,
+          currentFilter,
+          currentOffset + PAGE_SIZE,
+          searchVal
+        );
+        _loading = false;
+        if (spinner) spinner.style.display = 'none';
+      }, { rootMargin: '120px' });
+      observer.observe(sentinel);
+    })();
   </script>
 </body>
 </html>
