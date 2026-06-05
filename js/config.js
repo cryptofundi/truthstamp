@@ -17,11 +17,11 @@ window.TRUTHSTAMP_CONFIG = {
   SUPABASE_ANON_KEY: 'sb_publishable_oH-0vSs8t4ghRuRJ-LcCaA_sHikte9b',
 
   // TruthStamp smart contract — deployed on MegaETH testnet
-  CONTRACT_ADDRESS: '0x8FEB092b7303c9419d8525C99a3113E7c299C584',
-  CONTRACT_NETWORK: 'megaeth_testnet',
-  CONTRACT_CHAIN_ID: 6343,
-  CONTRACT_RPC_URL: 'https://carrot.megaeth.com/rpc',
-  CONTRACT_EXPLORER: 'https://megaeth-testnet-v2.blockscout.com',
+  CONTRACT_ADDRESS: '0xD8beDEa4DdaCBF681CCca5DBFa90b04bB654d0B7',
+  CONTRACT_NETWORK: 'megaeth',
+  CONTRACT_CHAIN_ID: 4326,
+  CONTRACT_RPC_URL: 'https://mainnet.megaeth.com/rpc',
+  CONTRACT_EXPLORER: 'https://mega.etherscan.io/',
 
   // Where users are sent after successful auth
   POST_AUTH_REDIRECT: 'dashboard.html',
