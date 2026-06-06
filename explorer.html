@@ -685,7 +685,7 @@ function buildCard(s) {
           ${_sd2?`<span style="font-size:11.5px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${escHtml(_sd2)}</span>`:''}
         </div>
         ${_sht2?`<div style="font-size:13.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px">${escHtml(s.display_title)}</div>`:''}
-        <div style="font-size:11.5px;color:var(--text-muted);font-style:italic">🔒 URL hidden until revealed</div>
+        <div style="font-size:12px;color:var(--brand);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--font-mono)">${escHtml(_su2)}</div>
       </div>`;
     } else if (isFile) {
       const _fn3=s.file_name||'File', _fm3=s.file_mime_type||'', _fe3=_fn3.includes('.')?_fn3.split('.').pop().toUpperCase():'';
