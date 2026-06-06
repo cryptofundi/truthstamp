@@ -736,9 +736,52 @@ function buildFeaturedCard(s) {
   let content='';
   if(isSealed&&!isOverdue) {
     const rv=sealedUntil?timeUntil(sealedUntil)+' · '+sealedUntil.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'}):'';
-    content=`<div class="reveal-row">⏱ Reveals ${esc(rv)}</div><div class="stamp-sealed-msg">🔒 Sealed. Timestamp locked on-chain.</div>`;
+    // For sealed FILE stamps: show file type header above the reveal row
+    let sealedFileHdr = '';
+    if(isFile) {
+      const fname2  = s.file_name || 'File';
+      const mime2   = s.file_mime_type || '';
+      const ext2    = fname2.includes('.') ? fname2.split('.').pop().toUpperCase() : '';
+      let te2='📄', tl2=ext2 ? ext2+' File':'File';
+      if(mime2.startsWith('image/')||/\.(png|jpg|jpeg|gif|webp|svg|bmp)$/i.test(fname2)){te2='🖼️';tl2=ext2?ext2+' Image':'Image';}
+      else if(mime2==='application/pdf'||/\.pdf$/i.test(fname2)){te2='📕';tl2='PDF Document';}
+      else if(mime2.startsWith('text/')||/\.(txt|md|csv|log)$/i.test(fname2)){te2='📝';tl2=ext2?ext2+' Document':'Text File';}
+      else if(/\.(doc|docx)$/i.test(fname2)){te2='📘';tl2='Word Document';}
+      else if(/\.(xls|xlsx)$/i.test(fname2)){te2='📊';tl2='Spreadsheet';}
+      else if(/\.(mp4|mov|avi|mkv|webm)$/i.test(fname2)){te2='🎬';tl2='Video';}
+      else if(/\.(mp3|wav|aac|flac)$/i.test(fname2)){te2='🎵';tl2='Audio';}
+      const hasTitle2 = s.display_title && s.display_title !== 'Sealed stamp' && s.display_title !== fname2 && s.display_title.trim()!=='';
+      sealedFileHdr = `<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 13px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:${hasTitle2?'7':'0'}px;">
+          <span style="font-size:16px;line-height:1">${te2}</span>
+          <span style="font-size:11.5px;font-weight:600;color:var(--text-sec);background:var(--surface);border:1px solid var(--border);padding:2px 9px;border-radius:var(--r-full)">${esc(tl2)}</span>
+        </div>
+        ${hasTitle2?`<div style="font-size:13.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.display_title)}</div>`:''}
+      </div>`;
+    }
+    content=`${sealedFileHdr}<div class="reveal-row">⏱ Reveals ${esc(rv)}</div><div class="stamp-sealed-msg">🔒 Sealed. Timestamp locked on-chain.</div>`;
   } else if(isSealed&&isOverdue) {
-    content=`<div class="reveal-row" style="background:rgba(248,220,255,.4);border-color:rgba(83,74,183,.2);color:#534AB7">⚡ Awaiting on-chain reveal</div>`;
+    let sealedFileHdr2 = '';
+    if(isFile) {
+      const fname3  = s.file_name || 'File';
+      const mime3   = s.file_mime_type || '';
+      const ext3    = fname3.includes('.') ? fname3.split('.').pop().toUpperCase() : '';
+      let te3='📄', tl3=ext3?ext3+' File':'File';
+      if(mime3.startsWith('image/')||/\.(png|jpg|jpeg|gif|webp|svg|bmp)$/i.test(fname3)){te3='🖼️';tl3=ext3?ext3+' Image':'Image';}
+      else if(mime3==='application/pdf'||/\.pdf$/i.test(fname3)){te3='📕';tl3='PDF Document';}
+      else if(mime3.startsWith('text/')||/\.(txt|md|csv|log)$/i.test(fname3)){te3='📝';tl3=ext3?ext3+' Document':'Text File';}
+      else if(/\.(doc|docx)$/i.test(fname3)){te3='📘';tl3='Word Document';}
+      else if(/\.(xls|xlsx)$/i.test(fname3)){te3='📊';tl3='Spreadsheet';}
+      const hasTitle3 = s.display_title && s.display_title !== 'Sealed stamp' && s.display_title !== fname3 && s.display_title.trim()!=='';
+      sealedFileHdr2 = `<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 13px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:${hasTitle3?'7':'0'}px;">
+          <span style="font-size:16px;line-height:1">${te3}</span>
+          <span style="font-size:11.5px;font-weight:600;color:var(--text-sec);background:var(--surface);border:1px solid var(--border);padding:2px 9px;border-radius:var(--r-full)">${esc(tl3)}</span>
+        </div>
+        ${hasTitle3?`<div style="font-size:13.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.display_title)}</div>`:''}
+      </div>`;
+    }
+    content=`${sealedFileHdr2}<div class="reveal-row" style="background:rgba(248,220,255,.4);border-color:rgba(83,74,183,.2);color:#534AB7">⚡ Awaiting on-chain reveal</div>`;
   } else if(isUrl&&s.text_content) {
     let url=s.text_content; try{const p=JSON.parse(url);url=p.url??url;}catch{}
     content=`<div class="stamp-url-link">🔗 ${esc(url.length>80?url.slice(0,80)+'…':url)}</div>`;
