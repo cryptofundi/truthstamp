@@ -736,9 +736,24 @@ function buildFeaturedCard(s) {
   let content='';
   if(isSealed&&!isOverdue) {
     const rv=sealedUntil?timeUntil(sealedUntil)+' · '+sealedUntil.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'}):'';
-    // For sealed FILE stamps: show file type header above the reveal row
+    // For sealed FILE or URL stamps: show info header above the reveal row
     let sealedFileHdr = '';
-    if(isFile) {
+    if(isUrl && s.text_content) {
+      let url2=s.text_content; try{const p=JSON.parse(url2);url2=p.url??url2;}catch{}
+      let domain2=''; try{domain2=new URL(url2).hostname.replace(/^www\./, '');}catch{}
+      const hasTitle5 = s.display_title && s.display_title !== 'Sealed stamp'
+        && s.display_title.trim() !== '' && s.display_title !== url2;
+      const shortUrl2 = url2.length>60 ? url2.slice(0,60)+'…' : url2;
+      sealedFileHdr = `<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 13px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:${hasTitle5?'7':'5'}px;">
+          <span style="font-size:16px;line-height:1">🔗</span>
+          <span style="font-size:11.5px;font-weight:600;color:var(--cyan);background:var(--cyan-bg);border:1px solid rgba(14,116,144,.15);padding:2px 9px;border-radius:var(--r-full)">URL Stamp</span>
+          ${domain2?`<span style="font-size:11.5px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${esc(domain2)}</span>`:''}
+        </div>
+        ${hasTitle5?`<div style="font-size:13.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px">${esc(s.display_title)}</div>`:''}
+        <div style="font-size:11.5px;color:var(--brand);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--font-mono)">${esc(shortUrl2)}</div>
+      </div>`;
+    } else if(isFile) {
       const fname2  = s.file_name || 'File';
       const mime2   = s.file_mime_type || '';
       const ext2    = fname2.includes('.') ? fname2.split('.').pop().toUpperCase() : '';
@@ -762,7 +777,22 @@ function buildFeaturedCard(s) {
     content=`${sealedFileHdr}<div class="reveal-row">⏱ Reveals ${esc(rv)}</div><div class="stamp-sealed-msg">🔒 Sealed. Timestamp locked on-chain.</div>`;
   } else if(isSealed&&isOverdue) {
     let sealedFileHdr2 = '';
-    if(isFile) {
+    if(isUrl && s.text_content) {
+      let url3=s.text_content; try{const p=JSON.parse(url3);url3=p.url??url3;}catch{}
+      let domain3=''; try{domain3=new URL(url3).hostname.replace(/^www\./, '');}catch{}
+      const hasTitle6 = s.display_title && s.display_title !== 'Sealed stamp'
+        && s.display_title.trim() !== '' && s.display_title !== url3;
+      const shortUrl3 = url3.length>60 ? url3.slice(0,60)+'…' : url3;
+      sealedFileHdr2 = `<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 13px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:${hasTitle6?'7':'5'}px;">
+          <span style="font-size:16px;line-height:1">🔗</span>
+          <span style="font-size:11.5px;font-weight:600;color:var(--cyan);background:var(--cyan-bg);border:1px solid rgba(14,116,144,.15);padding:2px 9px;border-radius:var(--r-full)">URL Stamp</span>
+          ${domain3?`<span style="font-size:11.5px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${esc(domain3)}</span>`:''}
+        </div>
+        ${hasTitle6?`<div style="font-size:13.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px">${esc(s.display_title)}</div>`:''}
+        <div style="font-size:11.5px;color:var(--brand);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--font-mono)">${esc(shortUrl3)}</div>
+      </div>`;
+    } else if(isFile) {
       const fname3  = s.file_name || 'File';
       const mime3   = s.file_mime_type || '';
       const ext3    = fname3.includes('.') ? fname3.split('.').pop().toUpperCase() : '';
@@ -784,7 +814,22 @@ function buildFeaturedCard(s) {
     content=`${sealedFileHdr2}<div class="reveal-row" style="background:rgba(248,220,255,.4);border-color:rgba(83,74,183,.2);color:#534AB7">⚡ Awaiting on-chain reveal</div>`;
   } else if(isUrl&&s.text_content) {
     let url=s.text_content; try{const p=JSON.parse(url);url=p.url??url;}catch{}
-    content=`<div class="stamp-url-link">🔗 ${esc(url.length>80?url.slice(0,80)+'…':url)}</div>`;
+    // Extract domain for display
+    let domain='';
+    try{ domain=new URL(url).hostname.replace(/^www\./, ''); }catch{}
+    const hasTitle4 = s.display_title && s.display_title !== 'Sealed stamp'
+      && s.display_title.trim() !== '' && s.display_title !== url;
+    const shortUrl = url.length>72 ? url.slice(0,72)+'…' : url;
+    content=`<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 15px;margin-bottom:2px;">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+        <span style="font-size:17px;line-height:1">🔗</span>
+        <span style="font-size:11.5px;font-weight:600;color:var(--cyan);background:var(--cyan-bg);border:1px solid rgba(14,116,144,.15);padding:2px 9px;border-radius:var(--r-full);white-space:nowrap">URL Stamp</span>
+        ${domain?`<span style="font-size:11.5px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${esc(domain)}</span>`:''}
+      </div>
+      ${hasTitle4?`<div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.display_title)}</div>`:''}
+      <div style="font-size:12px;color:var(--brand);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--font-mono)">${esc(shortUrl)}</div>
+      <div style="font-size:11.5px;color:var(--text-muted);margin-top:5px">Fingerprint locked on MegaETH</div>
+    </div>`;
   } else if(isFile) {
     const fname   = s.file_name || 'File';
     const mime    = s.file_mime_type || '';
