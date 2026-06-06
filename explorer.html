@@ -640,17 +640,120 @@ function buildCard(s) {
   let contentHtml = '';
   if (isSealed && !isOverdue) {
     const rv = sealedUntil ? timeUntil(sealedUntil) + ' · ' + sealedUntil.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'}) : '';
-    contentHtml = `<div class="reveal-row">⏱ Reveals ${escHtml(rv)}</div><div class="stamp-sealed-msg">🔒 Sealed. Timestamp locked on-chain.</div>`;
+    let _sealHdr = '';
+    if (isUrl && s.text_content) {
+      let _su=s.text_content; try{const _p=JSON.parse(_su);_su=_p.url??_su;}catch{}
+      let _sd=''; try{_sd=new URL(_su).hostname.replace(/^www\./,'');}catch{}
+      const _sht = s.display_title && s.display_title!=='Sealed stamp' && s.display_title.trim()!=='' && s.display_title!==_su;
+      _sealHdr = `<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 13px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:${_sht?'7':'0'}px;">
+          <span style="font-size:16px;line-height:1">🔗</span>
+          <span style="font-size:11.5px;font-weight:600;color:var(--cyan);background:var(--cyan-bg);border:1px solid rgba(14,116,144,.15);padding:2px 9px;border-radius:20px">URL Stamp</span>
+          ${_sd?`<span style="font-size:11.5px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${escHtml(_sd)}</span>`:''}
+        </div>
+        ${_sht?`<div style="font-size:13.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px">${escHtml(s.display_title)}</div>`:''}
+        <div style="font-size:11.5px;color:var(--text-muted);font-style:italic">🔒 URL hidden until revealed</div>
+      </div>`;
+    } else if (isFile) {
+      const _fn2=s.file_name||'File', _fm2=s.file_mime_type||'', _fe2=_fn2.includes('.')?_fn2.split('.').pop().toUpperCase():'';
+      let _te2='📄',_tl2=_fe2?_fe2+' File':'File';
+      if(_fm2.startsWith('image/')||/\.(png|jpg|jpeg|gif|webp|svg)$/i.test(_fn2)){_te2='🖼️';_tl2=_fe2?_fe2+' Image':'Image';}
+      else if(_fm2==='application/pdf'||/\.pdf$/i.test(_fn2)){_te2='📕';_tl2='PDF Document';}
+      else if(_fm2.startsWith('text/')||/\.(txt|md|csv)$/i.test(_fn2)){_te2='📝';_tl2=_fe2?_fe2+' Document':'Text File';}
+      else if(/\.(doc|docx)$/i.test(_fn2)){_te2='📘';_tl2='Word Document';}
+      else if(/\.(xls|xlsx)$/i.test(_fn2)){_te2='📊';_tl2='Spreadsheet';}
+      const _ht2=s.display_title&&s.display_title!=='Sealed stamp'&&s.display_title!==_fn2&&s.display_title.trim()!=='';
+      _sealHdr = `<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 13px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:${_ht2?'7':'0'}px;">
+          <span style="font-size:16px;line-height:1">${_te2}</span>
+          <span style="font-size:11.5px;font-weight:600;color:var(--text-sec);background:var(--surface);border:1px solid var(--border);padding:2px 9px;border-radius:20px">${escHtml(_tl2)}</span>
+        </div>
+        ${_ht2?`<div style="font-size:13.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(s.display_title)}</div>`:''}
+      </div>`;
+    }
+    contentHtml = `${_sealHdr}<div class="reveal-row">⏱ Reveals ${escHtml(rv)}</div><div class="stamp-sealed-msg">🔒 Sealed. Timestamp locked on-chain.</div>`;
   } else if (isSealed && isOverdue) {
-    contentHtml = `<div class="reveal-row" style="background:rgba(248,220,255,0.4);border-color:rgba(83,74,183,0.2);color:var(--purple)">⚡ Awaiting on-chain reveal</div><div class="stamp-sealed-msg">🔒 Sealed. Timestamp locked on-chain.</div>`;
+    let _sealHdr2 = '';
+    if (isUrl && s.text_content) {
+      let _su2=s.text_content; try{const _p2=JSON.parse(_su2);_su2=_p2.url??_su2;}catch{}
+      let _sd2=''; try{_sd2=new URL(_su2).hostname.replace(/^www\./,'');}catch{}
+      const _sht2=s.display_title&&s.display_title!=='Sealed stamp'&&s.display_title.trim()!==''&&s.display_title!==_su2;
+      _sealHdr2 = `<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 13px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:${_sht2?'7':'0'}px;">
+          <span style="font-size:16px;line-height:1">🔗</span>
+          <span style="font-size:11.5px;font-weight:600;color:var(--cyan);background:var(--cyan-bg);border:1px solid rgba(14,116,144,.15);padding:2px 9px;border-radius:20px">URL Stamp</span>
+          ${_sd2?`<span style="font-size:11.5px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${escHtml(_sd2)}</span>`:''}
+        </div>
+        ${_sht2?`<div style="font-size:13.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px">${escHtml(s.display_title)}</div>`:''}
+        <div style="font-size:11.5px;color:var(--text-muted);font-style:italic">🔒 URL hidden until revealed</div>
+      </div>`;
+    } else if (isFile) {
+      const _fn3=s.file_name||'File', _fm3=s.file_mime_type||'', _fe3=_fn3.includes('.')?_fn3.split('.').pop().toUpperCase():'';
+      let _te3='📄',_tl3=_fe3?_fe3+' File':'File';
+      if(_fm3.startsWith('image/')||/\.(png|jpg|jpeg|gif|webp|svg)$/i.test(_fn3)){_te3='🖼️';_tl3=_fe3?_fe3+' Image':'Image';}
+      else if(_fm3==='application/pdf'||/\.pdf$/i.test(_fn3)){_te3='📕';_tl3='PDF Document';}
+      else if(_fm3.startsWith('text/')||/\.(txt|md|csv)$/i.test(_fn3)){_te3='📝';_tl3=_fe3?_fe3+' Document':'Text File';}
+      else if(/\.(doc|docx)$/i.test(_fn3)){_te3='📘';_tl3='Word Document';}
+      else if(/\.(xls|xlsx)$/i.test(_fn3)){_te3='📊';_tl3='Spreadsheet';}
+      const _ht3=s.display_title&&s.display_title!=='Sealed stamp'&&s.display_title!==_fn3&&s.display_title.trim()!=='';
+      _sealHdr2 = `<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 13px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:${_ht3?'7':'0'}px;">
+          <span style="font-size:16px;line-height:1">${_te3}</span>
+          <span style="font-size:11.5px;font-weight:600;color:var(--text-sec);background:var(--surface);border:1px solid var(--border);padding:2px 9px;border-radius:20px">${escHtml(_tl3)}</span>
+        </div>
+        ${_ht3?`<div style="font-size:13.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(s.display_title)}</div>`:''}
+      </div>`;
+    }
+    contentHtml = `${_sealHdr2}<div class="reveal-row" style="background:rgba(248,220,255,0.4);border-color:rgba(83,74,183,0.2);color:var(--purple)">⚡ Awaiting on-chain reveal</div><div class="stamp-sealed-msg">🔒 Sealed. Timestamp locked on-chain.</div>`;
   } else if (isHashOnly) {
     contentHtml = `<div class="stamp-sealed-msg">🔐 Hash-only · maximum privacy</div>`;
   } else if (isUrl && s.text_content) {
     let url = s.text_content;
     try { const p = JSON.parse(url); url = p.url ?? url; } catch {}
-    contentHtml = `<div class="stamp-url-link">🔗 <span>${escHtml(url.length > 80 ? url.slice(0,80)+'…' : url)}</span></div>`;
+    let _domain=''; try{_domain=new URL(url).hostname.replace(/^www\./, '');}catch{}
+    const _hasTitle7 = s.display_title && s.display_title!=='Sealed stamp'
+      && s.display_title.trim()!=='' && s.display_title!==url;
+    const _shortUrl = url.length>72 ? url.slice(0,72)+'…' : url;
+    contentHtml = `<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 15px;margin-bottom:2px;">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+        <span style="font-size:17px;line-height:1">🔗</span>
+        <span style="font-size:11.5px;font-weight:600;color:var(--cyan);background:var(--cyan-bg);border:1px solid rgba(14,116,144,.15);padding:2px 9px;border-radius:20px;white-space:nowrap">URL Stamp</span>
+        ${_domain?`<span style="font-size:11.5px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${escHtml(_domain)}</span>`:''}
+      </div>
+      ${_hasTitle7?`<div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(s.display_title)}</div>`:''}
+      <div style="font-size:12px;color:var(--brand);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--font-mono)">${escHtml(_shortUrl)}</div>
+      <div style="font-size:11.5px;color:var(--text-muted);margin-top:5px">Fingerprint locked on MegaETH</div>
+    </div>`;
   } else if (isFile) {
-    contentHtml = `<div class="stamp-sealed-msg">📄 ${escHtml(s.file_name || 'File stamp')}${s.file_size_bytes ? ' · ' + (s.file_size_bytes/1024).toFixed(1) + ' KB' : ''}</div>`;
+    const _fname  = s.file_name || 'File';
+    const _mime   = s.file_mime_type || '';
+    const _ext    = _fname.includes('.') ? _fname.split('.').pop().toUpperCase() : '';
+    let _te='📄', _tl=_ext ? _ext+' File':'File';
+    if(_mime.startsWith('image/')||/\.(png|jpg|jpeg|gif|webp|svg|bmp)$/i.test(_fname)){_te='🖼️';_tl=_ext?_ext+' Image':'Image';}
+    else if(_mime==='application/pdf'||/\.pdf$/i.test(_fname)){_te='📕';_tl='PDF Document';}
+    else if(_mime.startsWith('text/')||/\.(txt|md|csv|log)$/i.test(_fname)){_te='📝';_tl=_ext?_ext+' Document':'Text File';}
+    else if(/\.(doc|docx)$/i.test(_fname)){_te='📘';_tl='Word Document';}
+    else if(/\.(xls|xlsx)$/i.test(_fname)){_te='📊';_tl='Spreadsheet';}
+    else if(/\.(mp4|mov|avi|mkv|webm)$/i.test(_fname)){_te='🎬';_tl='Video';}
+    else if(/\.(mp3|wav|aac|flac)$/i.test(_fname)){_te='🎵';_tl='Audio';}
+    else if(/\.(zip|rar|7z|tar|gz)$/i.test(_fname)){_te='🗜️';_tl='Archive';}
+    const _size = s.file_size_bytes
+      ? (s.file_size_bytes>=1048576?(s.file_size_bytes/1048576).toFixed(1)+' MB':(s.file_size_bytes/1024).toFixed(1)+' KB')
+      : '';
+    const _hasTitle = s.display_title && s.display_title!=='Sealed stamp'
+      && s.display_title!==_fname && s.display_title.trim()!=='';
+    contentHtml = `<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 15px;margin-bottom:2px;">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+        <span style="font-size:17px;line-height:1">${_te}</span>
+        <span style="font-size:11.5px;font-weight:600;color:var(--text-sec);background:var(--surface);border:1px solid var(--border);padding:2px 9px;border-radius:20px;white-space:nowrap">${escHtml(_tl)}</span>
+      </div>
+      ${_hasTitle?`<div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(s.display_title)}</div>`:''}
+      <div style="font-size:13px;color:var(--text-sec);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(_fname)}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap;">
+        ${_size?`<span style="font-size:11.5px;color:var(--text-muted)">${_size}</span><span style="color:var(--border-md);font-size:11px">·</span>`:''}
+        <span style="font-size:11.5px;color:var(--text-muted)">Fingerprint locked on MegaETH</span>
+      </div>
+    </div>`;
   } else if (s.text_content) {
     const text = s.text_content.length > 200 ? s.text_content.slice(0,200) + '…' : s.text_content;
     contentHtml = `<div class="stamp-content">${escHtml(text)}</div>`;
@@ -699,7 +802,7 @@ async function loadStamps(reset = true) {
   try {
     let query = window.tsDB
       .from('stamps_with_creator')
-      .select('proof_id, content_type, visibility, display_title, text_content, file_name, file_size_bytes, tags, block_timestamp, status, storage_uri, sealed_until, revealed, content_hash, tx_hash, creator_identity, creator_address, creator_public_handle, creator_wallet_address, bitcoin_txid, bitcoin_archive_status')
+      .select('proof_id, content_type, visibility, display_title, text_content, file_name, file_size_bytes, file_mime_type, tags, block_timestamp, status, storage_uri, sealed_until, revealed, content_hash, tx_hash, creator_identity, creator_address, creator_public_handle, creator_wallet_address, bitcoin_txid, bitcoin_archive_status')
       .eq('status', 'confirmed').in('visibility', ['public','sealed','hash_only'])
       .eq('is_hidden', false).eq('contract_address', CONTRACT);
     if (currentFeed === 'reveals')  query = query.eq('visibility','sealed').eq('revealed', true);
@@ -956,7 +1059,7 @@ async function searchByProofId(proofId) {
   try {
     const { data, error } = await window.tsDB
       .from('stamps_with_creator')
-      .select('proof_id, content_type, visibility, display_title, text_content, file_name, file_size_bytes, tags, block_timestamp, status, storage_uri, sealed_until, revealed, content_hash, tx_hash, creator_identity, creator_address, creator_public_handle, creator_wallet_address, bitcoin_txid, bitcoin_archive_status')
+      .select('proof_id, content_type, visibility, display_title, text_content, file_name, file_size_bytes, file_mime_type, tags, block_timestamp, status, storage_uri, sealed_until, revealed, content_hash, tx_hash, creator_identity, creator_address, creator_public_handle, creator_wallet_address, bitcoin_txid, bitcoin_archive_status')
       .eq('proof_id', proofId)
       .eq('contract_address', CONTRACT)
       .eq('status', 'confirmed')
