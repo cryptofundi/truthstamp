@@ -743,7 +743,51 @@ function buildFeaturedCard(s) {
     let url=s.text_content; try{const p=JSON.parse(url);url=p.url??url;}catch{}
     content=`<div class="stamp-url-link">🔗 ${esc(url.length>80?url.slice(0,80)+'…':url)}</div>`;
   } else if(isFile) {
-    content=`<div class="stamp-sealed-msg">📄 ${esc(s.file_name||'File stamp')}${s.file_size_bytes?' · '+(s.file_size_bytes/1024).toFixed(1)+' KB':''}</div>`;
+    const fname   = s.file_name || 'File';
+    const mime    = s.file_mime_type || '';
+    const ext     = fname.includes('.') ? fname.split('.').pop().toUpperCase() : '';
+    // Derive friendly type label + emoji from MIME or extension
+    let typeEmoji = '📄', typeLabel = ext ? ext + ' File' : 'File';
+    if (mime.startsWith('image/') || /\.(png|jpg|jpeg|gif|webp|svg|bmp|tiff)$/i.test(fname)) {
+      typeEmoji = '🖼️'; typeLabel = ext ? ext + ' Image' : 'Image';
+    } else if (mime === 'application/pdf' || /\.pdf$/i.test(fname)) {
+      typeEmoji = '📕'; typeLabel = 'PDF Document';
+    } else if (mime.startsWith('text/') || /\.(txt|md|csv|log)$/i.test(fname)) {
+      typeEmoji = '📝'; typeLabel = ext ? ext + ' Document' : 'Text File';
+    } else if (/\.(doc|docx)$/i.test(fname)) {
+      typeEmoji = '📘'; typeLabel = 'Word Document';
+    } else if (/\.(xls|xlsx)$/i.test(fname)) {
+      typeEmoji = '📊'; typeLabel = 'Spreadsheet';
+    } else if (/\.(mp4|mov|avi|mkv|webm)$/i.test(fname)) {
+      typeEmoji = '🎬'; typeLabel = 'Video';
+    } else if (/\.(mp3|wav|aac|flac|ogg)$/i.test(fname)) {
+      typeEmoji = '🎵'; typeLabel = 'Audio';
+    } else if (/\.(zip|rar|7z|tar|gz)$/i.test(fname)) {
+      typeEmoji = '🗜️'; typeLabel = 'Archive';
+    }
+    // Size: show MB if >= 1MB else KB
+    const sizeStr = s.file_size_bytes
+      ? (s.file_size_bytes >= 1048576
+          ? (s.file_size_bytes / 1048576).toFixed(1) + ' MB'
+          : (s.file_size_bytes / 1024).toFixed(1) + ' KB')
+      : '';
+    // Title: show if it differs from the bare filename
+    const hasTitle = s.display_title
+      && s.display_title !== 'Sealed stamp'
+      && s.display_title !== fname
+      && s.display_title.trim() !== '';
+    content = `<div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--r-md);padding:13px 15px;margin-bottom:2px;">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+        <span style="font-size:17px;line-height:1">${typeEmoji}</span>
+        <span style="font-size:11.5px;font-weight:600;color:var(--text-sec);background:var(--surface);border:1px solid var(--border);padding:2px 9px;border-radius:var(--r-full);white-space:nowrap">${esc(typeLabel)}</span>
+      </div>
+      ${hasTitle ? `<div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.display_title)}</div>` : ''}
+      <div style="font-size:13px;color:var(--text-sec);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(fname)}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap;">
+        ${sizeStr ? `<span style="font-size:11.5px;color:var(--text-muted)">${sizeStr}</span><span style="color:var(--border-md);font-size:11px">·</span>` : ''}
+        <span style="font-size:11.5px;color:var(--text-muted)">Fingerprint locked on MegaETH</span>
+      </div>
+    </div>`;
   } else if(s.text_content) {
     const t=s.text_content.length>160?s.text_content.slice(0,160)+'…':s.text_content;
     content=`<div class="stamp-content">${esc(t)}</div>`;
@@ -804,15 +848,15 @@ async function loadFeatured() {
     // Fetch a mix: latest public, latest sealed (not revealed), latest revealed
     const [pubR, sealedR, revealedR] = await Promise.all([
       window.tsDB.from('stamps_with_creator')
-        .select('proof_id,content_type,visibility,display_title,text_content,file_name,file_size_bytes,block_timestamp,storage_uri,sealed_until,revealed,content_hash,tx_hash,creator_identity,creator_address,creator_public_handle,creator_wallet_address')
+        .select('proof_id,content_type,visibility,display_title,text_content,file_name,file_size_bytes,file_mime_type,block_timestamp,storage_uri,sealed_until,revealed,content_hash,tx_hash,creator_identity,creator_address,creator_public_handle,creator_wallet_address')
         .eq('status','confirmed').eq('visibility','public').eq('is_hidden',false).eq('contract_address',CONTRACT)
         .order('block_timestamp',{ascending:false}).limit(1),
       window.tsDB.from('stamps_with_creator')
-        .select('proof_id,content_type,visibility,display_title,text_content,file_name,file_size_bytes,block_timestamp,storage_uri,sealed_until,revealed,content_hash,tx_hash,creator_identity,creator_address,creator_public_handle,creator_wallet_address')
+        .select('proof_id,content_type,visibility,display_title,text_content,file_name,file_size_bytes,file_mime_type,block_timestamp,storage_uri,sealed_until,revealed,content_hash,tx_hash,creator_identity,creator_address,creator_public_handle,creator_wallet_address')
         .eq('status','confirmed').eq('visibility','sealed').eq('revealed',false).eq('is_hidden',false).eq('contract_address',CONTRACT)
         .order('block_timestamp',{ascending:false}).limit(1),
       window.tsDB.from('stamps_with_creator')
-        .select('proof_id,content_type,visibility,display_title,text_content,file_name,file_size_bytes,block_timestamp,storage_uri,sealed_until,revealed,content_hash,tx_hash,creator_identity,creator_address,creator_public_handle,creator_wallet_address')
+        .select('proof_id,content_type,visibility,display_title,text_content,file_name,file_size_bytes,file_mime_type,block_timestamp,storage_uri,sealed_until,revealed,content_hash,tx_hash,creator_identity,creator_address,creator_public_handle,creator_wallet_address')
         .eq('status','confirmed').eq('visibility','sealed').eq('revealed',true).eq('is_hidden',false).eq('contract_address',CONTRACT)
         .order('block_timestamp',{ascending:false}).limit(1),
     ]);
@@ -827,7 +871,7 @@ async function loadFeatured() {
     // If we don't have 3 (e.g. no revealed yet), fill with latest stamps
     if(picks.length < 3) {
       const {data:fallback}=await window.tsDB.from('stamps_with_creator')
-        .select('proof_id,content_type,visibility,display_title,text_content,file_name,file_size_bytes,block_timestamp,storage_uri,sealed_until,revealed,content_hash,tx_hash,creator_identity,creator_address,creator_public_handle,creator_wallet_address')
+        .select('proof_id,content_type,visibility,display_title,text_content,file_name,file_size_bytes,file_mime_type,block_timestamp,storage_uri,sealed_until,revealed,content_hash,tx_hash,creator_identity,creator_address,creator_public_handle,creator_wallet_address')
         .eq('status','confirmed').in('visibility',['public','sealed']).eq('is_hidden',false).eq('contract_address',CONTRACT)
         .order('block_timestamp',{ascending:false}).limit(3);
       const existing=new Set(picks.map(p=>p.proof_id));
