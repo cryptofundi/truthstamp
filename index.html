@@ -751,7 +751,7 @@ function buildFeaturedCard(s) {
           ${domain2?`<span style="font-size:11.5px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${esc(domain2)}</span>`:''}
         </div>
         ${hasTitle5?`<div style="font-size:13.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px">${esc(s.display_title)}</div>`:''}
-        <div style="font-size:11.5px;color:var(--brand);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--font-mono)">${esc(shortUrl2)}</div>
+        <div style="font-size:11.5px;color:var(--text-muted);font-style:italic">🔒 URL hidden until revealed</div>
       </div>`;
     } else if(isFile) {
       const fname2  = s.file_name || 'File';
@@ -790,7 +790,7 @@ function buildFeaturedCard(s) {
           ${domain3?`<span style="font-size:11.5px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${esc(domain3)}</span>`:''}
         </div>
         ${hasTitle6?`<div style="font-size:13.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px">${esc(s.display_title)}</div>`:''}
-        <div style="font-size:11.5px;color:var(--brand);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--font-mono)">${esc(shortUrl3)}</div>
+        <div style="font-size:11.5px;color:var(--text-muted);font-style:italic">🔒 URL hidden until revealed</div>
       </div>`;
     } else if(isFile) {
       const fname3  = s.file_name || 'File';
