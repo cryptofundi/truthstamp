@@ -16,7 +16,7 @@
   }
 
   // Don't load if no real tracking ID is set
-  if (GA_TRACKING_ID === 'G-XXXXXXXXXX') {
+  if (GA_TRACKING_ID === 'G-V1G6MV8V67') {
     console.warn('[Analytics] Tracking ID not configured');
     return;
   }
