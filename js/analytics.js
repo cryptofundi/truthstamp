@@ -6,7 +6,7 @@
 
 (function() {
   // Replace this with your real GA4 Measurement ID before going live
-  const GA_TRACKING_ID = 'G-XXXXXXXXXX';
+  const GA_TRACKING_ID = 'G-V1G6MV8V67';
 
   // Don't load analytics in local development
   const isLocalDev = ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
