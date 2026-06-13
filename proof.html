@@ -1107,6 +1107,25 @@
           showArweaveActions(stamp.storage_uri, stamp.content_type);
         }
 
+      } else if (stamp.content_type === 'file') {
+        var isPubImg = stamp.file_mime_type && stamp.file_mime_type.indexOf('image/') === 0;
+        if (isPubImg && stamp.storage_uri) {
+          var pubImgUrl = 'https://arweave.net/' + stamp.storage_uri.replace('ar://', '');
+          var pubAlt = escapeHtml(stamp.file_name || 'Image');
+          contentBlock.innerHTML =
+            '<div style="padding:var(--space-4);text-align:center;">'
+            + '<img src="' + pubImgUrl + '" alt="' + pubAlt + '" '
+            + 'style="max-width:100%;border-radius:var(--radius-md);margin-bottom:var(--space-3);display:block;margin-left:auto;margin-right:auto;">'
+            + '<p style="font-size:var(--text-xs);color:var(--color-text-muted);margin:4px 0 0;">' + pubAlt + '</p>'
+            + '</div>';
+        } else if (stamp.file_name) {
+          contentText.textContent = `📄 ${stamp.file_name}`;
+        } else {
+          contentText.textContent = '(Content not available in cache — view on Arweave)';
+        }
+        if (stamp.storage_uri) {
+          showArweaveActions(stamp.storage_uri, stamp.content_type);
+        }
       } else {
         // Text or other content
         if (text) {
@@ -1187,8 +1206,8 @@
       window.trackEvent('proof_viewed', { proof_id: stamp.proof_id, visibility: stamp.visibility });
     }
 
-    // Bitcoin archive card — shown for eligible stamps
-    initBitcoinArchiveCard(stamp, currentUser);
+    // Bitcoin archive card — shown for eligible stamps (owner only)
+    initBitcoinArchiveCard(stamp, currentUser, isOwner);
   }
 
   // ── Client-side decryption (mirrors stamp.html logic) ───────────────────
@@ -1819,7 +1838,7 @@
   let   btcPrepareData       = null; // holds response from bitcoin-archive-prepare
 
   // Show/hide Bitcoin archive card based on stamp eligibility
-  function initBitcoinArchiveCard(stamp, currentUser) {
+  function initBitcoinArchiveCard(stamp, currentUser, isOwner) {
     const card = document.getElementById('btc-archive-card');
     if (!card) return;
 
@@ -1842,9 +1861,9 @@
       return;
     }
 
-    // Any logged-in user can archive any public stamp to Bitcoin.
-    // Solves cross-wallet problem (MetaMask stamp -> Xverse on mobile).
-    if (!currentUser) {
+    // Only the stamp's creator can archive it to Bitcoin.
+    // Prevents anyone from archiving (and spending credits on) someone else's stamp.
+    if (!currentUser || !isOwner) {
       card.style.display = 'none';
       return;
     }
