@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Legal Disclaimer — TruthStamp</title>
+<meta name="description" content="Legal disclaimer and limitations regarding TruthStamp's cryptographic timestamping services."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/components.css">
+<script src="js/config.js"></script>
+<script src="js/nav.js"></script>
+<style>
+.legal-shell { max-width: 720px; margin: 0 auto; padding: var(--space-8) var(--space-5) var(--space-12); }
+.legal-shell h1 { font-size: var(--text-3xl); font-weight: 700; margin: 0 0 var(--space-2); letter-spacing: -0.5px; }
+.legal-updated { font-size: var(--text-sm); color: var(--color-text-muted); margin: 0 0 var(--space-7); }
+.legal-shell h2 { font-size: var(--text-lg); font-weight: 700; margin: var(--space-7) 0 var(--space-3); }
+.legal-shell p { font-size: var(--text-base); line-height: 1.7; color: var(--color-text-secondary); margin: 0 0 var(--space-4); }
+.legal-shell ul { margin: 0 0 var(--space-4); padding-left: 1.3em; color: var(--color-text-secondary); font-size: var(--text-base); line-height: 1.7; }
+.legal-shell li { margin-bottom: 6px; }
+.legal-callout {
+  background: var(--brand-primary-light);
+  border-left: 3px solid var(--brand-primary);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: var(--space-4) var(--space-5);
+  margin: var(--space-5) 0;
+}
+.legal-callout p { margin: 0; color: var(--color-text); font-weight: 500; }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <span class="nav-logo">T</span><span>TruthStamp</span>
+    </a>
+    <div class="nav-links">
+      <a href="explorer.html">Explorer</a>
+      <a href="verify.html">Verify</a>
+      <a href="trust.html">Trust</a>
+      <a href="stamp.html" class="btn btn-primary btn-sm">+ New stamp</a>
+    </div>
+  </div>
+</nav>
+
+<main class="legal-shell">
+  <h1>Legal Disclaimer</h1>
+  <p class="legal-updated">Last updated: June 2026</p>
+
+  <div class="legal-callout">
+    <p>
+      TruthStamp provides cryptographic timestamping services. It proves that a hash of
+      your content existed at a specific time — it does not establish authorship,
+      originality, ownership, or non-repudiation in all contexts. Nothing on this site
+      is legal advice, and evidentiary value depends on your jurisdiction.
+    </p>
+  </div>
+
+  <h2>What TruthStamp Proves</h2>
+  <p>
+    When you create a stamp, TruthStamp computes a cryptographic hash (fingerprint) of
+    your content and records that hash, together with a timestamp, on the MegaETH
+    blockchain — optionally also on Arweave and Bitcoin. This creates a permanent,
+    independently verifiable record that:
+  </p>
+  <ul>
+    <li>A piece of content producing this exact hash existed at the recorded time</li>
+    <li>The record has not been altered since it was created (the blockchain is immutable)</li>
+    <li>The record was submitted by the wallet/account associated with the stamp</li>
+  </ul>
+
+  <h2>What TruthStamp Does Not Prove</h2>
+  <p>
+    A TruthStamp proof, on its own, does <strong>not</strong> establish:
+  </p>
+  <ul>
+    <li><strong>Authorship</strong> — that you personally created the content, as opposed to obtaining it from someone else</li>
+    <li><strong>Originality</strong> — that the content is novel, non-infringing, or free of third-party rights</li>
+    <li><strong>Ownership</strong> — of any intellectual property, copyright, trademark, or other rights in the content</li>
+    <li><strong>Content integrity beyond the hash</strong> — TruthStamp records a hash; it does not validate the truth, accuracy, or legality of the underlying content</li>
+    <li><strong>Identity</strong> — the <code>creatorIdentity</code> field is an application-layer claim made by the TruthStamp platform on behalf of the user, not a cryptographically authenticated identity verified independently by the blockchain (except where the user signs with their own wallet)</li>
+  </ul>
+
+  <h2>Evidentiary Value Varies by Jurisdiction</h2>
+  <p>
+    Laws regarding the admissibility and weight of blockchain timestamps as evidence
+    differ significantly between countries, and in many jurisdictions there is little
+    or no settled case law on the subject. A TruthStamp proof may be useful as
+    <strong>supporting evidence</strong> of when content existed — for example, to
+    demonstrate priority in a dispute, or to corroborate a claim — but it should not be
+    assumed to be conclusive, sufficient, or admissible on its own in any legal,
+    regulatory, or contractual context.
+  </p>
+  <p>
+    If you require a timestamp or proof for a matter with legal, regulatory, or
+    financial consequences, consult a qualified legal professional in the relevant
+    jurisdiction before relying on TruthStamp for that purpose.
+  </p>
+
+  <h2>Not Legal Advice</h2>
+  <p>
+    Nothing on truthstamp.xyz, in any TruthStamp proof, certificate, or related
+    documentation, constitutes legal advice. TruthStamp is not a law firm and does
+    not provide legal services. Use of TruthStamp does not create an attorney-client
+    relationship of any kind.
+  </p>
+
+  <h2>Permanence and Independence</h2>
+  <p>
+    Public stamps are recorded on the MegaETH blockchain and stored permanently on
+    Arweave; optionally, a reference may also be anchored to Bitcoin via OP_RETURN.
+    These records can be independently verified by anyone, using any compatible RPC
+    node, Arweave gateway, or Bitcoin block explorer — without relying on TruthStamp's
+    servers, database, or continued operation. See
+    <a href="trust.html" style="color:var(--brand-primary)">Trust &amp; Permanence</a> and
+    <a href="verify.html" style="color:var(--brand-primary)">Verify a Proof</a> for details.
+  </p>
+  <p>
+    However, TruthStamp itself — the website, dashboard, accounts, and any
+    convenience features — is a centralized service and may be modified,
+    discontinued, or become unavailable. This does not affect the underlying
+    on-chain and on-Arweave records, which remain independently verifiable.
+  </p>
+
+  <h2>No Warranty</h2>
+  <p>
+    TruthStamp is provided "as is" without warranties of any kind, express or implied,
+    including but not limited to warranties of merchantability, fitness for a
+    particular purpose, or non-infringement. TruthStamp does not warrant that the
+    service will be uninterrupted, error-free, or that any particular legal outcome
+    will result from use of a TruthStamp proof.
+  </p>
+
+  <h2>Questions</h2>
+  <p>
+    For questions about this disclaimer, see our
+    <a href="terms.html" style="color:var(--brand-primary)">Terms of Service</a> and
+    <a href="privacy.html" style="color:var(--brand-primary)">Privacy Policy</a>,
+    or reach out via the links in the footer.
+  </p>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="flex gap-2" style="align-items: center;">
+      <span class="nav-logo">T</span>
+      <span style="font-weight: 500; color: var(--color-text);">TruthStamp</span>
+    </div>
+    <div class="footer-links">
+      <a href="trust.html">Trust</a>
+      <a href="verify.html">Verify</a>
+      <a href="terms.html">Terms</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="disclaimer.html">Disclaimer</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
