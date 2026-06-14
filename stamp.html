@@ -612,8 +612,8 @@
         }
         // Combine date + time as UTC
         sealedUntil = Math.floor(new Date(`${sealDateInput}T${sealTimeInput}:00Z`).getTime() / 1000);
-        if (sealedUntil <= Math.floor(Date.now() / 1000) + 300) {
-          alert('Reveal date must be at least 5 minutes in the future.');
+        if (sealedUntil <= Math.floor(Date.now() / 1000) + 600) {
+          alert('Reveal date must be at least 10 minutes in the future.');
           return;
         }
       }
@@ -879,6 +879,12 @@
             return;
           }
           sealedUntil = Math.floor(new Date(`${sealDate}T${sealTime}:00Z`).getTime() / 1000);
+          if (sealedUntil <= Math.floor(Date.now() / 1000) + 600) {
+            showError('Reveal date must be at least 10 minutes in the future.');
+            if (btn) { btn.disabled = false; btn.classList.remove('btn-spinning'); }
+            updateCreditCost('file');
+            return;
+          }
         }
 
         const supabaseUrl = window.TRUTHSTAMP_CONFIG.SUPABASE_URL;
@@ -973,8 +979,8 @@
             return;
           }
           sealedUntil = Math.floor(new Date(`${sealDate}T${sealTime}:00Z`).getTime() / 1000);
-          if (sealedUntil <= Math.floor(Date.now() / 1000) + 300) {
-            showError('Reveal date must be at least 5 minutes in the future.');
+          if (sealedUntil <= Math.floor(Date.now() / 1000) + 600) {
+            showError('Reveal date must be at least 10 minutes in the future.');
             if (btn) { btn.disabled = false; btn.classList.remove('btn-spinning'); }
             return;
           }
