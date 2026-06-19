@@ -14,282 +14,131 @@
   <script src="js/config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/analytics.js"></script>
-
   <style>
-    .credits-shell {
-      max-width: 860px;
-      margin: 0 auto;
-      padding: var(--space-8) var(--space-5) var(--space-12);
-    }
-    .credits-header { margin-bottom: var(--space-8); }
+    .credits-shell { max-width: 860px; margin: 0 auto; padding: var(--space-8) var(--space-5) var(--space-12); }
+    .credits-header { margin-bottom: var(--space-6); }
     .credits-title { font-size: var(--text-2xl); font-weight: 700; margin: 0 0 var(--space-2); letter-spacing: -0.01em; }
     .credits-subtitle { color: var(--color-text-secondary); margin: 0; font-size: var(--text-base); }
-
-    .balance-bar {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: var(--space-4) var(--space-5);
-      background: var(--brand-primary-light);
-      border-radius: var(--radius-lg);
-      margin-bottom: var(--space-8);
-      flex-wrap: wrap; gap: var(--space-3);
-    }
+    /* Toggle */
+    .credit-toggle { display: inline-flex; background: var(--color-surface-alt); border: 1px solid var(--color-border); border-radius: var(--radius-full); padding: 4px; margin-bottom: var(--space-6); }
+    .credit-toggle button { font-family: inherit; font-size: var(--text-sm); font-weight: 600; padding: 8px 20px; border: none; background: none; color: var(--color-text-secondary); border-radius: var(--radius-full); cursor: pointer; transition: all .15s; }
+    .credit-toggle button.active { background: var(--brand-primary); color: #fff; }
+    .balance-bar { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4) var(--space-5); background: var(--brand-primary-light); border-radius: var(--radius-lg); margin-bottom: var(--space-6); flex-wrap: wrap; gap: var(--space-3); }
     .balance-label { font-size: var(--text-sm); color: var(--color-text-secondary); margin: 0; }
     .balance-amount { font-size: var(--text-xl); font-weight: 700; color: var(--brand-primary); margin: 0; }
-
-    /* Pack grid */
-    .pack-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: var(--space-4);
-      margin-bottom: var(--space-8);
-    }
-
-    .pack-card {
-      background: var(--color-surface);
-      border: 2px solid var(--color-border);
-      border-radius: var(--radius-xl);
-      padding: var(--space-6);
-      cursor: pointer;
-      transition: all 0.15s;
-      position: relative;
-      text-align: center;
-    }
+    .pack-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-8); }
+    .pack-card { background: var(--color-surface); border: 2px solid var(--color-border); border-radius: var(--radius-xl); padding: var(--space-6); cursor: pointer; transition: all 0.15s; position: relative; text-align: center; }
     .pack-card:hover { border-color: var(--brand-primary); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
     .pack-card.selected { border-color: var(--brand-primary); background: var(--brand-primary-light); }
-
-    .pack-badge {
-      position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-      background: var(--brand-primary); color: white;
-      font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-      padding: 3px 10px; border-radius: var(--radius-full);
-      white-space: nowrap;
-    }
-
+    .pack-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--brand-primary); color: white; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 10px; border-radius: var(--radius-full); white-space: nowrap; }
     .pack-name { font-size: var(--text-base); font-weight: 600; margin: 0 0 var(--space-2); }
     .pack-credits { font-size: 2.5rem; font-weight: 800; color: var(--brand-primary); margin: 0; line-height: 1; }
     .pack-credits-label { font-size: var(--text-xs); color: var(--color-text-muted); margin: 0 0 var(--space-3); }
     .pack-price { font-size: var(--text-lg); font-weight: 600; margin: 0 0 2px; }
     .pack-per-credit { font-size: var(--text-xs); color: var(--color-text-muted); margin: 0; }
-
-    .pack-uses {
-      margin-top: var(--space-4);
-      padding-top: var(--space-4);
-      border-top: 1px solid var(--color-border);
-    }
+    .pack-uses { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
     .pack-use { font-size: var(--text-xs); color: var(--color-text-secondary); margin: 2px 0; }
-
-    /* CTA */
-    .checkout-section {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-xl);
-      padding: var(--space-6);
-    }
-    .checkout-summary {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: var(--space-5); flex-wrap: wrap; gap: var(--space-3);
-    }
+    .checkout-section { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: var(--space-6); }
+    .checkout-summary { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-5); flex-wrap: wrap; gap: var(--space-3); }
     .checkout-selected { font-size: var(--text-base); font-weight: 600; margin: 0; }
     .checkout-price { font-size: var(--text-xl); font-weight: 700; color: var(--brand-primary); margin: 0; }
-
-    .checkout-notes {
-      display: flex; gap: var(--space-4); flex-wrap: wrap;
-      margin-top: var(--space-4);
-      padding-top: var(--space-4);
-      border-top: 1px solid var(--color-border);
-    }
+    .checkout-notes { display: flex; gap: var(--space-4); flex-wrap: wrap; margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
     .checkout-note { font-size: var(--text-xs); color: var(--color-text-muted); display: flex; align-items: center; gap: 4px; }
-
-    .error-msg {
-      padding: var(--space-3) var(--space-4);
-      background: #FEE2E2; color: #991B1B; border-radius: var(--radius-md);
-      font-size: var(--text-sm); margin-top: var(--space-4); display: none;
-    }
-    .success-msg {
-      padding: var(--space-4) var(--space-5);
-      background: #D1FAE5; color: #065F46; border-radius: var(--radius-lg);
-      font-size: var(--text-base); font-weight: 500; margin-top: var(--space-4); display: none;
-      text-align: center;
-    }
-
-    @media (max-width: 600px) {
-      .pack-grid { grid-template-columns: 1fr 1fr; }
-      .credits-shell { padding: var(--space-5) var(--space-4) var(--space-8); }
-    }
-    @media (max-width: 400px) {
-      .pack-grid { grid-template-columns: 1fr; }
-    }
+    .error-msg { padding: var(--space-3) var(--space-4); background: #FEE2E2; color: #991B1B; border-radius: var(--radius-md); font-size: var(--text-sm); margin-top: var(--space-4); display: none; }
+    .success-msg { padding: var(--space-4) var(--space-5); background: #D1FAE5; color: #065F46; border-radius: var(--radius-lg); font-size: var(--text-base); font-weight: 500; margin-top: var(--space-4); display: none; text-align: center; }
+    @media (max-width: 600px) { .pack-grid { grid-template-columns: 1fr 1fr; } .credits-shell { padding: var(--space-5) var(--space-4) var(--space-8); } }
+    @media (max-width: 400px) { .pack-grid { grid-template-columns: 1fr; } }
   </style>
   <script src="js/nav.js"></script>
 </head>
 <body>
   <nav class="nav">
     <div class="nav-inner">
-      <a href="index.html" class="nav-brand">
-        <span class="nav-logo">T</span><span>TruthStamp</span>
-      </a>
+      <a href="index.html" class="nav-brand"><span class="nav-logo">T</span><span>TruthStamp</span></a>
       <div class="nav-links">
         <a href="dashboard.html">My stamps</a>
+        <a href="api-keys.html">API Keys</a>
         <a href="stamp.html" class="btn btn-primary btn-sm">+ New stamp</a>
         <span id="nav-user-avatar" style="width:28px;height:28px;border-radius:50%;background:var(--brand-accent-light);color:var(--brand-accent);display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">?</span>
       </div>
     </div>
   </nav>
-
   <main class="credits-shell">
     <div class="credits-header">
       <h1 class="credits-title">Buy credits</h1>
-      <p class="credits-subtitle">One-time purchase. Credits never expire. Use for text, file, or URL stamps.</p>
+      <p class="credits-subtitle">One-time purchase. Credits never expire.</p>
     </div>
 
-    <!-- Current balance bar -->
+    <!-- Web / API toggle -->
+    <div class="credit-toggle">
+      <button id="toggle-web" class="active" onclick="switchCreditType('web')">Web Credits</button>
+      <button id="toggle-api" onclick="switchCreditType('api')">API Credits</button>
+    </div>
+
+    <!-- Balance bar -->
     <div class="balance-bar">
       <div>
-        <p class="balance-label">Your current balance</p>
+        <p class="balance-label" id="balance-label">Your current balance</p>
         <p class="balance-amount" id="current-balance">Loading...</p>
       </div>
-      <div style="font-size: var(--text-sm); color: var(--color-text-secondary);">
+      <div style="font-size: var(--text-sm); color: var(--color-text-secondary);" id="usage-hint">
         Text = 1 credit &nbsp;·&nbsp; File = 3 credits &nbsp;·&nbsp; URL = 2 credits
       </div>
     </div>
 
-    <!-- Currency note for international users -->
     <p id="currency-note" style="display:none; font-size: var(--text-xs); color: var(--color-text-muted); text-align:center; margin-bottom: var(--space-4); padding: var(--space-2) var(--space-4); background: var(--color-surface-alt); border-radius: var(--radius-md);"></p>
 
-    <!-- Pack selection -->
-    <div class="pack-grid">
-
-      <div class="pack-card" id="pack-starter" onclick="selectPack('starter')">
-        <p class="pack-name">Starter</p>
-        <p class="pack-credits">50</p>
-        <p class="pack-credits-label">credits</p>
-        <p class="pack-price">₹830</p>
-        <p class="pack-per-credit">₹16.60 per credit</p>
-        <div class="pack-uses">
-          <p class="pack-use">50 text stamps</p>
-          <p class="pack-use">or 16 file stamps</p>
-        </div>
-      </div>
-
-      <div class="pack-card" id="pack-standard" onclick="selectPack('standard')">
-        <p class="pack-name">Standard</p>
-        <p class="pack-credits">125</p>
-        <p class="pack-credits-label">credits</p>
-        <p class="pack-price">₹2,075</p>
-        <p class="pack-per-credit">₹16.60 per credit</p>
-        <div class="pack-uses">
-          <p class="pack-use">125 text stamps</p>
-          <p class="pack-use">or 41 file stamps</p>
-        </div>
-      </div>
-
-      <div class="pack-card" id="pack-pro" onclick="selectPack('pro')" style="border-color: var(--brand-primary);">
-        <span class="pack-badge">⭐ Best value</span>
-        <p class="pack-name">Pro Pack</p>
-        <p class="pack-credits">300</p>
-        <p class="pack-credits-label">credits</p>
-        <p class="pack-price">₹4,150</p>
-        <p class="pack-per-credit">₹13.83 per credit</p>
-        <div class="pack-uses">
-          <p class="pack-use">300 text stamps</p>
-          <p class="pack-use">or 100 file stamps</p>
-        </div>
-      </div>
-
-      <div class="pack-card" id="pack-power" onclick="selectPack('power')">
-        <p class="pack-name">Power</p>
-        <p class="pack-credits">700</p>
-        <p class="pack-credits-label">credits</p>
-        <p class="pack-price">₹8,300</p>
-        <p class="pack-per-credit">₹11.86 per credit</p>
-        <div class="pack-uses">
-          <p class="pack-use">700 text stamps</p>
-          <p class="pack-use">or 233 file stamps</p>
-        </div>
-      </div>
-
+    <!-- Pack grid (rendered dynamically) -->
+    <div class="pack-grid" id="pack-grid">
+      <div style="grid-column:1/-1; text-align:center; padding:var(--space-8); color:var(--color-text-muted);">Loading packs…</div>
     </div>
 
-    <!-- Checkout section -->
+    <!-- Checkout -->
     <div class="checkout-section">
       <div class="checkout-summary">
         <div>
           <p class="checkout-selected" id="checkout-selected-text">Select a pack above</p>
-          <p style="font-size: var(--text-sm); color: var(--color-text-muted); margin: 2px 0 0;">
-            Credits added instantly after payment
-          </p>
+          <p style="font-size: var(--text-sm); color: var(--color-text-muted); margin: 2px 0 0;">Credits added instantly after payment</p>
         </div>
         <div style="text-align:right;">
           <p class="checkout-price" id="checkout-price-display" style="display:none;"></p>
           <p id="checkout-eth-display" style="display:none; font-size:var(--text-sm); color:var(--color-text-muted); margin:2px 0 0;"></p>
         </div>
       </div>
-
-      <!-- Razorpay button -->
-      <button
-        class="btn btn-primary btn-block btn-lg"
-        id="pay-btn"
-        onclick="startCheckout()"
-        disabled
-        style="opacity:0.5;"
-      >
-        Pay with Razorpay
-      </button>
-
-      <!-- Divider -->
+      <button class="btn btn-primary btn-block btn-lg" id="pay-btn" onclick="startCheckout()" disabled style="opacity:0.5;">Pay with Razorpay</button>
       <div style="display:flex; align-items:center; gap:var(--space-3); margin:var(--space-4) 0;">
         <div style="flex:1; height:1px; background:var(--color-border);"></div>
         <span style="font-size:var(--text-xs); color:var(--color-text-muted); white-space:nowrap;">or pay with crypto</span>
         <div style="flex:1; height:1px; background:var(--color-border);"></div>
       </div>
-
-      <!-- Crypto payment button -->
-      <button
-        class="btn btn-block btn-lg"
-        id="crypto-pay-btn"
-        onclick="startCryptoCheckout()"
-        disabled
-        style="opacity:0.5; background:var(--color-surface); border:2px solid var(--color-border); color:var(--color-text); display:flex; align-items:center; justify-content:center; gap:var(--space-2);"
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-        </svg>
-        Pay with ETH on MegaETH
-        <span id="crypto-btn-eth" style="font-size:var(--text-sm); color:var(--color-text-muted);"></span>
+      <button class="btn btn-block btn-lg" id="crypto-pay-btn" onclick="startCryptoCheckout()" disabled style="opacity:0.5; background:var(--color-surface); border:2px solid var(--color-border); color:var(--color-text); display:flex; align-items:center; justify-content:center; gap:var(--space-2);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        Pay with ETH on MegaETH <span id="crypto-btn-eth" style="font-size:var(--text-sm); color:var(--color-text-muted);"></span>
       </button>
-
-      <!-- Crypto disclaimer -->
       <div id="crypto-disclaimer" style="display:none; margin-top:var(--space-4); padding:var(--space-4); background:var(--color-surface-alt); border-radius:var(--radius-lg); border:1px solid var(--color-border);">
-        <p style="font-size:var(--text-sm); font-weight:600; margin:0 0 var(--space-2); color:var(--color-text);">
-          🔒 Fully trustless — connect wallet, sign the transaction
-        </p>
-        <p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0 0 var(--space-2); line-height:1.6;">
-          No approvals needed · No wallet permissions requested · Just a simple ETH transfer
-        </p>
-        <div style="display:flex; flex-direction:column; gap:4px;">
-          <p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0;">✓ Safe &amp; simple — standard ETH transfer, nothing else</p>
-          <p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0;">✓ No smart contract interaction — direct wallet-to-wallet</p>
-          <p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0;">✓ Credits added automatically once transaction confirms</p>
-          <p style="font-size:var(--text-xs); color:var(--color-text-secondary); margin:0; margin-top:4px;">💡 Tip: use a fresh wallet if you prefer extra privacy</p>
-        </div>
+        <p style="font-size:var(--text-sm); font-weight:600; margin:0 0 var(--space-2); color:var(--color-text);">🔒 Fully trustless — connect wallet, sign the transaction</p>
+        <p style="font-size:var(--text-xs); color:var(--color-text-muted); margin:0; line-height:1.6;">No approvals needed · No wallet permissions requested · Just a simple ETH transfer. Credits added automatically once the transaction confirms.</p>
       </div>
-
       <div class="error-msg" id="error-msg"></div>
       <div class="success-msg" id="success-msg"></div>
-
       <div class="checkout-notes" style="margin-top:var(--space-4);">
         <span class="checkout-note">🔒 Secured by Razorpay</span>
-        <span class="checkout-note">✓ UPI, cards, net banking accepted</span>
-        <span class="checkout-note">✓ ETH on MegaETH accepted</span>
+        <span class="checkout-note">✓ UPI, cards, net banking</span>
+        <span class="checkout-note">✓ ETH on MegaETH</span>
         <span class="checkout-note">✓ Credits never expire</span>
       </div>
     </div>
   </main>
 
   <script>
-    // ── ETH price fetch ────────────────────────────────────────────────────
-    let ethPriceUsd = null; // cached ETH/USD price
+    // ── State ──────────────────────────────────────────────────────────────
+    let CURRENT_TYPE = 'web';          // 'web' | 'api'
+    let PACKS = { web: [], api: [] };  // loaded from DB
+    let selectedPack = null;
+    let webBalance = 0, apiBalance = 0;
+    let ethPriceUsd = null;
 
+    // ── ETH price ──────────────────────────────────────────────────────────
     async function getEthPrice() {
       if (ethPriceUsd) return ethPriceUsd;
       try {
@@ -297,513 +146,319 @@
         const data = await res.json();
         ethPriceUsd = data.ethereum.usd;
         return ethPriceUsd;
-      } catch {
-        return 3000; // fallback price if API fails
-      }
+      } catch { return 3000; }
     }
-
-    function usdToEth(usdAmount, ethPrice) {
-      return (usdAmount / ethPrice).toFixed(6);
-    }
-
-    function ethToWei(ethAmount) {
-      // Convert ETH string to wei (BigInt)
-      const parts = ethAmount.toString().split('.');
+    function usdToEth(usd, price) { return (usd / price).toFixed(6); }
+    function ethToWei(eth) {
+      const parts = eth.toString().split('.');
       const whole = BigInt(parts[0]) * BigInt(1e18);
-      const decimals = parts[1] ? parts[1].padEnd(18, '0').slice(0, 18) : '0'.repeat(18);
-      return whole + BigInt(decimals);
+      const dec = parts[1] ? parts[1].padEnd(18,'0').slice(0,18) : '0'.repeat(18);
+      return whole + BigInt(dec);
     }
-    // ── Currency detection — IP-based (works correctly with VPN) ─────────────
-    // ipapi.co free tier: 1000 req/day, no key needed, returns real IP country.
-    // Locale/timezone only used as instant fallback if IP API fails or is slow.
-    // INR for India (country code IN), USD for everyone else.
 
-    // Instant locale-based guess shown immediately (no flicker on page load)
+    // ── Currency detection ───────────────────────────────────────────────────
     function localeCurrencyGuess() {
-      const tz     = Intl.DateTimeFormat().resolvedOptions().timeZone ?? '';
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone ?? '';
       const locale = navigator.language ?? '';
-      const isIndia = tz.startsWith('Asia/Calcutta') ||
-                      tz.startsWith('Asia/Kolkata')  ||
-                      locale.startsWith('en-IN')      ||
-                      locale.startsWith('hi');
+      const isIndia = tz.startsWith('Asia/Calcutta') || tz.startsWith('Asia/Kolkata') || locale.startsWith('en-IN') || locale.startsWith('hi');
       return isIndia ? 'INR' : 'USD';
     }
-
-    // IP-based detection — overrides locale guess with real country from IP
     async function detectCurrencyFromIP() {
       try {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 4000);
-        const res  = await fetch('https://ipapi.co/json/', { signal: controller.signal });
-        clearTimeout(timer);
+        const c = new AbortController();
+        const t = setTimeout(() => c.abort(), 4000);
+        const res = await fetch('https://ipapi.co/json/', { signal: c.signal });
+        clearTimeout(t);
         const data = await res.json();
-        const code = (data.country_code || '').toUpperCase();
-        return code === 'IN' ? 'INR' : 'USD';
-      } catch(e) {
-        // Silently fall back to locale guess — no console warning needed
-        return null;
-      }
+        return (data.country_code || '').toUpperCase() === 'IN' ? 'INR' : 'USD';
+      } catch { return null; }
     }
-
-    // Start with locale guess so prices show instantly
     let USER_CURRENCY = localeCurrencyGuess();
 
-    // Pricing in both currencies
-    // INR: ₹830, ₹2075, ₹4150, ₹8300
-    // USD: $10, $25, $50, $100 (rounded from INR at ~₹83/USD)
-    const PACK_PRICING = {
-      INR: {
-        starter:  { display: '₹830',    perCredit: '₹16.60', amountPaise: 83000,  amountSmallest: 83000,  usdEquivalent: 10  },
-        standard: { display: '₹2,075',  perCredit: '₹16.60', amountPaise: 207500, amountSmallest: 207500, usdEquivalent: 25  },
-        pro:      { display: '₹4,150',  perCredit: '₹13.83', amountPaise: 415000, amountSmallest: 415000, usdEquivalent: 50  },
-        power:    { display: '₹8,300',  perCredit: '₹11.86', amountPaise: 830000, amountSmallest: 830000, usdEquivalent: 100 },
-      },
-      USD: {
-        starter:  { display: '$10',  perCredit: '$0.20', amountPaise: 83000,  amountSmallest: 1000,  usdEquivalent: 10  },
-        standard: { display: '$25',  perCredit: '$0.20', amountPaise: 207500, amountSmallest: 2500,  usdEquivalent: 25  },
-        pro:      { display: '$50',  perCredit: '$0.17', amountPaise: 415000, amountSmallest: 5000,  usdEquivalent: 50  },
-        power:    { display: '$100', perCredit: '$0.14', amountPaise: 830000, amountSmallest: 10000, usdEquivalent: 100 },
-      }
-    };
+    // ── Format helpers ───────────────────────────────────────────────────────
+    function fmtPrice(pack) {
+      if (USER_CURRENCY === 'INR') return '₹' + (pack.amount_inr / 100).toLocaleString('en-IN');
+      return '$' + (pack.amount_usd / 100).toFixed(pack.amount_usd % 100 === 0 ? 0 : 2);
+    }
+    function perCredit(pack) {
+      if (USER_CURRENCY === 'INR') return '₹' + (pack.amount_inr / 100 / pack.credits).toFixed(2) + ' per credit';
+      return '$' + (pack.amount_usd / 100 / pack.credits).toFixed(2) + ' per credit';
+    }
+    function usdEquivalent(pack) { return pack.amount_usd / 100; }
 
-    // PACKS as a function so it always uses current USER_CURRENCY
-    function getPacks() {
-      return {
-        starter:  { name: 'Starter',  credits: 50,  ...PACK_PRICING[USER_CURRENCY].starter  },
-        standard: { name: 'Standard', credits: 125, ...PACK_PRICING[USER_CURRENCY].standard },
-        pro:      { name: 'Pro Pack', credits: 300, ...PACK_PRICING[USER_CURRENCY].pro      },
-        power:    { name: 'Power',    credits: 700, ...PACK_PRICING[USER_CURRENCY].power    },
-      };
+    // ── Load packs from DB ───────────────────────────────────────────────────
+    async function loadPacks() {
+      const { data, error } = await window.tsDB
+        .from('credit_packs')
+        .select('pack_id, credit_type, name, credits, amount_inr, amount_usd, active, sort_order')
+        .eq('active', true)
+        .order('sort_order', { ascending: true });
+      if (error) { showError('Could not load packs: ' + error.message); return; }
+      PACKS = { web: [], api: [] };
+      (data || []).forEach(p => { (PACKS[p.credit_type] ??= []).push(p); });
+      renderPacks();
     }
 
-    // Update price display — called on load and again after IP check resolves
-    function updatePriceDisplay() {
-      const prices = PACK_PRICING[USER_CURRENCY];
-      document.querySelector('#pack-starter .pack-price').textContent       = prices.starter.display;
-      document.querySelector('#pack-starter .pack-per-credit').textContent  = prices.starter.perCredit + ' per credit';
-      document.querySelector('#pack-standard .pack-price').textContent      = prices.standard.display;
-      document.querySelector('#pack-standard .pack-per-credit').textContent = prices.standard.perCredit + ' per credit';
-      document.querySelector('#pack-pro .pack-price').textContent           = prices.pro.display;
-      document.querySelector('#pack-pro .pack-per-credit').textContent      = prices.pro.perCredit + ' per credit';
-      document.querySelector('#pack-power .pack-price').textContent         = prices.power.display;
-      document.querySelector('#pack-power .pack-per-credit').textContent    = prices.power.perCredit + ' per credit';
-
-      // If a pack was already selected, update the checkout summary too
-      if (selectedPack) {
-        const pack = getPacks()[selectedPack];
-        const priceEl = document.getElementById('checkout-price-display');
-        if (priceEl) priceEl.textContent = pack.display;
+    function renderPacks() {
+      const grid = document.getElementById('pack-grid');
+      const packs = PACKS[CURRENT_TYPE] || [];
+      if (packs.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:var(--space-8);color:var(--color-text-muted);">No packs available right now.</div>`;
+        return;
       }
+      // Mark the middle-upper pack as "best value" (highest credits-per-currency)
+      let bestId = null, bestRatio = 0;
+      packs.forEach(p => { const r = p.credits / p.amount_usd; if (r > bestRatio) { bestRatio = r; bestId = p.pack_id; } });
+      grid.innerHTML = packs.map(p => `
+        <div class="pack-card${p.pack_id === bestId ? '' : ''}" id="pack-${p.pack_id}" onclick="selectPack('${p.pack_id}')" ${p.pack_id === bestId ? 'style="border-color:var(--brand-primary);"' : ''}>
+          ${p.pack_id === bestId ? '<span class="pack-badge">⭐ Best value</span>' : ''}
+          <p class="pack-name">${p.name}</p>
+          <p class="pack-credits">${p.credits.toLocaleString()}</p>
+          <p class="pack-credits-label">${CURRENT_TYPE === 'api' ? 'API credits' : 'credits'}</p>
+          <p class="pack-price">${fmtPrice(p)}</p>
+          <p class="pack-per-credit">${perCredit(p)}</p>
+        </div>
+      `).join('');
+      // Reset selection on tab switch
+      selectedPack = null;
+      document.getElementById('checkout-selected-text').textContent = 'Select a pack above';
+      document.getElementById('checkout-price-display').style.display = 'none';
+      document.getElementById('checkout-eth-display').style.display = 'none';
+      const pb = document.getElementById('pay-btn'); pb.disabled = true; pb.style.opacity = '0.5'; pb.textContent = 'Pay with Razorpay';
+      const cb = document.getElementById('crypto-pay-btn'); cb.disabled = true; cb.style.opacity = '0.5';
+      document.getElementById('crypto-disclaimer').style.display = 'none';
+    }
 
-      // Currency note
+    function getPack(packId) { return (PACKS[CURRENT_TYPE] || []).find(p => p.pack_id === packId); }
+
+    // ── Toggle ───────────────────────────────────────────────────────────────
+    function switchCreditType(type) {
+      CURRENT_TYPE = type;
+      document.getElementById('toggle-web').classList.toggle('active', type === 'web');
+      document.getElementById('toggle-api').classList.toggle('active', type === 'api');
+      // Balance + usage hint
+      document.getElementById('balance-label').textContent = type === 'api' ? 'Your API credit balance' : 'Your current balance';
+      document.getElementById('current-balance').textContent = (type === 'api' ? apiBalance : webBalance) + (type === 'api' ? ' API credits' : ' credits');
+      document.getElementById('usage-hint').innerHTML = type === 'api'
+        ? 'API: Text = 1 credit &nbsp;·&nbsp; URL = 2 credits'
+        : 'Text = 1 credit &nbsp;·&nbsp; File = 3 credits &nbsp;·&nbsp; URL = 2 credits';
+      hideError();
+      document.getElementById('success-msg').style.display = 'none';
+      renderPacks();
+    }
+
+    function updateCurrencyNote() {
       const note = document.getElementById('currency-note');
-      if (note) {
-        if (USER_CURRENCY === 'USD') {
-          note.textContent = '💳 International cards accepted. Charged in USD via Razorpay — Visa, Mastercard, Amex supported.';
-          note.style.display = 'block';
-        } else {
-          note.style.display = 'none';
-        }
-      }
+      if (USER_CURRENCY === 'USD') {
+        note.textContent = '💳 International cards accepted. Charged in USD via Razorpay.';
+        note.style.display = 'block';
+      } else { note.style.display = 'none'; }
     }
 
-    // Run IP detection in background — updates UI if currency differs from locale guess
-    (async function initCurrencyFromIP() {
-      const ipCurrency = await detectCurrencyFromIP();
-      if (ipCurrency && ipCurrency !== USER_CURRENCY) {
-        USER_CURRENCY = ipCurrency;
-        updatePriceDisplay(); // silently refresh prices
-      }
-    })();
-
-    let selectedPack = null;
-
-    // ── Auth guard + load balance ──────────────────────────────────────────
+    // ── Auth + balances ──────────────────────────────────────────────────────
     (async function() {
-      updatePriceDisplay();
-
       if (window.tsRequireAuth) {
         const user = await window.tsRequireAuth();
         if (!user) return;
-
         const profile = await window.tsAuth.getProfile();
         if (profile) {
-          document.getElementById('current-balance').textContent =
-            `${profile.credits_balance ?? 0} credits`;
+          webBalance = profile.credits_balance ?? 0;
+          apiBalance = profile.api_credits_balance ?? 0;
+          document.getElementById('current-balance').textContent = webBalance + ' credits';
           const name = profile.display_name || user.email || '?';
-          const initials = name.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase();
-          document.getElementById('nav-user-avatar').textContent = initials;
+          document.getElementById('nav-user-avatar').textContent = name.replace(/[^A-Za-z]/g,'').slice(0,2).toUpperCase();
         }
       }
-
-      // Pre-select Pro pack (best value)
-      selectPack('pro');
+      updateCurrencyNote();
+      await loadPacks();
+      // Background IP currency refine
+      const ipCur = await detectCurrencyFromIP();
+      if (ipCur && ipCur !== USER_CURRENCY) { USER_CURRENCY = ipCur; updateCurrencyNote(); renderPacks(); }
     })();
 
-    // ── Pack selection ─────────────────────────────────────────────────────
+    // ── Pack selection ───────────────────────────────────────────────────────
     function selectPack(packId) {
       document.querySelectorAll('.pack-card').forEach(el => el.classList.remove('selected'));
       document.getElementById(`pack-${packId}`)?.classList.add('selected');
       selectedPack = packId;
-
-      const pack = getPacks()[packId];
-      document.getElementById('checkout-selected-text').textContent =
-        `${pack.name} — ${pack.credits} credits`;
-      document.getElementById('checkout-price-display').textContent = pack.display;
+      const pack = getPack(packId);
+      if (!pack) return;
+      const label = CURRENT_TYPE === 'api' ? 'API credits' : 'credits';
+      document.getElementById('checkout-selected-text').textContent = `${pack.name} — ${pack.credits.toLocaleString()} ${label}`;
+      document.getElementById('checkout-price-display').textContent = fmtPrice(pack);
       document.getElementById('checkout-price-display').style.display = 'block';
-
-      // Enable Razorpay button
       const btn = document.getElementById('pay-btn');
-      btn.disabled = false;
-      btn.style.opacity = '1';
-      btn.textContent = `Pay ${pack.display} with Razorpay`;
-
-      // Enable crypto button and show ETH estimate
+      btn.disabled = false; btn.style.opacity = '1';
+      btn.textContent = `Pay ${fmtPrice(pack)} with Razorpay`;
       const cryptoBtn = document.getElementById('crypto-pay-btn');
-      cryptoBtn.disabled = false;
-      cryptoBtn.style.opacity = '1';
+      cryptoBtn.disabled = false; cryptoBtn.style.opacity = '1';
       document.getElementById('crypto-disclaimer').style.display = 'block';
-
-      // Fetch live ETH price and update display
-      // Always use USD equivalent for ETH conversion regardless of display currency
-      const usdAmount = pack.usdEquivalent;
-      getEthPrice().then(ethPrice => {
-        const ethAmount = usdToEth(usdAmount, ethPrice);
-        document.getElementById('checkout-eth-display').textContent = `≈ ${ethAmount} ETH`;
+      getEthPrice().then(price => {
+        const eth = usdToEth(usdEquivalent(pack), price);
+        document.getElementById('checkout-eth-display').textContent = `≈ ${eth} ETH`;
         document.getElementById('checkout-eth-display').style.display = 'block';
-        document.getElementById('crypto-btn-eth').textContent = `(${ethAmount} ETH)`;
+        document.getElementById('crypto-btn-eth').textContent = `(${eth} ETH)`;
       });
     }
 
-    // ── Razorpay checkout ──────────────────────────────────────────────────
+    // ── Razorpay ─────────────────────────────────────────────────────────────
     async function startCheckout() {
       if (!selectedPack) return;
-
       const btn = document.getElementById('pay-btn');
       hideError();
-
-      // Show loading state
-      btn.disabled = true;
-      btn.textContent = 'Creating order...';
-      btn.style.opacity = '0.7';
-
+      btn.disabled = true; btn.textContent = 'Creating order...'; btn.style.opacity = '0.7';
       try {
-        // Get auth token
         const { data: { session } } = await window.tsDB.auth.getSession();
-        if (!session) {
-          window.location.href = 'auth.html';
-          return;
-        }
-
-        // Step 1: Create Razorpay order via Edge Function
+        if (!session) { window.location.href = 'auth.html'; return; }
         const supabaseUrl = window.TRUTHSTAMP_CONFIG.SUPABASE_URL;
-        const orderRes = await fetch(
-          `${supabaseUrl}/functions/v1/razorpay-create-order`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${session.access_token}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ pack_id: selectedPack, currency: USER_CURRENCY }),
-          }
-        );
-
-        const orderData = await orderRes.json();
-        if (!orderRes.ok) {
-          throw new Error(orderData.error ?? 'Failed to create order');
-        }
-
-        const pack = getPacks()[selectedPack];
-
-        // Step 2: Open Razorpay modal
-        const options = {
-          key: orderData.key_id,
-          amount: orderData.amount,
-          currency: orderData.currency,
-          name: 'TruthStamp',
-          description: `${pack.name} — ${pack.credits} credits`,
-          order_id: orderData.order_id,
-          // Pre-fill user details if available
-          prefill: {
-            email: session.user.email ?? '',
-          },
-          theme: {
-            color: '#2563EB',
-          },
-          modal: {
-            ondismiss: function() {
-              // User closed the modal without paying
-              btn.disabled = false;
-              btn.style.opacity = '1';
-              btn.textContent = `Pay ${pack.display} — Get ${pack.credits} credits`;
-            }
-          },
-          handler: async function(response) {
-            // Step 3: Verify payment signature
-            btn.textContent = 'Verifying payment...';
-            await verifyPayment(response, session.access_token);
-          }
-        };
-
-        const rzp = new window.Razorpay(options);
-        rzp.on('payment.failed', function(response) {
-          showError(`Payment failed: ${response.error.description}`);
-          btn.disabled = false;
-          btn.style.opacity = '1';
-          btn.textContent = `Pay ${pack.display} — Get ${pack.credits} credits`;
+        const orderRes = await fetch(`${supabaseUrl}/functions/v1/razorpay-create-order`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pack_id: selectedPack, currency: USER_CURRENCY, credit_type: CURRENT_TYPE }),
         });
-
+        const orderData = await orderRes.json();
+        if (!orderRes.ok) throw new Error(orderData.error ?? 'Failed to create order');
+        const pack = getPack(selectedPack);
+        const label = CURRENT_TYPE === 'api' ? 'API credits' : 'credits';
+        const options = {
+          key: orderData.key_id, amount: orderData.amount, currency: orderData.currency,
+          name: 'TruthStamp', description: `${pack.name} — ${pack.credits} ${label}`,
+          order_id: orderData.order_id,
+          prefill: { email: session.user.email ?? '' },
+          theme: { color: '#2563EB' },
+          modal: { ondismiss: function() { btn.disabled = false; btn.style.opacity = '1'; btn.textContent = `Pay ${fmtPrice(pack)} with Razorpay`; } },
+          handler: async function(response) { btn.textContent = 'Verifying payment...'; await verifyPayment(response, session.access_token); }
+        };
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function(r) { showError(`Payment failed: ${r.error.description}`); btn.disabled = false; btn.style.opacity = '1'; btn.textContent = `Pay ${fmtPrice(pack)} with Razorpay`; });
         rzp.open();
-
       } catch (err) {
-        showError(err instanceof Error ? err.message : 'Payment failed. Please try again.');
-        btn.disabled = false;
-        btn.style.opacity = '1';
-        btn.textContent = `Pay ${getPacks()[selectedPack].display} — Get ${getPacks()[selectedPack].credits} credits`;
+        showError(err instanceof Error ? err.message : 'Payment failed.');
+        btn.disabled = false; btn.style.opacity = '1';
+        const pack = getPack(selectedPack);
+        btn.textContent = pack ? `Pay ${fmtPrice(pack)} with Razorpay` : 'Pay with Razorpay';
       }
     }
 
-    // ── Payment verification ───────────────────────────────────────────────
-    async function verifyPayment(razorpayResponse, token) {
+    async function verifyPayment(rzpResponse, token) {
       const btn = document.getElementById('pay-btn');
       try {
         const supabaseUrl = window.TRUTHSTAMP_CONFIG.SUPABASE_URL;
-        const verifyRes = await fetch(
-          `${supabaseUrl}/functions/v1/razorpay-verify-payment`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              razorpay_payment_id: razorpayResponse.razorpay_payment_id,
-              razorpay_order_id:   razorpayResponse.razorpay_order_id,
-              razorpay_signature:  razorpayResponse.razorpay_signature,
-            }),
-          }
-        );
-
+        const verifyRes = await fetch(`${supabaseUrl}/functions/v1/razorpay-verify-payment`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            razorpay_payment_id: rzpResponse.razorpay_payment_id,
+            razorpay_order_id: rzpResponse.razorpay_order_id,
+            razorpay_signature: rzpResponse.razorpay_signature,
+          }),
+        });
         const result = await verifyRes.json();
-
-        if (!verifyRes.ok || !result.success) {
-          throw new Error(result.error ?? 'Verification failed');
-        }
-
-        // ✅ Success!
+        if (!verifyRes.ok || !result.success) throw new Error(result.error ?? 'Verification failed');
+        const label = CURRENT_TYPE === 'api' ? 'API credits' : 'credits';
         const successEl = document.getElementById('success-msg');
-        successEl.innerHTML = `
-          ✅ Payment successful! <strong>${result.credits_added} credits</strong> added to your account.
-          New balance: <strong>${result.new_balance} credits</strong>.
-          <a href="dashboard.html" style="color: #065F46; margin-left: 8px;">Go to dashboard →</a>
-        `;
+        successEl.innerHTML = `✅ Payment successful! <strong>${result.credits_added} ${label}</strong> added. New balance: <strong>${result.new_balance}</strong>.`;
         successEl.style.display = 'block';
-
-        btn.textContent = '✓ Credits added!';
-        btn.style.background = '#10B981';
-        btn.disabled = true;
-
-        // Update balance display
-        document.getElementById('current-balance').textContent = `${result.new_balance} credits`;
-
-        if (window.trackEvent) {
-          window.trackEvent('purchase_completed', {
-            pack_id: selectedPack,
-            credits: result.credits_added,
-            amount: getPacks()[selectedPack].amountPaise,
-          });
-        }
-
-        // Redirect to dashboard after 3 seconds
-        setTimeout(() => { window.location.href = 'dashboard.html'; }, 3000);
-
+        btn.textContent = '✓ Credits added!'; btn.style.background = '#10B981'; btn.disabled = true;
+        // Update local balance + bar
+        if (CURRENT_TYPE === 'api') apiBalance = result.new_balance; else webBalance = result.new_balance;
+        document.getElementById('current-balance').textContent = result.new_balance + (CURRENT_TYPE === 'api' ? ' API credits' : ' credits');
+        if (window.trackEvent) window.trackEvent('purchase_completed', { pack_id: selectedPack, credit_type: CURRENT_TYPE, credits: result.credits_added });
+        const dest = CURRENT_TYPE === 'api' ? 'api-keys.html' : 'dashboard.html';
+        setTimeout(() => { window.location.href = dest; }, 3000);
       } catch (err) {
-        showError(`Payment verified by Razorpay but credit update failed: ${err.message}. Please contact support with your payment ID: ${razorpayResponse.razorpay_payment_id}`);
-        btn.disabled = false;
-        btn.style.opacity = '1';
-        btn.textContent = `Pay ${getPacks()[selectedPack].display} — Get ${getPacks()[selectedPack].credits} credits`;
+        showError(`Payment verified by Razorpay but credit update failed: ${err.message}. Contact support with payment ID: ${rzpResponse.razorpay_payment_id}`);
+        btn.disabled = false; btn.style.opacity = '1';
+        const pack = getPack(selectedPack);
+        btn.textContent = pack ? `Pay ${fmtPrice(pack)} with Razorpay` : 'Pay with Razorpay';
       }
     }
 
-    // ── Crypto payment ─────────────────────────────────────────────────────
-    // Platform wallet receives payment (90%) + gas wallet top-up (10%)
+    // ── Crypto ───────────────────────────────────────────────────────────────
     const PLATFORM_WALLET  = '0xcBbCA61bD878b21c280236be3668bA559B8DA9EF';
     const GAS_WALLET       = '0xcBbCA61bD878b21c280236be3668bA559B8DA9EF';
-    const MEGAETH_CHAIN_ID = '0x10e6'; // 4326 in hex
+    const MEGAETH_CHAIN_ID = '0x10e6';
     const MEGAETH_RPC      = 'https://mainnet.megaeth.com/rpc';
 
     async function startCryptoCheckout() {
       if (!selectedPack) return;
-
-      if (!window.ethereum) {
-        showError('MetaMask not found. Please install MetaMask to pay with ETH.');
-        return;
-      }
-
-      const pack = getPacks()[selectedPack];
+      if (!window.ethereum) { showError('MetaMask not found. Please install MetaMask to pay with ETH.'); return; }
+      const pack = getPack(selectedPack);
       const cryptoBtn = document.getElementById('crypto-pay-btn');
       const originalText = cryptoBtn.innerHTML;
       hideError();
-
       try {
-        // ── Step 1: Get auth session ────────────────────────────────────────
         const { data: { session } } = await window.tsDB.auth.getSession();
         if (!session) { window.location.href = 'auth.html'; return; }
-
-        // ── Step 2: Get live ETH price ──────────────────────────────────────
         cryptoBtn.disabled = true;
         cryptoBtn.innerHTML = `<span style="opacity:0.7;">Fetching ETH price...</span>`;
-
         const ethPrice = await getEthPrice();
-        const usdAmount = pack.usdEquivalent; // always USD for ETH conversion
+        const usdAmount = usdEquivalent(pack);
         const totalEth = parseFloat(usdToEth(usdAmount, ethPrice));
-
-        // Split: 90% to platform wallet, 10% to gas wallet
         const platformEth = (totalEth * 0.90).toFixed(8);
-        const gasEth      = (totalEth * 0.10).toFixed(8);
-
+        const gasEth = (totalEth * 0.10).toFixed(8);
         const platformWei = ethToWei(platformEth).toString(16);
-        const gasWei      = ethToWei(gasEth).toString(16);
-
-        // ── Step 3: Verify we're on MegaETH ────────────────────────────────
+        const gasWei = ethToWei(gasEth).toString(16);
         cryptoBtn.innerHTML = `<span style="opacity:0.7;">Checking network...</span>`;
-
         const currentChain = await window.ethereum.request({ method: 'eth_chainId' });
-        console.log('Current chain:', currentChain, 'Expected:', MEGAETH_CHAIN_ID);
-
         if (currentChain.toLowerCase() !== MEGAETH_CHAIN_ID.toLowerCase()) {
-          throw new Error(
-            `Wrong network detected (${currentChain}). ` +
-            `Please manually switch to MegaETH Testnet in MetaMask (Chain ID: 6343), then try again.`
-          );
+          throw new Error(`Wrong network (${currentChain}). Switch to MegaETH Mainnet (Chain ID 4326) and try again.`);
         }
-
-        // ── Step 4: Get wallet address ──────────────────────────────────────
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         const fromAddress = accounts[0];
-
-        // ── Step 5: Send payment tx (90% to platform) ──────────────────────
         cryptoBtn.innerHTML = `<span style="opacity:0.7;">Confirm payment in MetaMask... (${totalEth} ETH)</span>`;
-
         const paymentTx = await window.ethereum.request({
           method: 'eth_sendTransaction',
-          params: [{
-            from: fromAddress,
-            to: PLATFORM_WALLET,
-            value: '0x' + platformWei,
-            gas: '0x13880', // 80000 — MegaETH requires higher intrinsic gas
-          }],
+          params: [{ from: fromAddress, to: PLATFORM_WALLET, value: '0x' + platformWei, gas: '0x13880' }],
         });
-
-        // ── Step 6: Send gas top-up tx (10% to gas wallet) ─────────────────
-        cryptoBtn.innerHTML = `<span style="opacity:0.7;">Confirm gas top-up in MetaMask... (${gasEth} ETH)</span>`;
-
+        cryptoBtn.innerHTML = `<span style="opacity:0.7;">Confirm gas top-up... (${gasEth} ETH)</span>`;
         try {
-          await window.ethereum.request({
-            method: 'eth_sendTransaction',
-            params: [{
-              from: fromAddress,
-              to: GAS_WALLET,
-              value: '0x' + gasWei,
-              gas: '0x13880',
-            }],
-          });
-        } catch (gasErr) {
-          // Gas top-up failing shouldn't block the user from getting credits
-          console.warn('Gas wallet top-up failed (non-critical):', gasErr.message);
-        }
-
-        // ── Step 7: Wait for payment tx to confirm ──────────────────────────
+          await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: fromAddress, to: GAS_WALLET, value: '0x' + gasWei, gas: '0x13880' }] });
+        } catch (gasErr) { console.warn('Gas top-up failed (non-critical):', gasErr.message); }
         cryptoBtn.innerHTML = `<span style="opacity:0.7;">Waiting for confirmation...</span>`;
-
         await waitForTransaction(paymentTx);
-
-        // ── Step 8: Notify backend to add credits ───────────────────────────
         const supabaseUrl = window.TRUTHSTAMP_CONFIG.SUPABASE_URL;
         const verifyRes = await fetch(`${supabaseUrl}/functions/v1/crypto-verify-payment`, {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            tx_hash: paymentTx,
-            pack_id: selectedPack,
-            from_address: fromAddress,
-            eth_amount: totalEth.toString(),
-            chain_id: 6343,
-          }),
+          headers: { 'Authorization': `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tx_hash: paymentTx, pack_id: selectedPack, from_address: fromAddress, eth_amount: totalEth.toString(), chain_id: 4326, credit_type: CURRENT_TYPE }),
         });
-
         const result = await verifyRes.json();
         if (!verifyRes.ok) throw new Error(result.error ?? 'Verification failed');
-
-        // ── Success ─────────────────────────────────────────────────────────
+        const label = CURRENT_TYPE === 'api' ? 'API credits' : 'credits';
         const successEl = document.getElementById('success-msg');
-        successEl.innerHTML = `
-          ✅ Payment confirmed on MegaETH!
-          <strong>${result.credits_added} credits</strong> added.
-          New balance: <strong>${result.new_balance} credits</strong>.
-          <br><a href="https://megaeth-testnet-v2.blockscout.com/tx/${paymentTx}"
-             target="_blank" style="color:#065F46; font-size:var(--text-xs);">
-            View transaction on explorer →
-          </a>
-          <a href="dashboard.html" style="color:#065F46; margin-left:12px;">Go to dashboard →</a>
-        `;
+        successEl.innerHTML = `✅ Payment confirmed on MegaETH! <strong>${result.credits_added} ${label}</strong> added. New balance: <strong>${result.new_balance}</strong>.<br><a href="https://mega.etherscan.io/tx/${paymentTx}" target="_blank" style="color:#065F46; font-size:var(--text-xs);">View transaction →</a>`;
         successEl.style.display = 'block';
-        cryptoBtn.innerHTML = '✓ Payment confirmed!';
-        cryptoBtn.style.background = '#10B981';
-        cryptoBtn.style.color = 'white';
-        cryptoBtn.style.border = 'none';
-
-        if (window.trackEvent) window.trackEvent('crypto_purchase_completed', {
-          pack_id: selectedPack, eth_amount: totalEth, tx_hash: paymentTx
-        });
-
-        setTimeout(() => { window.location.href = 'dashboard.html'; }, 4000);
-
+        cryptoBtn.innerHTML = '✓ Payment confirmed!'; cryptoBtn.style.background = '#10B981'; cryptoBtn.style.color = 'white'; cryptoBtn.style.border = 'none';
+        if (CURRENT_TYPE === 'api') apiBalance = result.new_balance; else webBalance = result.new_balance;
+        document.getElementById('current-balance').textContent = result.new_balance + (CURRENT_TYPE === 'api' ? ' API credits' : ' credits');
+        if (window.trackEvent) window.trackEvent('crypto_purchase_completed', { pack_id: selectedPack, credit_type: CURRENT_TYPE, eth_amount: totalEth, tx_hash: paymentTx });
+        const dest = CURRENT_TYPE === 'api' ? 'api-keys.html' : 'dashboard.html';
+        setTimeout(() => { window.location.href = dest; }, 4000);
       } catch (err) {
-        if (err.code === 4001) {
-          showError('Transaction cancelled. No ETH was sent.');
-        } else {
-          showError('Crypto payment failed: ' + (err.message ?? 'Unknown error'));
-        }
-        cryptoBtn.disabled = false;
-        cryptoBtn.innerHTML = originalText;
+        if (err.code === 4001) showError('Transaction cancelled. No ETH was sent.');
+        else showError('Crypto payment failed: ' + (err.message ?? 'Unknown error'));
+        cryptoBtn.disabled = false; cryptoBtn.innerHTML = originalText;
       }
     }
 
-    // Poll for tx confirmation
     async function waitForTransaction(txHash, maxWaitMs = 60000) {
       const start = Date.now();
       while (Date.now() - start < maxWaitMs) {
         const res = await fetch(MEGAETH_RPC, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jsonrpc: '2.0', method: 'eth_getTransactionReceipt',
-            params: [txHash], id: 1,
-          }),
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_getTransactionReceipt', params: [txHash], id: 1 }),
         });
         const data = await res.json();
-        if (data.result?.status === '0x1') return true;  // confirmed
+        if (data.result?.status === '0x1') return true;
         if (data.result?.status === '0x0') throw new Error('Transaction reverted on-chain');
-        await new Promise(r => setTimeout(r, 2000)); // wait 2s before retry
+        await new Promise(r => setTimeout(r, 2000));
       }
       throw new Error('Transaction not confirmed within 60 seconds. Please check explorer.');
     }
 
-    function showError(msg) {
-      const el = document.getElementById('error-msg');
-      el.textContent = msg;
-      el.style.display = 'block';
-      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-
-    function hideError() {
-      document.getElementById('error-msg').style.display = 'none';
-    }
+    function showError(msg) { const el = document.getElementById('error-msg'); el.textContent = msg; el.style.display = 'block'; el.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+    function hideError() { document.getElementById('error-msg').style.display = 'none'; }
   </script>
 </body>
 </html>
