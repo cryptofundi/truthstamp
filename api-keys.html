@@ -48,6 +48,12 @@
   .modal-foot { padding: 16px 22px; border-top: 1px solid var(--color-border); display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
   .reveal-box { background: #1A1A2E; color: #BEF264; font-family: var(--font-mono); font-size: 13px; padding: 14px 16px; border-radius: var(--radius-md); word-break: break-all; line-height: 1.5; margin: 0 0 12px; }
   .warn-text { font-size: var(--text-sm); color: #92400E; background: #FEF3C7; border-radius: var(--radius-md); padding: 10px 14px; margin: 0; line-height: 1.5; }
+  .stat-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-5); }
+  .stat-tile { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-4) var(--space-5); }
+  .stat-tile-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted); margin: 0 0 8px; }
+  .stat-tile-value { font-size: var(--text-2xl); font-weight: 700; letter-spacing: -0.5px; margin: 0; color: var(--color-text); }
+  .stat-tile-value.small { font-size: var(--text-base); font-weight: 600; letter-spacing: 0; }
+  .stat-tile-meta { font-size: var(--text-xs); color: var(--color-text-muted); margin: 4px 0 0; }
   .ak-msg { font-size: var(--text-sm); padding: 10px 14px; border-radius: var(--radius-md); margin-bottom: var(--space-4); display: none; }
 </style>
 </head>
@@ -71,6 +77,30 @@
   </div>
 
   <div id="ak-msg" class="ak-msg"></div>
+  <!-- Analytics tiles -->
+  <div class="stat-tiles" id="stat-tiles">
+    <div class="stat-tile">
+      <p class="stat-tile-label">API Credits</p>
+      <p class="stat-tile-value" id="tile-credits">—</p>
+      <p class="stat-tile-meta">Available balance</p>
+    </div>
+    <div class="stat-tile">
+      <p class="stat-tile-label">Total Requests</p>
+      <p class="stat-tile-value" id="tile-requests">—</p>
+      <p class="stat-tile-meta">Lifetime API calls</p>
+    </div>
+    <div class="stat-tile">
+      <p class="stat-tile-label">Active Keys</p>
+      <p class="stat-tile-value" id="tile-active-keys">—</p>
+      <p class="stat-tile-meta" id="tile-active-keys-meta">of — total</p>
+    </div>
+    <div class="stat-tile">
+      <p class="stat-tile-label">Last Activity</p>
+      <p class="stat-tile-value small" id="tile-last-activity">—</p>
+      <p class="stat-tile-meta" id="tile-last-activity-meta">No requests yet</p>
+    </div>
+  </div>
+
 
   <!-- Card 1: API Credits -->
   <div class="ak-card">
@@ -222,6 +252,31 @@
     }
   }
 
+
+
+  async function loadStats() {
+    try {
+      const data = await callApiKeys({ action: 'stats' });
+      document.getElementById('tile-credits').textContent = (data.api_credits_balance ?? 0).toLocaleString();
+      document.getElementById('tile-requests').textContent = (data.total_requests ?? 0).toLocaleString();
+      document.getElementById('tile-active-keys').textContent = data.active_keys ?? 0;
+      document.getElementById('tile-active-keys-meta').textContent = `of ${data.total_keys ?? 0} total`;
+
+      const lastEl = document.getElementById('tile-last-activity');
+      const lastMetaEl = document.getElementById('tile-last-activity-meta');
+      if (data.last_activity) {
+        lastEl.textContent = fmtRelative(data.last_activity);
+        lastMetaEl.textContent = new Date(data.last_activity).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+      } else {
+        lastEl.textContent = 'Never';
+        lastMetaEl.textContent = 'No requests yet';
+      }
+    } catch (e) {
+      // Stats failing should not block the page. Leave tiles at "—".
+      console.warn('Stats load failed:', e.message);
+    }
+  }
+
   function openCreateModal() {
     document.getElementById('key-name-input').value = '';
     document.getElementById('create-modal').classList.add('open');
@@ -241,6 +296,7 @@
       document.getElementById('copy-key-btn').textContent = 'Copy';
       document.getElementById('reveal-modal').classList.add('open');
       loadKeys();
+      loadStats();
     } catch (e) {
       showMsg(e.message, 'error');
     } finally {
@@ -273,6 +329,7 @@
       await callApiKeys({ action: 'revoke', key_id: keyId });
       showMsg(`Key "${name}" revoked.`, 'success');
       loadKeys();
+      loadStats();
     } catch (e) {
       showMsg(e.message, 'error');
     }
@@ -287,6 +344,7 @@
     const user = await window.tsRequireAuth();
     if (!user) return;
     loadKeys();
+    loadStats();
   })();
 </script>
 </body>
