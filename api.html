@@ -84,6 +84,7 @@
     <ul>
       <li><a href="#create">Create stamp</a></li>
       <li><a href="#retrieve">Retrieve stamp</a></li>
+      <li><a href="#reveal">Reveal sealed stamp</a></li>
       <li><a href="#verify">Verify content</a></li>
     </ul>
     <div class="api-toc-label">Reference</div>
@@ -263,6 +264,49 @@
       </div>
     </section>
 
+
+    <!-- REVEAL -->
+    <section class="api-section" id="reveal">
+      <h2>Reveal a sealed stamp</h2>
+      <div class="endpoint-badge"><span class="method post">POST</span> /stamps/:proof_id/reveal</div>
+      <p>Reveal a sealed stamp on-chain after its <code class="inline">sealed_until</code> date has passed. This uploads the content to Arweave and records the reveal on MegaETH. After reveal, <code class="inline">GET /stamps/:proof_id</code> returns the unsealed content.</p>
+      <p>Only the original stamp creator can reveal. Cost mirrors the underlying type: text = 1, URL = 2, file = 3 credits. Credits are refunded on any failure.</p>
+
+      <h3>Example</h3>
+      <p class="code-label">Request</p>
+      <pre class="code"><span class="k">curl</span> -X POST <span class="s">".../api-v1/stamps/27/reveal"</span> \
+  -H <span class="s">"Authorization: Bearer ts_live_YOUR_KEY"</span> \
+  -H <span class="s">"apikey: YOUR_ANON_KEY"</span> \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -H <span class="s">"Idempotency-Key: my-reveal-001"</span></pre>
+      <p class="code-label">Response <span class="m">200</span></p>
+      <pre class="code">{
+  <span class="c">"success"</span>: <span class="k">true</span>,
+  <span class="c">"proof_id"</span>: <span class="m">27</span>,
+  <span class="c">"revealed"</span>: <span class="k">true</span>,
+  <span class="c">"tx_hash"</span>: <span class="s">"0xa490f00c...d3e3d"</span>,
+  <span class="c">"arweave_uri"</span>: <span class="s">"ar://H3els0gCLLEW...jXc"</span>,
+  <span class="c">"proof_url"</span>: <span class="s">"https://truthstamp.io/proof.html?id=27"</span>,
+  <span class="c">"credits_charged"</span>: <span class="m">1</span>,
+  <span class="c">"api_credits_remaining"</span>: <span class="m">192</span>
+}</pre>
+
+      <h3>Error conditions</h3>
+      <table class="api-table">
+        <tr><th>HTTP</th><th>error</th><th>Meaning</th></tr>
+        <tr><td>403</td><td><code>not_owner</code></td><td>Only the stamp creator can reveal it</td></tr>
+        <tr><td>400</td><td><code>not_sealed</code></td><td>The stamp isn't a sealed stamp</td></tr>
+        <tr><td>400</td><td><code>still_sealed</code></td><td>Reveal date hasn't passed yet</td></tr>
+        <tr><td>409</td><td><code>already_revealed</code></td><td>This stamp was already revealed</td></tr>
+        <tr><td>402</td><td><code>insufficient_api_credits</code></td><td>Not enough API credits</td></tr>
+        <tr><td>422</td><td><code>reveal_failed</code></td><td>On-chain or Arweave failure; credits refunded</td></tr>
+      </table>
+
+      <div class="callout">
+        <p>Reveal is synchronous and typically takes 15&ndash;30 seconds (Arweave upload + on-chain transaction). For revealing many stamps at once, loop client-side respecting your rate limit.</p>
+      </div>
+    </section>
+
     <!-- VERIFY -->
     <section class="api-section" id="verify">
       <h2>Verify content</h2>
@@ -328,6 +372,11 @@
         <tr><td>409</td><td><code>duplicate_content</code></td><td>This exact content was already stamped</td></tr>
         <tr><td>429</td><td><code>rate_limited</code></td><td>Per-minute request limit exceeded</td></tr>
         <tr><td>422</td><td><code>stamp_failed</code></td><td>Stamping failed; credits refunded</td></tr>
+        <tr><td>403</td><td><code>not_owner</code></td><td>Reveal: only the stamp creator can reveal</td></tr>
+        <tr><td>400</td><td><code>not_sealed</code></td><td>Reveal: stamp isn't sealed</td></tr>
+        <tr><td>400</td><td><code>still_sealed</code></td><td>Reveal: reveal date hasn't passed yet</td></tr>
+        <tr><td>409</td><td><code>already_revealed</code></td><td>Reveal: stamp was already revealed</td></tr>
+        <tr><td>422</td><td><code>reveal_failed</code></td><td>Reveal: failed; credits refunded</td></tr>
       </table>
       <div class="callout">
         <p>On any failure during stamp creation, your API credits are automatically refunded — you are never charged for a stamp that did not succeed.</p>
