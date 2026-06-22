@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin · Bitcoin Archive Queue — TruthStamp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/components.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/nav.js"></script>
+<style>
+  .ad-shell { max-width: 1100px; margin: 0 auto; padding: var(--space-7) var(--space-5) var(--space-12); }
+  .ad-head h1 { font-size: var(--text-2xl); font-weight: 600; margin: 0 0 4px; }
+  .ad-head p { color: var(--color-text-secondary); margin: 0 0 var(--space-5); }
+  .ad-msg { padding: 10px 14px; border-radius: var(--radius-md); margin-bottom: var(--space-4); display: none; font-size: var(--text-sm); }
+  .ad-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-5); margin-bottom: var(--space-4); }
+  .job-row { display: grid; grid-template-columns: 80px 1fr auto; gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--color-border); align-items: center; }
+  .job-row:first-of-type { border-top: none; }
+  .job-id { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); }
+  .job-main p { margin: 0 0 4px; font-size: var(--text-sm); }
+  .job-main .proof-link { font-weight: 600; color: var(--brand-primary); text-decoration: none; }
+  .job-meta { font-size: 11px; color: var(--color-text-muted); }
+  .badge { font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 8px; border-radius: var(--radius-full); display: inline-block; }
+  .badge.queued    { background: #FEF3C7; color: #92400E; }
+  .badge.broadcast { background: #DBEAFE; color: #1E40AF; }
+  .badge.confirmed { background: #D1FAE5; color: #065F46; }
+  .badge.failed    { background: #FEE2E2; color: #991B1B; }
+  .modal-overlay { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.5); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--color-surface); border-radius: var(--radius-xl); width: 100%; max-width: 540px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+  .modal-head { padding: 16px 20px; border-bottom: 1px solid var(--color-border); }
+  .modal-body { padding: 20px; }
+  .modal-foot { padding: 14px 20px; border-top: 1px solid var(--color-border); display: flex; gap: 10px; justify-content: flex-end; }
+  .mono { font-family: var(--font-mono); font-size: 12px; }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand"><span class="nav-logo">T</span><span>TruthStamp</span></a>
+    <div class="nav-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="api-keys.html">API Keys</a>
+      <a href="admin-bitcoin-archive.html" style="color:var(--color-text); font-weight:500;">Admin</a>
+    </div>
+  </div>
+</nav>
+
+<main class="ad-shell">
+  <div class="ad-head">
+    <h1>Bitcoin Archive Queue (API)</h1>
+    <p>Internal admin tool. Lists API-originated archive jobs. Process via your own Bitcoin wallet (Unisat) and confirm here once the TX is broadcast.</p>
+  </div>
+
+  <div class="ad-msg" id="ad-msg"></div>
+  <div id="ad-loading" class="ad-card" style="text-align:center; color:var(--color-text-muted);">Loading…</div>
+  <div id="ad-content" style="display:none;"></div>
+</main>
+
+<!-- Mark Processed modal -->
+<div class="modal-overlay" id="confirm-modal" onclick="if(event.target===this)closeConfirmModal()">
+  <div class="modal">
+    <div class="modal-head"><h3 style="margin:0; font-size:var(--text-lg); font-weight:600;">Mark archive job as processed</h3></div>
+    <div class="modal-body">
+      <p style="font-size:var(--text-sm); color:var(--color-text-secondary); margin:0 0 var(--space-3);">
+        Paste the Bitcoin txid (64 hex chars) you've already broadcast via your wallet.
+        This will verify on Bitcoin and update the job + stamp record.
+        No web credits will be charged.
+      </p>
+      <p style="font-size:var(--text-xs); color:var(--color-text-muted); margin: 0 0 var(--space-2);">Job</p>
+      <p class="mono" id="confirm-job-id" style="margin:0 0 var(--space-3);"></p>
+      <p style="font-size:var(--text-xs); color:var(--color-text-muted); margin: 0 0 var(--space-2);">TSA-1 payload (what should be in OP_RETURN)</p>
+      <p class="mono" id="confirm-payload" style="margin:0 0 var(--space-4); word-break:break-all; background:var(--color-surface-alt); padding:8px 10px; border-radius:var(--radius-sm);"></p>
+      <label class="label" for="txid-input" style="font-size:var(--text-sm); display:block; margin-bottom:6px;">Bitcoin txid</label>
+      <input type="text" id="txid-input" class="input mono" placeholder="64-char hex string" maxlength="64" style="width:100%;">
+      <p class="ad-msg" id="confirm-msg" style="margin-top:var(--space-3);"></p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary btn-sm" onclick="closeConfirmModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="confirm-btn" onclick="submitMarkProcessed()">Mark processed</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const FN_URL = (window.TRUTHSTAMP_CONFIG?.SUPABASE_URL ?? '') + '/functions/v1/admin-bitcoin-archive';
+  const ANON = window.TRUTHSTAMP_CONFIG?.SUPABASE_ANON_KEY ?? '';
+  let _currentJobId = null;
+
+  async function callAdmin(payload) {
+    const session = await window.tsDB.auth.getSession();
+    const token = session?.data?.session?.access_token;
+    if (!token) { window.location.href = 'auth.html'; throw new Error('Not signed in'); }
+    const res = await fetch(FN_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'apikey': ANON,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message ?? data.error ?? `Error ${res.status}`);
+    return data;
+  }
+
+  function showMsg(text, kind) {
+    const el = document.getElementById('ad-msg');
+    el.textContent = text;
+    el.style.display = 'block';
+    el.style.background = kind === 'error' ? '#FEE2E2' : '#ECFDF5';
+    el.style.color = kind === 'error' ? '#991B1B' : '#065F46';
+    setTimeout(() => { el.style.display = 'none'; }, 6000);
+  }
+
+  function escapeHtml(s) {
+    return (s ?? '').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+  }
+
+  async function loadJobs() {
+    const wrap = document.getElementById('ad-content');
+    document.getElementById('ad-loading').style.display = 'block';
+    wrap.style.display = 'none';
+    try {
+      const data = await callAdmin({ action: 'list' });
+      const jobs = data.jobs ?? [];
+      // Group by status
+      const groups = { queued: [], broadcast: [], confirmed: [], failed: [], other: [] };
+      jobs.forEach(j => (groups[j.status] ?? groups.other).push(j));
+
+      const renderJob = (j) => `
+        <div class="job-row">
+          <div>
+            <span class="badge ${escapeHtml(j.status)}">${escapeHtml(j.status)}</span>
+            <p class="job-id" style="margin:4px 0 0;">${escapeHtml(j.job_id.slice(0,8))}…</p>
+          </div>
+          <div class="job-main">
+            <p><a class="proof-link" href="proof.html?id=${j.proof_id}" target="_blank">Proof #${j.proof_id}</a></p>
+            <p class="job-meta">Queued ${fmtDate(j.created_at)}${j.txid ? ' · txid: ' + j.txid.slice(0,16) + '…' : ''}</p>
+            ${j.last_error ? `<p class="job-meta" style="color:#991B1B;">Last error: ${escapeHtml(j.last_error)}</p>` : ''}
+          </div>
+          <div>
+            ${j.status === 'queued' || j.status === 'failed'
+              ? `<button class="btn btn-primary btn-sm" onclick="openConfirmModal('${j.job_id}', ${JSON.stringify(j.tsa1_payload || '').replace(/'/g,'&apos;')})">Mark Processed</button>`
+              : j.txid
+                ? `<a class="btn btn-secondary btn-sm" href="https://mempool.space/tx/${j.txid}" target="_blank" rel="noopener">View on mempool ↗</a>`
+                : ''}
+          </div>
+        </div>`;
+
+      const sections = [
+        { title: `Queued (${groups.queued.length})`,    list: groups.queued },
+        { title: `Broadcast (${groups.broadcast.length})`, list: groups.broadcast },
+        { title: `Confirmed (${groups.confirmed.length})`, list: groups.confirmed },
+        { title: `Failed (${groups.failed.length})`,    list: groups.failed },
+      ];
+
+      wrap.innerHTML = sections.map(s => `
+        <div class="ad-card">
+          <h2 style="font-size:var(--text-base); font-weight:600; margin:0 0 var(--space-3);">${s.title}</h2>
+          ${s.list.length ? s.list.map(renderJob).join('') : '<p style="color:var(--color-text-muted); font-size:var(--text-sm); margin:0;">No jobs in this state.</p>'}
+        </div>
+      `).join('');
+
+      document.getElementById('ad-loading').style.display = 'none';
+      wrap.style.display = 'block';
+    } catch (e) {
+      document.getElementById('ad-loading').style.display = 'none';
+      showMsg(e.message, 'error');
+      wrap.innerHTML = `<div class="ad-card" style="color:var(--color-text-muted); text-align:center;">${escapeHtml(e.message)}</div>`;
+      wrap.style.display = 'block';
+    }
+  }
+
+  function openConfirmModal(jobId, tsa1Payload) {
+    _currentJobId = jobId;
+    document.getElementById('confirm-job-id').textContent = jobId;
+    document.getElementById('confirm-payload').textContent = tsa1Payload || '(no payload yet — admin will need to prepare via proof.html first if missing)';
+    document.getElementById('txid-input').value = '';
+    document.getElementById('confirm-msg').style.display = 'none';
+    document.getElementById('confirm-modal').classList.add('open');
+    setTimeout(() => document.getElementById('txid-input').focus(), 80);
+  }
+  function closeConfirmModal() {
+    document.getElementById('confirm-modal').classList.remove('open');
+    _currentJobId = null;
+  }
+
+  async function submitMarkProcessed() {
+    const txid = document.getElementById('txid-input').value.trim().toLowerCase();
+    const msg  = document.getElementById('confirm-msg');
+    const btn  = document.getElementById('confirm-btn');
+    msg.style.display = 'none';
+    if (!txid || !/^[0-9a-f]{64}$/.test(txid)) {
+      msg.textContent = 'Please paste a valid 64-character Bitcoin txid (hex).';
+      msg.style.background = '#FEE2E2'; msg.style.color = '#991B1B';
+      msg.style.display = 'block';
+      return;
+    }
+    btn.disabled = true; btn.textContent = 'Verifying…';
+    try {
+      const data = await callAdmin({ action: 'mark_processed', job_id: _currentJobId, txid });
+      closeConfirmModal();
+      showMsg(`Job marked processed. TX ${data.confirmed ? 'confirmed' : 'broadcast'}.`, 'ok');
+      loadJobs();
+    } catch (e) {
+      msg.textContent = e.message;
+      msg.style.background = '#FEE2E2'; msg.style.color = '#991B1B';
+      msg.style.display = 'block';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Mark processed';
+    }
+  }
+
+  // Init
+  (async function() {
+    const user = await window.tsRequireAuth();
+    if (!user) return;
+    loadJobs();
+  })();
+</script>
+</body>
+</html>
