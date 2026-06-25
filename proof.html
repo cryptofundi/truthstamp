@@ -599,7 +599,7 @@
     <div style="
       background:#fff; border-radius:12px; width:100%; max-width:700px;
       margin:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);
-      font-family:Arial,sans-serif;
+      font-family:Arial,sans-serif; overflow-x:hidden; box-sizing:border-box;
     ">
       <!-- Modal toolbar -->
       <div style="
@@ -620,7 +620,7 @@
         </div>
       </div>
       <!-- Certificate content -->
-      <div id="cert-content" style="padding:40px 48px;"></div>
+      <div id="cert-content" style="padding:clamp(16px,4vw,40px) clamp(16px,4vw,40px);"></div>
     </div>
   </div>
 
@@ -1772,7 +1772,7 @@
 
     // Render certificate inside modal
     document.getElementById('cert-content').innerHTML = `
-      <div style="border:3px double #1a1a2e;padding:40px;border-radius:8px;color:#111">
+      <div style="border:3px double #1a1a2e;padding:clamp(16px,4vw,40px);border-radius:8px;color:#111;box-sizing:border-box;width:100%">
         <div style="text-align:center;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid #e5e7eb">
           <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#2854E8;margin-bottom:8px">✦ TruthStamp</div>
           <h1 style="font-size:26px;font-weight:700;margin-bottom:6px">Certificate of Proof</h1>
@@ -1781,9 +1781,9 @@
         </div>
         <div style="background:#f8f9fb;border:1px solid #e5e7eb;border-radius:6px;padding:14px 20px;margin-bottom:20px;text-align:center;font-size:15px;font-weight:600">${safe(title)}</div>
         <style>
-          .crow{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid #f3f4f6;font-size:12px;gap:16px}
-          .ck{color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10px;flex-shrink:0;padding-top:1px}
-          .cv{font-family:monospace;font-size:10px;word-break:break-all;text-align:right}
+          .crow{display:flex;flex-direction:column;padding:9px 0;border-bottom:1px solid #f3f4f6;font-size:12px;gap:3px}
+          .ck{color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10px;flex-shrink:0}
+          .cv{font-family:monospace;font-size:10px;word-break:break-all;text-align:left;color:#111}
         </style>
         <div class="crow"><span class="ck">Proof ID</span><span class="cv">${safe(proofId)}</span></div>
         <div class="crow"><span class="ck">Stamped</span><span class="cv" style="font-family:Arial">${safe(stampedAt)}</span></div>
@@ -1824,9 +1824,9 @@
         <title>TruthStamp Certificate</title>
         <style>body{font-family:Arial,sans-serif;padding:40px;max-width:760px;margin:0 auto}
         @media print{body{padding:20px}}
-        .crow{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid #f3f4f6;font-size:12px;gap:16px}
-        .ck{color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10px;flex-shrink:0;padding-top:1px}
-        .cv{font-family:monospace;font-size:10px;word-break:break-all;text-align:right}
+        .crow{display:flex;flex-direction:column;padding:9px 0;border-bottom:1px solid #f3f4f6;font-size:12px;gap:3px}
+        .ck{color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10px;flex-shrink:0}
+        .cv{font-family:monospace;font-size:10px;word-break:break-all;text-align:left;color:#111}
         </style></head>
         <body onload="window.print()">${content}</body></html>`);
       win.document.close();
