@@ -1164,7 +1164,7 @@
 
     if (stamp.tx_hash) {
       const cfg = window.TRUTHSTAMP_CONFIG;
-      const explorerBase = cfg?.CONTRACT_EXPLORER ?? 'https://megaeth-testnet-v2.blockscout.com';
+      const explorerBase = cfg?.CONTRACT_EXPLORER ?? 'https://mega.etherscan.io/';
       document.getElementById('tech-tx').innerHTML =
         `<a href="${explorerBase}/tx/${stamp.tx_hash}" target="_blank" rel="noopener">${stamp.tx_hash}</a>`;
       const explorerLink = document.getElementById('explorer-link');
@@ -1348,7 +1348,7 @@
 
       let pkg;
       const cfg         = window.TRUTHSTAMP_CONFIG ?? {};
-      const explorerBase = cfg.CONTRACT_EXPLORER ?? 'https://megaeth-testnet-v2.blockscout.com';
+      const explorerBase = cfg.CONTRACT_EXPLORER ?? 'https://mega.etherscan.io/';
 
       if (stamp.content_type === 'file') {
         // ── File stamp recovery package ──────────────────────────────────
