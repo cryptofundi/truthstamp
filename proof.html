@@ -1792,13 +1792,13 @@
         <div class="crow"><span class="ck">Blockchain Transaction</span><span class="cv">${safe(tx)}</span></div>
         <div class="crow"><span class="ck">Proof URL</span><span class="cv" style="font-family:Arial">${safe(proofUrl)}</span></div>
         <div style="text-align:center;margin-top:24px;padding-top:20px;border-top:1px solid #e5e7eb">
-          <p style="font-size:11px;color:#9ca3af;margin-bottom:4px">This proof is permanently recorded on the MegaETH blockchain and cannot be altered or deleted.</p>
-          <p style="font-size:11px;color:#9ca3af;margin-bottom:4px">Verify independently at any time — even without TruthStamp — using the hash and contract address.</p>
-          <p style="font-size:10px;color:#2854E8">Contract: ${safe(cfg?.CONTRACT_ADDRESS??'')} · Network: MegaETH Mainnet</p>
+          <p style="font-size:11px;color:#4b5563;margin-bottom:4px;-webkit-print-color-adjust:exact;print-color-adjust:exact">This proof is permanently recorded on the MegaETH blockchain and cannot be altered or deleted.</p>
+          <p style="font-size:11px;color:#4b5563;margin-bottom:4px;-webkit-print-color-adjust:exact;print-color-adjust:exact">Verify independently at any time — even without TruthStamp — using the hash and contract address.</p>
+          <p style="font-size:10px;color:#2854E8;-webkit-print-color-adjust:exact;print-color-adjust:exact">Contract: ${safe(cfg?.CONTRACT_ADDRESS??'')} · Network: MegaETH Mainnet</p>
         </div>
-        <div style="margin-top:16px;padding:12px 14px;background:#f8f9fb;border:1px solid #e5e7eb;border-radius:6px;text-align:left">
-          <p style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#9ca3af;margin:0 0 4px">Disclaimer</p>
-          <p style="font-size:10px;color:#6b7280;line-height:1.5;margin:0">This certificate provides cryptographic proof that a hash of the referenced content existed on the blockchain at the stated timestamp. It serves as supporting evidence of existence at that time, but does not by itself establish authorship, ownership, originality, or content integrity beyond the hash. Evidentiary value depends on jurisdiction and legal context. This is not legal advice; TruthStamp is not a law firm — consult a qualified legal professional regarding use of this proof.</p>
+        <div style="margin-top:16px;padding:12px 14px;background:#f8f9fb;border:1px solid #e5e7eb;border-radius:6px;text-align:left;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+          <p style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#374151;margin:0 0 4px">Disclaimer</p>
+          <p style="font-size:11px;color:#374151;line-height:1.5;margin:0">This certificate provides cryptographic proof that a hash of the referenced content existed on the blockchain at the stated timestamp. It serves as supporting evidence of existence at that time, but does not by itself establish authorship, ownership, originality, or content integrity beyond the hash. Evidentiary value depends on jurisdiction and legal context. This is not legal advice; TruthStamp is not a law firm — consult a qualified legal professional regarding use of this proof.</p>
         </div>
       </div>`;
 
@@ -1823,10 +1823,14 @@
       win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
         <title>TruthStamp Certificate</title>
         <style>body{font-family:Arial,sans-serif;padding:40px;max-width:760px;margin:0 auto}
-        @media print{body{padding:20px}}
+        @media print{
+          body{padding:20px}
+          *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important}
+        }
         .crow{display:flex;flex-direction:column;padding:9px 0;border-bottom:1px solid #f3f4f6;font-size:12px;gap:3px}
-        .ck{color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10px;flex-shrink:0}
-        .cv{font-family:monospace;font-size:10px;word-break:break-all;text-align:left;color:#111}
+        .ck{color:#374151;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10px;flex-shrink:0}
+        .cv{font-family:monospace;font-size:11px;word-break:break-all;text-align:left;color:#111}
+        p{color:#374151 !important}
         </style></head>
         <body onload="window.print()">${content}</body></html>`);
       win.document.close();
