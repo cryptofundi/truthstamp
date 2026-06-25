@@ -269,7 +269,7 @@
       <div class="ts-drawer-section">
         <div class="ts-drawer-network">
           <div class="ts-drawer-network-dot"></div>
-          <span>MegaETH Testnet · Connected</span>
+          <span>MegaETH · Connected</span>
         </div>
       </div>
 
