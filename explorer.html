@@ -495,6 +495,15 @@ function resolveNameFromStamp(s) {
   const identity = s.creator_identity || '';
   const userWallet = s.creator_wallet_address || ''; // personal wallet from profiles join
 
+  // ── x402 Agent stamps ──────────────────────────────────────────────────
+  // Account-less agents: identity is a Base wallet (0x + 40 hex) and the
+  // profiles join found NOTHING (no handle, no personal wallet). Old
+  // wallet-auth humans also have 0x identities, but their profile row
+  // matches via the view's wallet join, populating those columns.
+  if (/^0x[0-9a-fA-F]{40}$/.test(identity) &&
+      !s.creator_public_handle && !userWallet)
+    return 'AI Agent · ' + identity.slice(0, 6) + '…' + identity.slice(-4);
+
   // If identity itself is a wallet address (old wallet-auth stamps)
   if (identity.startsWith('0x') && identity.length >= 10)
     return s.creator_public_handle || (identity.slice(0, 6) + '…' + identity.slice(-4));
@@ -535,7 +544,12 @@ async function prefetchHandles(identities) {
     if (walletIds.length) {
       const { data } = await window.tsDB
         .from('profiles').select('wallet_address, public_handle').in('wallet_address', walletIds);
-      (data || []).forEach(p => { if (p.wallet_address) _handleCache[p.wallet_address] = p.public_handle || null; });
+      (data || []).forEach(p => { if (p.wallet_address) {
+        _handleCache[p.wallet_address] = p.public_handle || null;
+        // Mark "a profile row exists for this wallet" so agents (no profile
+        // at all) can be told apart from wallet-auth humans without handles.
+        _walletCache[p.wallet_address] = p.wallet_address;
+      } });
       walletIds.forEach(w => { if (!(w in _handleCache)) _handleCache[w] = null; });
     }
   } catch(e) { console.warn('[Explorer] prefetchHandles:', e.message); }
@@ -546,8 +560,13 @@ function resolveNameFromIdentity(identity) {
   if (!identity) return 'Creator';
 
   // Identity itself is a wallet address
-  if (identity.startsWith('0x') && identity.length >= 10)
+  if (identity.startsWith('0x') && identity.length >= 10) {
+    // x402 agent: full wallet identity with NO matching profile row at all
+    // (prefetchHandles marks _walletCache[wallet] when a profile exists)
+    if (/^0x[0-9a-fA-F]{40}$/.test(identity) && !_handleCache[identity] && !_walletCache[identity])
+      return 'AI Agent · ' + identity.slice(0, 6) + '…' + identity.slice(-4);
     return _handleCache[identity] || (identity.slice(0, 6) + '…' + identity.slice(-4));
+  }
 
   if (isUUID(identity)) {
     // Check if this UUID belongs to a wallet user (has personal wallet in _walletCache)
@@ -563,6 +582,8 @@ function resolveNameFromIdentity(identity) {
 
 // Avatar initials
 function getAvatarInitial(identity, displayName) {
+  // x402 agent stamps (resolveNameFromStamp labels them "AI Agent · 0x…")
+  if (displayName && displayName.startsWith('AI Agent')) return '🤖';
   if (!displayName || displayName.startsWith('Creator_')) {
     // Wallet user — use first 2 hex chars of wallet
     const w = (identity.startsWith('0x') ? identity : _walletCache[identity] || '');
