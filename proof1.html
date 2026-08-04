@@ -285,6 +285,12 @@
           Back
         </a>
         <span class="url-text" id="proof-url">truthstamp.io/proof.html?id=...</span>
+        <button id="copy-url-btn" onclick="copyProofUrl()"
+          title="To archive to Bitcoin using a different wallet (e.g. Xverse on mobile), copy this URL and open it in your Bitcoin wallet's browser"
+          style="display:inline-flex;align-items:center;gap:4px;font-size:var(--text-xs);color:var(--color-text-muted);background:none;border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:3px 8px;cursor:pointer;font-family:var(--font-sans);flex-shrink:0;transition:border-color .15s,color .15s;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          <span id="copy-url-label">Copy URL</span>
+        </button>
         <div style="display:flex; align-items:center; gap:var(--space-2); flex-shrink:0; flex-wrap:wrap; justify-content:flex-end;">
           <div class="verify-seal">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
@@ -593,7 +599,7 @@
     <div style="
       background:#fff; border-radius:12px; width:100%; max-width:700px;
       margin:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);
-      font-family:Arial,sans-serif;
+      font-family:Arial,sans-serif; overflow-x:hidden; box-sizing:border-box;
     ">
       <!-- Modal toolbar -->
       <div style="
@@ -614,7 +620,7 @@
         </div>
       </div>
       <!-- Certificate content -->
-      <div id="cert-content" style="padding:40px 48px;"></div>
+      <div id="cert-content" style="padding:clamp(16px,4vw,40px) clamp(16px,4vw,40px);"></div>
     </div>
   </div>
 
@@ -897,48 +903,40 @@
             ` : ''}
           </div>`;
       } else {
-        // ── Reveal date has passed — show content to EVERYONE ─────────────
+        // ── Reveal date has passed — show content ─────────────────────────
+        // New stamps: text_content is stored directly (since fix)
+        // Old stamps: encrypted_content only — need decrypt
         let text = stamp.text_content || '';
 
-        // Try decrypt from encrypted_content (owner only — has the key)
-        const decryptUserId = currentUser?.id ?? null;
-        if (!text && stamp.encrypted_content && decryptUserId) {
-          try {
-            const decrypted = await decryptForUser(stamp.encrypted_content, decryptUserId);
-            try {
-              const parsed = JSON.parse(decrypted);
-              text = parsed.content ?? decrypted;
-            } catch { text = decrypted; }
-            // Auto-cache to DB so non-owners can see on next load
-            if (text && !stamp.text_content) {
-              try {
-                await window.tsDB.from('stamps').update({
-                  text_content:  text,
-                  display_title: text.slice(0, 60),
-                })
-                .eq('proof_id', stamp.proof_id)
-                .eq('contract_address', window.TRUTHSTAMP_CONFIG?.CONTRACT_ADDRESS ?? '');
-              } catch(e) { console.warn('[TruthStamp] Auto-cache failed:', e); }
-            }
-          } catch(e) {
-            console.warn('[TruthStamp] sealed decrypt failed:', e);
-          }
-        }
-
-        // If still no text (non-owner, content not yet cached) — ask server to decrypt
+        // If text_content is already set — use it directly, no decrypt needed
         if (!text) {
-          try {
-            const { data: fnData, error: fnErr } = await window.tsDB.functions.invoke(
-              'decrypt-sealed',
-              { body: { proof_id: stamp.proof_id } }
-            );
-            if (!fnErr && fnData?.success && fnData?.content) {
-              text = fnData.content;
-            } else {
-              console.warn('[TruthStamp] decrypt-sealed failed:', fnErr?.message ?? fnData?.error);
-            }
-          } catch(e) {
-            console.warn('[TruthStamp] decrypt-sealed error:', e.message);
+          // Old stamp: try owner client-side decrypt first
+          if (stamp.encrypted_content && currentUser?.id) {
+            try {
+              const decrypted = await decryptForUser(stamp.encrypted_content, currentUser.id);
+              try { const p = JSON.parse(decrypted); text = p.content ?? decrypted; }
+              catch { text = decrypted; }
+              // Cache to DB so non-owners can see it on next load
+              if (text) {
+                try {
+                  await window.tsDB.from('stamps').update({
+                    text_content: text,
+                    display_title: text.slice(0, 60),
+                  })
+                  .eq('proof_id', stamp.proof_id)
+                  .eq('contract_address', window.TRUTHSTAMP_CONFIG?.CONTRACT_ADDRESS ?? '');
+                } catch(e) { console.warn('[TruthStamp] cache failed:', e); }
+              }
+            } catch(e) { console.warn('[TruthStamp] client decrypt failed:', e); }
+          }
+          // Still no text — try server-side decrypt (handles old encrypted stamps for non-owners)
+          if (!text) {
+            try {
+              const { data: fnData, error: fnErr } = await window.tsDB.functions.invoke(
+                'decrypt-sealed', { body: { proof_id: stamp.proof_id } }
+              );
+              if (!fnErr && fnData?.success && fnData?.content) text = fnData.content;
+            } catch(e) { console.warn('[TruthStamp] decrypt-sealed error:', e.message); }
           }
         }
 
@@ -955,21 +953,33 @@
             + 'style="font-size:var(--text-sm); font-weight:600; color:var(--brand-primary); word-break:break-all; overflow-wrap:anywhere; display:block;">'
             + escapeHtml(displayUrl) + '</a></div>';
         } else if (stamp.content_type === 'file') {
-          contentText.textContent = stamp.file_name ? `📄 ${stamp.file_name}` : '(File stamp)';
+          // FIX 2: image files render inline; avoids Arweave octet-stream download
+          var isSealedImg = stamp.file_mime_type && stamp.file_mime_type.indexOf('image/') === 0;
+          if (isSealedImg && stamp.storage_uri) {
+            var sealedImgUrl = 'https://arweave.net/' + stamp.storage_uri.replace('ar://', '');
+            var sealedAlt = escapeHtml(stamp.file_name || 'Image');
+            contentBlock.innerHTML =
+              '<div style="padding:var(--space-4);text-align:center;">'
+              + '<img src="' + sealedImgUrl + '" alt="' + sealedAlt + '" '
+              + 'style="max-width:100%;border-radius:var(--radius-md);margin-bottom:var(--space-3);display:block;margin-left:auto;margin-right:auto;">'
+              + '<p style="font-size:var(--text-xs);color:var(--color-text-muted);margin:4px 0 0;">' + sealedAlt + '</p>'
+              + '<a href="' + sealedImgUrl + '" target="_blank" rel="noopener" '
+              + 'style="font-size:var(--text-xs);color:var(--brand-primary);margin-top:6px;display:inline-block;">Open on Arweave ↗</a>'
+              + '</div>';
+          } else {
+            contentText.textContent = stamp.file_name ? stamp.file_name : '(File stamp)';
+          }
         } else if (text) {
           contentText.textContent = text;
         } else if (!isOwner) {
-          // Non-owner, seal date passed, server decrypt also failed
+          // Non-owner, seal date passed, content not yet available
+          const msg = stamp.revealed
+            ? `Content was revealed on-chain. <a href="" style="color:var(--brand-primary)">Refresh</a> to see it.`
+            : `Seal date has passed.<br><span style="font-size:var(--text-xs); color:var(--color-text-muted);">Content will be permanently visible after the owner clicks <strong>Reveal on-chain</strong>.</span>`;
           contentBlock.innerHTML = `
             <div class="proof-content-hash-only">
-              <div style="font-size: 2rem; margin-bottom: 8px;">🔓</div>
-              <p style="margin: 0; color: var(--color-text-secondary); line-height: 1.6;">
-                Seal date has passed.<br>
-                <span style="font-size:var(--text-xs); color:var(--color-text-muted);">
-                  Content will be permanently visible after the owner clicks
-                  <strong>Reveal on-chain</strong>.
-                </span>
-              </p>
+              <div style="font-size: 2rem; margin-bottom: 8px;">${stamp.revealed ? '🔓' : '⏳'}</div>
+              <p style="margin: 0; color: var(--color-text-secondary); line-height: 1.6;">${msg}</p>
             </div>`;
         } else {
           // Owner but decrypt failed
@@ -1097,6 +1107,25 @@
           showArweaveActions(stamp.storage_uri, stamp.content_type);
         }
 
+      } else if (stamp.content_type === 'file') {
+        var isPubImg = stamp.file_mime_type && stamp.file_mime_type.indexOf('image/') === 0;
+        if (isPubImg && stamp.storage_uri) {
+          var pubImgUrl = 'https://arweave.net/' + stamp.storage_uri.replace('ar://', '');
+          var pubAlt = escapeHtml(stamp.file_name || 'Image');
+          contentBlock.innerHTML =
+            '<div style="padding:var(--space-4);text-align:center;">'
+            + '<img src="' + pubImgUrl + '" alt="' + pubAlt + '" '
+            + 'style="max-width:100%;border-radius:var(--radius-md);margin-bottom:var(--space-3);display:block;margin-left:auto;margin-right:auto;">'
+            + '<p style="font-size:var(--text-xs);color:var(--color-text-muted);margin:4px 0 0;">' + pubAlt + '</p>'
+            + '</div>';
+        } else if (stamp.file_name) {
+          contentText.textContent = `📄 ${stamp.file_name}`;
+        } else {
+          contentText.textContent = '(Content not available in cache — view on Arweave)';
+        }
+        if (stamp.storage_uri) {
+          showArweaveActions(stamp.storage_uri, stamp.content_type);
+        }
       } else {
         // Text or other content
         if (text) {
@@ -1116,6 +1145,9 @@
     // Stats
     document.getElementById('stat-block').textContent =
       stamp.block_number ? stamp.block_number.toLocaleString() : '—';
+    // Store mime type and filename for post-reveal inline image display
+    window._currentStampMimeType = stamp.file_mime_type ?? '';
+    window._currentStampFileName = stamp.file_name ?? '';
     document.getElementById('stat-type').textContent =
       stamp.content_type ? stamp.content_type.charAt(0).toUpperCase() + stamp.content_type.slice(1) : '—';
 
@@ -1132,7 +1164,7 @@
 
     if (stamp.tx_hash) {
       const cfg = window.TRUTHSTAMP_CONFIG;
-      const explorerBase = cfg?.CONTRACT_EXPLORER ?? 'https://megaeth-testnet-v2.blockscout.com';
+      const explorerBase = cfg?.CONTRACT_EXPLORER ?? 'https://mega.etherscan.io/';
       document.getElementById('tech-tx').innerHTML =
         `<a href="${explorerBase}/tx/${stamp.tx_hash}" target="_blank" rel="noopener">${stamp.tx_hash}</a>`;
       const explorerLink = document.getElementById('explorer-link');
@@ -1174,8 +1206,8 @@
       window.trackEvent('proof_viewed', { proof_id: stamp.proof_id, visibility: stamp.visibility });
     }
 
-    // Bitcoin archive card — shown for eligible stamps
-    initBitcoinArchiveCard(stamp, currentUser);
+    // Bitcoin archive card — shown for eligible stamps (owner only)
+    initBitcoinArchiveCard(stamp, currentUser, isOwner);
   }
 
   // ── Client-side decryption (mirrors stamp.html logic) ───────────────────
@@ -1297,39 +1329,100 @@
   }
 
   // ── Download recovery package ─────────────────────────────────────────────
-  // Downloads the encrypted_content from DB as a standalone recovery file.
-  // User keeps this locally — can decrypt independently if TruthStamp goes down.
+  // Downloads a recovery package for any stamp type:
+  //   File stamps   → Arweave URI + file metadata (no encryption)
+  //   Text/URL stamps → encrypted payload for offline decryption
   async function downloadRecoveryPackage() {
     const proofId = new URLSearchParams(window.location.search).get('id');
     try {
       const { data: stamp } = await window.tsDB
         .from('stamps')
-        .select('encrypted_content, encrypted_arweave_uri, proof_id, content_hash, sealed_until, creator_identity')
+        .select('content_type, encrypted_content, encrypted_arweave_uri, storage_uri, proof_id, content_hash, sealed_until, creator_identity, file_name, file_mime_type, file_size_bytes, tx_hash, block_timestamp, display_title')
         .eq('proof_id', proofId)
         .maybeSingle();
 
-      if (!stamp?.encrypted_content) {
-        alert('No encrypted backup found for this stamp.\nThis may be an older stamp created before encryption was added.');
+      if (!stamp) {
+        alert('Could not load stamp data. Please try again.');
         return;
       }
 
-      const pkg = {
-        _note:                 'TruthStamp encrypted recovery package',
-        _version:              '1.0',
-        _instructions:         'Decrypt ciphertext using AES-256-GCM. Key derived via PBKDF2-SHA256 from (userId + "truthstamp-v1-hash-only"). See enc/kdf/iv/iterations fields.',
-        proof_id:              stamp.proof_id,
-        content_hash:          stamp.content_hash,
-        sealed_until:          stamp.sealed_until,
-        creator_identity:      stamp.creator_identity,
-        encrypted_arweave_uri: stamp.encrypted_arweave_uri ?? null,
-        encrypted_payload:     JSON.parse(stamp.encrypted_content),
-        exported_at:           new Date().toISOString(),
-      };
+      let pkg;
+      const cfg         = window.TRUTHSTAMP_CONFIG ?? {};
+      const explorerBase = cfg.CONTRACT_EXPLORER ?? 'https://mega.etherscan.io/';
 
-      const blob = new Blob(
-        [JSON.stringify(pkg, null, 2)],
-        { type: 'application/json' }
-      );
+      if (stamp.content_type === 'file') {
+        // ── File stamp recovery package ──────────────────────────────────
+        // Contains Arweave URI + metadata so the owner can always retrieve
+        // the file independently — no encryption needed, file lives on Arweave.
+        const arweaveUri = stamp.storage_uri ?? null;
+        const arweaveUrl = arweaveUri ? 'https://arweave.net/' + arweaveUri.replace('ar://', '') : null;
+
+        pkg = {
+          _note:          'TruthStamp file stamp recovery package',
+          _version:       '1.0',
+          _type:          'file',
+          _instructions:  arweaveUrl
+            ? 'Your file is permanently stored on Arweave. Use the arweave_url below to retrieve it at any time — no TruthStamp account needed.'
+            : 'Your file hash is sealed on MegaETH. Retrieve the file from Arweave once the owner has revealed on-chain.',
+          proof_id:       stamp.proof_id,
+          file_name:      stamp.file_name ?? null,
+          file_mime_type: stamp.file_mime_type ?? null,
+          file_size_bytes: stamp.file_size_bytes ?? null,
+          content_hash:   stamp.content_hash,
+          display_title:  stamp.display_title ?? null,
+          sealed_until:   stamp.sealed_until ?? null,
+          creator_identity: stamp.creator_identity,
+          arweave_uri:    arweaveUri,
+          arweave_url:    arweaveUrl,
+          megaeth_tx:     stamp.tx_hash ?? null,
+          megaeth_tx_url: stamp.tx_hash ? `${explorerBase}/tx/${stamp.tx_hash}` : null,
+          block_timestamp: stamp.block_timestamp ?? null,
+          exported_at:    new Date().toISOString(),
+        };
+
+      } else {
+        // ── Text / URL stamp recovery package ────────────────────────────
+        // Contains encrypted payload for offline decryption.
+        if (!stamp.encrypted_content) {
+          // Stamp exists but no encrypted backup — provide basic proof metadata
+          pkg = {
+            _note:        'TruthStamp proof recovery package (no encrypted backup)',
+            _version:     '1.0',
+            _type:        stamp.content_type,
+            _instructions: 'No encrypted backup was stored for this stamp. The proof is permanently on MegaETH and Arweave.',
+            proof_id:     stamp.proof_id,
+            content_hash: stamp.content_hash,
+            sealed_until: stamp.sealed_until ?? null,
+            creator_identity: stamp.creator_identity,
+            arweave_uri:  stamp.storage_uri ?? null,
+            megaeth_tx:   stamp.tx_hash ?? null,
+            megaeth_tx_url: stamp.tx_hash ? `${explorerBase}/tx/${stamp.tx_hash}` : null,
+            exported_at:  new Date().toISOString(),
+          };
+        } else {
+          let encPayload;
+          try { encPayload = JSON.parse(stamp.encrypted_content); }
+          catch { encPayload = stamp.encrypted_content; }
+
+          pkg = {
+            _note:                 'TruthStamp encrypted recovery package',
+            _version:              '1.0',
+            _type:                 stamp.content_type,
+            _instructions:         'Decrypt ciphertext using AES-256-GCM. Key derived via PBKDF2-SHA256 from (userId + "truthstamp-v1-hash-only"). See enc/kdf/iv/iterations fields.',
+            proof_id:              stamp.proof_id,
+            content_hash:          stamp.content_hash,
+            sealed_until:          stamp.sealed_until ?? null,
+            creator_identity:      stamp.creator_identity,
+            arweave_uri:           stamp.storage_uri ?? null,
+            encrypted_arweave_uri: stamp.encrypted_arweave_uri ?? null,
+            megaeth_tx:            stamp.tx_hash ?? null,
+            encrypted_payload:     encPayload,
+            exported_at:           new Date().toISOString(),
+          };
+        }
+      }
+
+      const blob = new Blob([JSON.stringify(pkg, null, 2)], { type: 'application/json' });
       const a    = document.createElement('a');
       a.href     = URL.createObjectURL(blob);
       a.download = `truthstamp-recovery-proof-${proofId}.json`;
@@ -1410,10 +1503,26 @@
       resultEl.style.display = 'block';
       btn.textContent = '✅ Revealed';
 
-      // Show Arweave link in content block
+      // Show Arweave link + inline preview after reveal
       if (result.arweave_uri) {
         const ct = document.getElementById('stat-type')?.textContent?.toLowerCase() ?? 'text';
         showArweaveActions(result.arweave_uri, ct);
+        // For image files: show inline preview immediately without requiring page refresh
+        const fileMime = window._currentStampMimeType ?? '';
+        const isRevealedImg = ct === 'file' && fileMime && fileMime.indexOf('image/') === 0;
+        if (isRevealedImg) {
+          const imgUrl = 'https://arweave.net/' + result.arweave_uri.replace('ar://', '');
+          const contentBlock = document.getElementById('content-block');
+          if (contentBlock) {
+            contentBlock.innerHTML =
+              '<div style="padding:var(--space-4);text-align:center;">'
+              + '<img src="' + imgUrl + '" alt="Revealed file" '
+              + 'style="max-width:100%;border-radius:var(--radius-md);margin-bottom:var(--space-3);display:block;margin-left:auto;margin-right:auto;">'
+              + '<p style="font-size:var(--text-xs);color:var(--color-text-muted);margin:4px 0 0;">'
+              + (window._currentStampFileName ?? 'Image file') + '</p>'
+              + '</div>';
+          }
+        }
       }
 
       // Hide amber banner after short delay
@@ -1609,6 +1718,37 @@
     });
     if (window.trackEvent) window.trackEvent('proof_link_copied');
   }
+  function copyProofUrl() {
+    var url = window.location.href;
+    function onCopied() {
+      var label = document.getElementById('copy-url-label');
+      var btn   = document.getElementById('copy-url-btn');
+      if (label) label.textContent = 'Copied!';
+      if (btn)   btn.style.color = 'var(--brand-primary)';
+      setTimeout(function() {
+        if (label) label.textContent = 'Copy URL';
+        if (btn)   btn.style.color = '';
+      }, 2000);
+    }
+    function fallback() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = url;
+        ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;';
+        document.body.appendChild(ta);
+        ta.focus(); ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        onCopied();
+      } catch(e) { alert('Copy this URL:\n' + url); }
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(url).then(onCopied).catch(fallback);
+    } else {
+      fallback();
+    }
+    if (window.trackEvent) window.trackEvent('proof_url_copied');
+  }
 
   function showCertificate() {
     const proofId   = document.getElementById('tech-proof-id')?.textContent ?? '';
@@ -1632,7 +1772,7 @@
 
     // Render certificate inside modal
     document.getElementById('cert-content').innerHTML = `
-      <div style="border:3px double #1a1a2e;padding:40px;border-radius:8px;color:#111">
+      <div style="border:3px double #1a1a2e;padding:clamp(16px,4vw,40px);border-radius:8px;color:#111;box-sizing:border-box;width:100%">
         <div style="text-align:center;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid #e5e7eb">
           <div style="font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#2854E8;margin-bottom:8px">✦ TruthStamp</div>
           <h1 style="font-size:26px;font-weight:700;margin-bottom:6px">Certificate of Proof</h1>
@@ -1641,9 +1781,9 @@
         </div>
         <div style="background:#f8f9fb;border:1px solid #e5e7eb;border-radius:6px;padding:14px 20px;margin-bottom:20px;text-align:center;font-size:15px;font-weight:600">${safe(title)}</div>
         <style>
-          .crow{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid #f3f4f6;font-size:12px;gap:16px}
-          .ck{color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10px;flex-shrink:0;padding-top:1px}
-          .cv{font-family:monospace;font-size:10px;word-break:break-all;text-align:right}
+          .crow{display:flex;flex-direction:column;padding:9px 0;border-bottom:1px solid #f3f4f6;font-size:12px;gap:3px}
+          .ck{color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10px;flex-shrink:0}
+          .cv{font-family:monospace;font-size:10px;word-break:break-all;text-align:left;color:#111}
         </style>
         <div class="crow"><span class="ck">Proof ID</span><span class="cv">${safe(proofId)}</span></div>
         <div class="crow"><span class="ck">Stamped</span><span class="cv" style="font-family:Arial">${safe(stampedAt)}</span></div>
@@ -1652,9 +1792,13 @@
         <div class="crow"><span class="ck">Blockchain Transaction</span><span class="cv">${safe(tx)}</span></div>
         <div class="crow"><span class="ck">Proof URL</span><span class="cv" style="font-family:Arial">${safe(proofUrl)}</span></div>
         <div style="text-align:center;margin-top:24px;padding-top:20px;border-top:1px solid #e5e7eb">
-          <p style="font-size:11px;color:#9ca3af;margin-bottom:4px">This proof is permanently recorded on the MegaETH blockchain and cannot be altered or deleted.</p>
-          <p style="font-size:11px;color:#9ca3af;margin-bottom:4px">Verify independently at any time — even without TruthStamp — using the hash and contract address.</p>
-          <p style="font-size:10px;color:#2854E8">Contract: ${safe(cfg?.CONTRACT_ADDRESS??'')} · Network: MegaETH Testnet</p>
+          <p style="font-size:11px;color:#4b5563;margin-bottom:4px;-webkit-print-color-adjust:exact;print-color-adjust:exact">This proof is permanently recorded on the MegaETH blockchain and cannot be altered or deleted.</p>
+          <p style="font-size:11px;color:#4b5563;margin-bottom:4px;-webkit-print-color-adjust:exact;print-color-adjust:exact">Verify independently at any time — even without TruthStamp — using the hash and contract address.</p>
+          <p style="font-size:10px;color:#2854E8;-webkit-print-color-adjust:exact;print-color-adjust:exact">Contract: ${safe(cfg?.CONTRACT_ADDRESS??'')} · Network: MegaETH Mainnet</p>
+        </div>
+        <div style="margin-top:16px;padding:12px 14px;background:#f8f9fb;border:1px solid #e5e7eb;border-radius:6px;text-align:left;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+          <p style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#374151;margin:0 0 4px">Disclaimer</p>
+          <p style="font-size:11px;color:#374151;line-height:1.5;margin:0">This certificate provides cryptographic proof that a hash of the referenced content existed on the blockchain at the stated timestamp. It serves as supporting evidence of existence at that time, but does not by itself establish authorship, ownership, originality, or content integrity beyond the hash. Evidentiary value depends on jurisdiction and legal context. This is not legal advice; TruthStamp is not a law firm — consult a qualified legal professional regarding use of this proof.</p>
         </div>
       </div>`;
 
@@ -1679,10 +1823,14 @@
       win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
         <title>TruthStamp Certificate</title>
         <style>body{font-family:Arial,sans-serif;padding:40px;max-width:760px;margin:0 auto}
-        @media print{body{padding:20px}}
-        .crow{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid #f3f4f6;font-size:12px;gap:16px}
-        .ck{color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10px;flex-shrink:0;padding-top:1px}
-        .cv{font-family:monospace;font-size:10px;word-break:break-all;text-align:right}
+        @media print{
+          body{padding:20px}
+          *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important}
+        }
+        .crow{display:flex;flex-direction:column;padding:9px 0;border-bottom:1px solid #f3f4f6;font-size:12px;gap:3px}
+        .ck{color:#374151;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10px;flex-shrink:0}
+        .cv{font-family:monospace;font-size:11px;word-break:break-all;text-align:left;color:#111}
+        p{color:#374151 !important}
         </style></head>
         <body onload="window.print()">${content}</body></html>`);
       win.document.close();
@@ -1698,7 +1846,7 @@
   let   btcPrepareData       = null; // holds response from bitcoin-archive-prepare
 
   // Show/hide Bitcoin archive card based on stamp eligibility
-  function initBitcoinArchiveCard(stamp, currentUser) {
+  function initBitcoinArchiveCard(stamp, currentUser, isOwner) {
     const card = document.getElementById('btc-archive-card');
     if (!card) return;
 
@@ -1721,19 +1869,12 @@
       return;
     }
 
-    // Not archived yet — only the OWNER can archive
-    const isOwner = !!(currentUser?.id && (
-      currentUser.id === stamp.creator_profile_id ||
-      currentUser.id === stamp.creator_identity
-    ));
-
-    // Hide card for: non-logged-in users AND logged-in non-owners
+    // Only the stamp's creator can archive it to Bitcoin.
+    // Prevents anyone from archiving (and spending credits on) someone else's stamp.
     if (!currentUser || !isOwner) {
       card.style.display = 'none';
       return;
     }
-
-    // Owner + not archived → show archive action
     card.style.display = 'block';
     checkPendingBitcoinArchive();
   }
